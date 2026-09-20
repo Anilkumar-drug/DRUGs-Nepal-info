@@ -79,22 +79,43 @@ fun CalculatorsScreen(
         ) {
             tabs.forEach { (tabKey, tabTitle) ->
                 val isSelected = state.activeCalcTab == tabKey
+                val tabIcon = when (tabKey) {
+                    "egfr" -> Icons.Default.WaterDrop
+                    "bsa" -> Icons.Default.Straighten
+                    "child_pugh" -> Icons.Default.LocalHospital
+                    "rumack" -> Icons.Default.Timeline
+                    else -> Icons.Default.ChildCare
+                }
+
                 FilterChip(
                     selected = isSelected,
                     onClick = { viewModel.setCalcTab(tabKey) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = tabIcon,
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp),
+                            tint = if (isSelected) Color.White else MaterialTheme.colorScheme.primary
+                        )
+                    },
                     label = {
                         Text(
                             text = tabTitle,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                             fontSize = 12.sp
                         )
                     },
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(18.dp),
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primary,
                         selectedLabelColor = Color.White,
                         containerColor = MaterialTheme.colorScheme.surface,
                         labelColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+                        enabled = true,
+                        selected = isSelected
                     ),
                     modifier = Modifier.testTag("calc_tab_$tabKey")
                 )

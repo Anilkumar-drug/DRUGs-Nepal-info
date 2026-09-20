@@ -27,10 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.screens.*
-import com.example.ui.theme.DrugsNepalTheme
-import com.example.ui.theme.Emerald400
-import com.example.ui.theme.Indigo400
-import com.example.ui.theme.Red400
+import com.example.ui.theme.*
 import com.example.viewmodel.ClinicalViewModel
 import com.example.viewmodel.NavigationScreen
 
@@ -102,115 +99,169 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
             .fillMaxSize()
             .testTag("drugs_nepal_scaffold"),
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.primary
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 3.dp,
+                shadowElevation = 2.dp
+            ) {
+                TopAppBar(
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Text(
-                                text = "Rx",
-                                color = Color.White,
-                                fontWeight = FontWeight.Black,
-                                fontSize = 14.sp,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = MaterialTheme.colorScheme.primary,
+                                shadowElevation = 2.dp
+                            ) {
+                                Text(
+                                    text = "Rx",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 15.sp,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                            Column {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Text(
+                                        text = "DRUGs Nepal",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Black,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Surface(
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                                    ) {
+                                        Text(
+                                            text = "EML",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = when (state.currentScreen) {
+                                        NavigationScreen.GEMINI -> "AI Pharmacology Copilot"
+                                        NavigationScreen.SETTINGS -> "Settings & Prescriber Profile"
+                                        else -> state.currentScreen.title
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
-                        Column {
-                            Text(
-                                text = "DRUGs Nepal",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = when (state.currentScreen) {
-                                    NavigationScreen.GEMINI -> "AI Pharmacology Copilot"
-                                    NavigationScreen.SETTINGS -> "Settings & Profile"
-                                    else -> state.currentScreen.title
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                    },
+                    actions = {
+                        // Gemini AI Copilot Quick Pill Button
+                        Surface(
+                            onClick = { viewModel.navigateTo(NavigationScreen.GEMINI) },
+                            shape = RoundedCornerShape(16.dp),
+                            color = if (state.currentScreen == NavigationScreen.GEMINI) {
+                                Indigo500
+                            } else {
+                                Indigo500.copy(alpha = 0.12f)
+                            },
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                if (state.currentScreen == NavigationScreen.GEMINI) Indigo500 else Indigo400.copy(alpha = 0.4f)
+                            ),
+                            modifier = Modifier
+                                .testTag("top_gemini_button")
+                                .padding(end = 4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = "Gemini AI",
+                                    tint = if (state.currentScreen == NavigationScreen.GEMINI) Color.White else Indigo400,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = "AI Copilot",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (state.currentScreen == NavigationScreen.GEMINI) Color.White else Indigo400
+                                )
+                            }
                         }
-                    }
-                },
-                actions = {
-                    // Gemini AI Copilot Button
-                    IconButton(
-                        onClick = { viewModel.navigateTo(NavigationScreen.GEMINI) },
-                        modifier = Modifier
-                            .testTag("top_gemini_button")
-                            .clip(CircleShape)
-                            .background(if (state.currentScreen == NavigationScreen.GEMINI) Indigo400.copy(alpha = 0.2f) else Color.Transparent)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = "Gemini AI",
-                            tint = if (state.currentScreen == NavigationScreen.GEMINI) Indigo400 else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
 
-                    // Settings Button
-                    IconButton(
-                        onClick = { viewModel.navigateTo(NavigationScreen.SETTINGS) },
-                        modifier = Modifier
-                            .testTag("top_settings_button")
-                            .clip(CircleShape)
-                            .background(if (state.currentScreen == NavigationScreen.SETTINGS) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
-                    ) {
-                        Icon(
-                            imageVector = if (state.currentScreen == NavigationScreen.SETTINGS) Icons.Filled.Settings else Icons.Outlined.Settings,
-                            contentDescription = "Settings",
-                            tint = if (state.currentScreen == NavigationScreen.SETTINGS) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                        // Settings Button
+                        IconButton(
+                            onClick = { viewModel.navigateTo(NavigationScreen.SETTINGS) },
+                            modifier = Modifier
+                                .testTag("top_settings_button")
+                                .clip(CircleShape)
+                                .background(if (state.currentScreen == NavigationScreen.SETTINGS) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                        ) {
+                            Icon(
+                                imageVector = if (state.currentScreen == NavigationScreen.SETTINGS) Icons.Filled.Settings else Icons.Outlined.Settings,
+                                contentDescription = "Settings",
+                                tint = if (state.currentScreen == NavigationScreen.SETTINGS) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface
+                    )
                 )
-            )
+            }
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 8.dp,
-                modifier = Modifier.testTag("bottom_navigation_bar")
+                shadowElevation = 8.dp,
+                border = androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
             ) {
-                navItems.forEach { item ->
-                    val isSelected = state.currentScreen == item.screen
-                    NavigationBarItem(
-                        selected = isSelected,
-                        onClick = { viewModel.navigateTo(item.screen) },
-                        icon = {
-                            Icon(
-                                imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                                contentDescription = item.label,
-                                tint = if (isSelected) {
-                                    if (item.screen == NavigationScreen.ANTIDOTE) Red400 else MaterialTheme.colorScheme.primary
-                                } else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = item.label,
-                                fontSize = 10.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                        ),
-                        modifier = Modifier.testTag("nav_${item.screen.name.lowercase()}")
-                    )
+                NavigationBar(
+                    containerColor = Color.Transparent,
+                    tonalElevation = 0.dp,
+                    windowInsets = WindowInsets.navigationBars,
+                    modifier = Modifier.testTag("bottom_navigation_bar")
+                ) {
+                    navItems.forEach { item ->
+                        val isSelected = state.currentScreen == item.screen
+                        NavigationBarItem(
+                            selected = isSelected,
+                            onClick = { viewModel.navigateTo(item.screen) },
+                            icon = {
+                                Icon(
+                                    imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                                    contentDescription = item.label,
+                                    tint = if (isSelected) {
+                                        if (item.screen == NavigationScreen.ANTIDOTE) Red500 else MaterialTheme.colorScheme.primary
+                                    } else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = item.label,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                            ),
+                            modifier = Modifier.testTag("nav_${item.screen.name.lowercase()}")
+                        )
+                    }
                 }
             }
         }

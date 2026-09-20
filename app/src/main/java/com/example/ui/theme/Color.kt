@@ -45,3 +45,28 @@ val PitchBlackBg = Color(0xFF000000)
 val PitchBlackCard = Color(0xFF0D0D0D)
 val PitchBlackNav = Color(0xFF050505)
 val PitchBlackBorder = Color(0xFF262626)
+
+// Organ System Accents
+val Cyan400 = Color(0xFF22D3EE)
+val Cyan500 = Color(0xFF06B6D4)
+val Violet400 = Color(0xFFA78BFA)
+val Violet500 = Color(0xFF8B5CF6)
+val Orange400 = Color(0xFFFB923C)
+val Orange500 = Color(0xFFF97316)
+val Rose400 = Color(0xFFFB7185)
+val Rose500 = Color(0xFFF43F5E)
+
+fun getSystemColor(system: String): Color {
+    val s = system.lowercase()
+    return when {
+        s.contains("infect") || s.contains("anti") -> Emerald500
+        s.contains("cardio") || s.contains("cvs") -> Red500
+        s.contains("respir") || s.contains("pulm") -> Cyan500
+        s.contains("endo") || s.contains("diabet") -> Amber500
+        s.contains("neuro") || s.contains("psych") || s.contains("cns") -> Violet500
+        s.contains("gastro") || s.contains("gi") -> Orange500
+        s.contains("musculo") || s.contains("rheum") -> Indigo500
+        s.contains("nephro") || s.contains("renal") -> MedicalBlue500
+        else -> MedicalBlue600
+    }
+}
