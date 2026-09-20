@@ -4,8 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,18 +22,24 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.data.model.Drug
+import com.example.ui.components.AppSidebarDrawer
 import com.example.ui.screens.*
 import com.example.ui.theme.*
 import com.example.viewmodel.ClinicalViewModel
+import com.example.viewmodel.DrugFilterType
 import com.example.viewmodel.NavigationScreen
+import com.example.viewmodel.SearchMode
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,163 +71,207 @@ data class NavItem(
 fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val navItems = listOf(
-        NavItem(
-            screen = NavigationScreen.SEARCH,
-            label = "Drugs",
-            selectedIcon = Icons.Filled.Search,
-            unselectedIcon = Icons.Outlined.Search
-        ),
-        NavItem(
-            screen = NavigationScreen.SYSTEM,
-            label = "Systems",
-            selectedIcon = Icons.Filled.GridView,
-            unselectedIcon = Icons.Outlined.GridView
-        ),
-        NavItem(
-            screen = NavigationScreen.DISEASE,
-            label = "Protocols",
-            selectedIcon = Icons.AutoMirrored.Filled.MenuBook,
-            unselectedIcon = Icons.AutoMirrored.Outlined.MenuBook
-        ),
-        NavItem(
-            screen = NavigationScreen.ANTIDOTE,
-            label = "Toxicology",
-            selectedIcon = Icons.Filled.Warning,
-            unselectedIcon = Icons.Outlined.WarningAmber
-        ),
-        NavItem(
-            screen = NavigationScreen.CALCULATOR,
-            label = "MDCalc",
-            selectedIcon = Icons.Filled.Calculate,
-            unselectedIcon = Icons.Outlined.Calculate
+    val navItems = remember {
+        listOf(
+            NavItem(
+                screen = NavigationScreen.SEARCH,
+                label = "Drugs",
+                selectedIcon = Icons.Filled.Medication,
+                unselectedIcon = Icons.Outlined.Medication
+            ),
+            NavItem(
+                screen = NavigationScreen.DISEASE,
+                label = "Conditions",
+                selectedIcon = Icons.Filled.LocalHospital,
+                unselectedIcon = Icons.Outlined.LocalHospital
+            ),
+            NavItem(
+                screen = NavigationScreen.INTERACTION,
+                label = "Interactions",
+                selectedIcon = Icons.Filled.ElectricBolt,
+                unselectedIcon = Icons.Outlined.ElectricBolt
+            ),
+            NavItem(
+                screen = NavigationScreen.CALCULATOR,
+                label = "Calculators",
+                selectedIcon = Icons.Filled.Calculate,
+                unselectedIcon = Icons.Outlined.Calculate
+            ),
+            NavItem(
+                screen = NavigationScreen.GEMINI,
+                label = "AI Copilot",
+                selectedIcon = Icons.Filled.AutoAwesome,
+                unselectedIcon = Icons.Outlined.AutoAwesome
+            )
         )
-    )
+    }
 
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("drugs_nepal_scaffold"),
-        topBar = {
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 3.dp,
-                shadowElevation = 2.dp
-            ) {
-                TopAppBar(
-                    title = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("drugs_nepal_scaffold"),
+            topBar = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(NavyDeep)
+                ) {
+                    // Status Bar Inset Spacer
+                    Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+
+                    // Top Navy Bar formatted exactly as Screenshot 2 & 3
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // Three-Dot Sidebar Button (Left) - Exactly as circled in Screenshot 2
+                        Surface(
+                            onClick = { viewModel.openSidebar() },
+                            shape = RoundedCornerShape(12.dp),
+                            color = NavyPill,
+                            border = BorderStroke(1.dp, NavyCardBorder),
+                            modifier = Modifier
+                                .size(42.dp)
+                                .testTag("top_three_dots_button")
                         ) {
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = MaterialTheme.colorScheme.primary,
-                                shadowElevation = 2.dp
-                            ) {
-                                Text(
-                                    text = "Rx",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 15.sp,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                            Column {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Text(
-                                        text = "DRUGs Nepal",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Black,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Surface(
-                                        shape = RoundedCornerShape(4.dp),
-                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
-                                    ) {
-                                        Text(
-                                            text = "EML",
-                                            fontSize = 9.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-                                        )
-                                    }
-                                }
-                                Text(
-                                    text = when (state.currentScreen) {
-                                        NavigationScreen.GEMINI -> "AI Pharmacology Copilot"
-                                        NavigationScreen.SETTINGS -> "Settings & Prescriber Profile"
-                                        else -> state.currentScreen.title
-                                    },
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "Open Sidebar Navigation Menu",
+                                    tint = DimsTealPrimary,
+                                    modifier = Modifier.size(24.dp)
                                 )
                             }
                         }
-                    },
-                    actions = {
-                        // Gemini AI Copilot Quick Pill Button
+
+                        // Rounded Search Pill (Center)
                         Surface(
-                            onClick = { viewModel.navigateTo(NavigationScreen.GEMINI) },
-                            shape = RoundedCornerShape(16.dp),
-                            color = if (state.currentScreen == NavigationScreen.GEMINI) {
-                                Indigo500
-                            } else {
-                                Indigo500.copy(alpha = 0.12f)
-                            },
-                            border = androidx.compose.foundation.BorderStroke(
-                                1.dp,
-                                if (state.currentScreen == NavigationScreen.GEMINI) Indigo500 else Indigo400.copy(alpha = 0.4f)
-                            ),
+                            onClick = { viewModel.navigateTo(NavigationScreen.SEARCH) },
+                            shape = RoundedCornerShape(22.dp),
+                            color = NavyPill,
+                            border = BorderStroke(1.dp, NavyCardBorder),
                             modifier = Modifier
-                                .testTag("top_gemini_button")
-                                .padding(end = 4.dp)
+                                .weight(1f)
+                                .height(42.dp)
+                                .testTag("top_search_pill")
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 14.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.AutoAwesome,
-                                    contentDescription = "Gemini AI",
-                                    tint = if (state.currentScreen == NavigationScreen.GEMINI) Color.White else Indigo400,
-                                    modifier = Modifier.size(16.dp)
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    tint = Slate400,
+                                    modifier = Modifier.size(18.dp)
                                 )
                                 Text(
-                                    text = "AI Copilot",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (state.currentScreen == NavigationScreen.GEMINI) Color.White else Indigo400
+                                    text = if (state.searchQuery.isNotBlank()) state.searchQuery 
+                                    else "औषधि, खतराका लक्षण, क्याल्कुलेटर खोज्नुहोस्... (Search drugs, conditions...)",
+                                    fontSize = 12.sp,
+                                    color = if (state.searchQuery.isNotBlank()) Color.White else Slate400,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
 
-                        // Settings Button
-                        IconButton(
-                            onClick = { viewModel.navigateTo(NavigationScreen.SETTINGS) },
-                            modifier = Modifier
-                                .testTag("top_settings_button")
-                                .clip(CircleShape)
-                                .background(if (state.currentScreen == NavigationScreen.SETTINGS) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
-                        ) {
+                    // Brand vs Generic Switch Button (Before AI icon)
+                    val isBrand = state.searchMode == SearchMode.BRAND
+                    Surface(
+                        onClick = {
+                            val nextMode = if (isBrand) SearchMode.GENERIC else SearchMode.BRAND
+                            viewModel.setSearchMode(nextMode)
+                            if (state.currentScreen != NavigationScreen.SEARCH) {
+                                viewModel.navigateTo(NavigationScreen.SEARCH)
+                            }
+                        },
+                        shape = CircleShape,
+                        color = if (isBrand) DimsTealPrimary.copy(alpha = 0.2f) else Amber500.copy(alpha = 0.2f),
+                        border = BorderStroke(1.2.dp, if (isBrand) DimsTealPrimary else Amber400),
+                        modifier = Modifier
+                            .size(38.dp)
+                            .testTag("top_brand_generic_switch_button")
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier.padding(1.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (isBrand) Icons.Default.Medication else Icons.Default.Science,
+                                    contentDescription = if (isBrand) "Current: Brand Mode. Tap to switch to Generic" else "Current: Generic Mode. Tap to switch to Brand",
+                                    tint = if (isBrand) DimsTealPrimary else Amber400,
+                                    modifier = Modifier.size(17.dp)
+                                )
+                                Text(
+                                    text = if (isBrand) "BRAND" else "GENERIC",
+                                    fontSize = 7.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = if (isBrand) DimsTealPrimary else Amber400,
+                                    letterSpacing = 0.2.sp,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    }
+
+                    // Sparkle Gemini AI Button (Right 1)
+                    Surface(
+                        onClick = { viewModel.navigateTo(NavigationScreen.GEMINI) },
+                        shape = CircleShape,
+                        color = NavyPill,
+                        border = BorderStroke(1.dp, SparkleViolet.copy(alpha = 0.5f)),
+                        modifier = Modifier
+                            .size(38.dp)
+                            .testTag("top_sparkle_gemini_button")
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                imageVector = if (state.currentScreen == NavigationScreen.SETTINGS) Icons.Filled.Settings else Icons.Outlined.Settings,
-                                contentDescription = "Settings",
-                                tint = if (state.currentScreen == NavigationScreen.SETTINGS) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = "Gemini AI Copilot",
+                                tint = SparkleViolet,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface
-                    )
-                )
+                    }
+
+                    // Bookmarks / Saved Button (Right 2)
+                    val isBookmarkFiltered = state.activeFilter == DrugFilterType.BOOKMARKS
+                    Surface(
+                        onClick = {
+                            viewModel.navigateTo(NavigationScreen.SEARCH)
+                            if (isBookmarkFiltered) {
+                                viewModel.setFilter(DrugFilterType.ALL)
+                            } else {
+                                viewModel.setFilter(DrugFilterType.BOOKMARKS)
+                            }
+                        },
+                        shape = CircleShape,
+                        color = if (isBookmarkFiltered) Amber500 else NavyPill,
+                        border = BorderStroke(1.dp, if (isBookmarkFiltered) Amber400 else NavyCardBorder),
+                        modifier = Modifier
+                            .size(38.dp)
+                            .testTag("top_bookmarks_button")
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (isBookmarkFiltered) Icons.Default.Bookmark else Icons.Outlined.BookmarkBorder,
+                                contentDescription = "Bookmarks",
+                                tint = if (isBookmarkFiltered) Color.Black else Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
             }
         },
         bottomBar = {
@@ -225,7 +279,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                 color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 8.dp,
                 shadowElevation = 8.dp,
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
             ) {
                 NavigationBar(
                     containerColor = Color.Transparent,
@@ -243,7 +297,9 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                     imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
                                     contentDescription = item.label,
                                     tint = if (isSelected) {
-                                        if (item.screen == NavigationScreen.ANTIDOTE) Red500 else MaterialTheme.colorScheme.primary
+                                        if (item.screen == NavigationScreen.INTERACTION) Red500
+                                        else if (item.screen == NavigationScreen.GEMINI) SparkleViolet
+                                        else MaterialTheme.colorScheme.primary
                                     } else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             },
@@ -275,15 +331,22 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
             when (state.currentScreen) {
                 NavigationScreen.SEARCH -> DrugSearchScreen(
                     searchQuery = state.searchQuery,
+                    searchMode = state.searchMode,
                     activeFilter = state.activeFilter,
                     selectedSystemFilter = state.selectedSystemFilter,
-                    filteredDrugs = viewModel.getFilteredDrugs(),
+                    filteredDrugs = state.filteredDrugs,
                     bookmarkedDrugIds = state.bookmarkedDrugIds,
                     onSearchChange = { viewModel.updateSearchQuery(it) },
+                    onSearchModeChange = { viewModel.setSearchMode(it) },
                     onFilterChange = { viewModel.setFilter(it) },
                     onClearSystemFilter = { viewModel.filterBySystem("All Systems") },
                     onDrugClick = { viewModel.openDrug(it) },
                     onBookmarkToggle = { viewModel.toggleBookmark(it) }
+                )
+
+                NavigationScreen.INTERACTION -> InteractionCheckerScreen(
+                    state = state,
+                    viewModel = viewModel
                 )
 
                 NavigationScreen.SYSTEM -> SystemBrowseScreen(
@@ -310,6 +373,11 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                     state = state,
                     viewModel = viewModel
                 )
+
+                NavigationScreen.COMPANIES -> CompaniesScreen(
+                    onDrugClick = { viewModel.openDrug(it) },
+                    onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                )
             }
 
             // Drug Detail Modal
@@ -324,6 +392,71 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                     onDismiss = { viewModel.closeDrugModal() }
                 )
             }
+
+            // Practitioner Login / Credentials Dialog
+            if (state.isLoginDialogOpen) {
+                com.example.ui.components.PractitionerLoginDialog(
+                    isLoggedIn = state.isLoggedIn,
+                    initialName = state.doctorName,
+                    initialDegree = state.doctorDegree,
+                    initialCouncilNo = state.doctorCouncilNo,
+                    onDismissRequest = { viewModel.closeLoginDialog() },
+                    onSave = { name, degree, councilNo ->
+                        viewModel.loginOrUpdateProfile(name, degree, councilNo)
+                    },
+                    onLogout = {
+                        viewModel.logout()
+                    }
+                )
+            }
         }
     }
+
+    // Three-Dot Sidebar Drawer (Exactly as shown in Screenshot 1)
+    AppSidebarDrawer(
+        isOpen = state.isSidebarOpen,
+        isLoggedIn = state.isLoggedIn,
+        doctorName = state.doctorName,
+        doctorDegree = state.doctorDegree,
+        doctorCouncilNo = state.doctorCouncilNo,
+        onClose = { viewModel.closeSidebar() },
+        onSignInClick = {
+            viewModel.closeSidebar()
+            viewModel.openLoginDialog()
+        },
+        onCompaniesClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.COMPANIES)
+        },
+        onDrugsByIndicationClick = {
+            viewModel.closeSidebar()
+            viewModel.setSearchMode(SearchMode.INDICATION)
+            viewModel.navigateTo(NavigationScreen.SEARCH)
+        },
+        onDrugsBySystemClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.SYSTEM)
+        },
+        onCalculatorsClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.CALCULATOR)
+        },
+        onAiAssistantClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.GEMINI)
+        },
+        onInteractionsClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.INTERACTION)
+        },
+        onAntidotesClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.ANTIDOTE)
+        },
+        onSettingsClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.SETTINGS)
+        }
+    )
+}
 }

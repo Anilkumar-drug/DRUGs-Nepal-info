@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -49,54 +51,136 @@ fun SettingsScreen(
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
         ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            if (state.isLoggedIn) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(48.dp)
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = if (state.doctorDegree.isNotBlank()) state.doctorDegree.take(3).uppercase()
+                                    else if (state.doctorName.isNotBlank()) state.doctorName.take(2).uppercase()
+                                    else "MD",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    color = Color.White
+                                )
+                            }
+                        }
+
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(
-                                text = "MD",
+                                text = state.doctorName.ifBlank { "Practitioner (Name Not Set)" },
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            if (state.doctorDegree.isNotBlank()) {
+                                Text(
+                                    text = state.doctorDegree,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Text(
+                                text = if (state.doctorCouncilNo.isNotBlank()) "Council Reg: ${state.doctorCouncilNo}"
+                                else "Council Reg: Optional (Not Set)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
-                    Column {
-                        Text(
-                            text = state.doctorName,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "Nepal Medical Council Reg: ${state.doctorNmc}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        IconButton(
+                            onClick = { showEditProfileDialog = true },
+                            modifier = Modifier.testTag("edit_profile_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit Profile",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        IconButton(
+                            onClick = { viewModel.logout() },
+                            modifier = Modifier.testTag("logout_profile_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Logout,
+                                contentDescription = "Log Out",
+                                tint = Red500
+                            )
+                        }
                     }
                 }
-
-                IconButton(
-                    onClick = { showEditProfileDialog = true },
-                    modifier = Modifier.testTag("edit_profile_button")
+            } else {
+                // Not Logged In / Guest State
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit Profile",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.PersonOutline,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Guest Clinician Mode",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Sign in with optional Name, Degree, and Council number to personalize reports.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = { showEditProfileDialog = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("sign_in_profile_button"),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Login,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Log In / Set Practitioner Profile (Optional)")
+                    }
                 }
             }
         }
@@ -302,44 +386,21 @@ fun SettingsScreen(
         Spacer(modifier = Modifier.height(70.dp))
     }
 
-    // Edit Profile Dialog
+    // Edit / Sign In Profile Dialog
     if (showEditProfileDialog) {
-        var tempName by remember { mutableStateOf(state.doctorName) }
-        var tempNmc by remember { mutableStateOf(state.doctorNmc) }
-
-        AlertDialog(
+        com.example.ui.components.PractitionerLoginDialog(
+            isLoggedIn = state.isLoggedIn,
+            initialName = state.doctorName,
+            initialDegree = state.doctorDegree,
+            initialCouncilNo = state.doctorCouncilNo,
             onDismissRequest = { showEditProfileDialog = false },
-            title = { Text("Edit Practitioner Profile") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(
-                        value = tempName,
-                        onValueChange = { tempName = it },
-                        label = { Text("Physician Name") },
-                        singleLine = true
-                    )
-                    OutlinedTextField(
-                        value = tempNmc,
-                        onValueChange = { tempNmc = it },
-                        label = { Text("NMC Registration No.") },
-                        singleLine = true
-                    )
-                }
+            onSave = { name, degree, councilNo ->
+                viewModel.loginOrUpdateProfile(name, degree, councilNo)
+                showEditProfileDialog = false
             },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.updateDoctorProfile(tempName, tempNmc)
-                        showEditProfileDialog = false
-                    }
-                ) {
-                    Text("Save")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEditProfileDialog = false }) {
-                    Text("Cancel")
-                }
+            onLogout = {
+                viewModel.logout()
+                showEditProfileDialog = false
             }
         )
     }

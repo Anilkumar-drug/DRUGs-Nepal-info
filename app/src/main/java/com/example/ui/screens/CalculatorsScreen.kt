@@ -30,13 +30,15 @@ fun CalculatorsScreen(
     state: ClinicalUiState,
     viewModel: ClinicalViewModel
 ) {
-    val tabs = listOf(
-        "egfr" to "eGFR (Cockcroft-Gault)",
-        "bsa" to "BSA (Mosteller)",
-        "child_pugh" to "Child-Pugh Score",
-        "rumack" to "Paracetamol Nomogram",
-        "pediatric" to "Pediatric Liquid Dose"
-    )
+    val tabs = remember {
+        listOf(
+            "egfr" to "eGFR (Cockcroft-Gault)",
+            "bsa" to "BSA (Mosteller)",
+            "child_pugh" to "Child-Pugh Score",
+            "rumack" to "Paracetamol Nomogram",
+            "pediatric" to "Pediatric Liquid Dose"
+        )
+    }
 
     Column(
         modifier = Modifier

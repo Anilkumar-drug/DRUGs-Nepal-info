@@ -41,3 +41,31 @@ enum class FontSizeScale(val scaleFactor: Float, val label: String) {
     LARGE(1.12f, "Large"),
     XLARGE(1.25f, "X-Large")
 }
+
+enum class InteractionSeverity(val label: String, val level: Int) {
+    CONTRAINDICATED("Contraindicated", 3),
+    SERIOUS("Serious / Monitor Closely", 2),
+    MODERATE("Moderate Interaction", 1),
+    MINOR("Minor / Informational", 0)
+}
+
+data class DrugInteraction(
+    val drug1Generic: String,
+    val drug2Generic: String,
+    val severity: InteractionSeverity,
+    val effect: String,
+    val mechanism: String,
+    val clinicalAction: String
+)
+
+data class CompanyDrugBrand(
+    val drug: Drug,
+    val brand: BrandInfo,
+    val isNepal: Boolean
+)
+
+data class CompanyProfile(
+    val name: String,
+    val country: String,
+    val products: List<CompanyDrugBrand>
+)

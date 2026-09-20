@@ -96,17 +96,27 @@ fun DrugsNepalTheme(
         AppThemeMode.PITCH_BLACK -> PitchBlackColorScheme
     }
 
-    val currentDensity = LocalDensity.current
-    val customDensity = Density(
-        density = currentDensity.density,
-        fontScale = currentDensity.fontScale * fontSizeScale.scaleFactor
-    )
-
-    CompositionLocalProvider(LocalDensity provides customDensity) {
+    if (fontSizeScale == FontSizeScale.NORMAL) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,
             content = content
         )
+    } else {
+        val currentDensity = LocalDensity.current
+        val customDensity = androidx.compose.runtime.remember(currentDensity.density, currentDensity.fontScale, fontSizeScale) {
+            Density(
+                density = currentDensity.density,
+                fontScale = currentDensity.fontScale * fontSizeScale.scaleFactor
+            )
+        }
+
+        CompositionLocalProvider(LocalDensity provides customDensity) {
+            MaterialTheme(
+                colorScheme = colorScheme,
+                typography = Typography,
+                content = content
+            )
+        }
     }
 }

@@ -20,10 +20,19 @@ enum class NavigationScreen(val title: String) {
     SEARCH("Universal Drug Search"),
     SYSTEM("Browse by Organ System"),
     DISEASE("Disease & Protocols"),
+    INTERACTION("Drug Interaction Checker"),
     ANTIDOTE("Antidote & Toxicology"),
     CALCULATOR("MDCalc Clinical Suite"),
     GEMINI("Gemini AI Assistant"),
-    SETTINGS("App Settings")
+    SETTINGS("App Settings"),
+    COMPANIES("Pharmaceutical Companies")
+}
+
+enum class SearchMode(val title: String) {
+    BRAND("Brand"),
+    GENERIC("Generic"),
+    INDICATION("Indication"),
+    HERBAL("Herbal")
 }
 
 enum class DrugFilterType(val label: String) {
@@ -37,17 +46,26 @@ enum class DrugFilterType(val label: String) {
 data class ClinicalUiState(
     val currentScreen: NavigationScreen = NavigationScreen.SEARCH,
     val searchQuery: String = "",
+    val searchMode: SearchMode = SearchMode.BRAND,
     val activeFilter: DrugFilterType = DrugFilterType.ALL,
     val selectedSystemFilter: String? = null,
     val selectedDrug: Drug? = null,
     val isDrugModalOpen: Boolean = false,
     val bookmarkedDrugIds: Set<String> = setOf("d1", "d4"),
+    val selectedInteractionDrugIds: Set<String> = setOf("d1", "d5"),
     val patientWeightKg: Double = 60.0,
     // Theme & Settings
     val themeMode: AppThemeMode = AppThemeMode.DARK,
     val fontSizeScale: FontSizeScale = FontSizeScale.NORMAL,
-    val doctorName: String = "Dr. Prabhat Sharma",
-    val doctorNmc: String = "NMC-28491",
+    // Prescriber Profile (Default empty, optional login)
+    val isLoggedIn: Boolean = false,
+    val doctorName: String = "",
+    val doctorDegree: String = "",
+    val doctorCouncilNo: String = "",
+    val isLoginDialogOpen: Boolean = false,
+    val isSidebarOpen: Boolean = false,
+    val isCompaniesModalOpen: Boolean = false,
+    val filteredDrugs: List<Drug> = emptyList(),
     // Gemini Chat
     val chatMessages: List<ChatMessage> = listOf(
         ChatMessage(
@@ -98,6 +116,16 @@ class ClinicalViewModel : ViewModel() {
     val uiState: StateFlow<ClinicalUiState> = _uiState.asStateFlow()
 
     init {
+        // Initialize precomputed drug list
+        _uiState.value = _uiState.value.copy(
+            filteredDrugs = filterDrugs(
+                searchQuery = "",
+                searchMode = SearchMode.BRAND,
+                activeFilter = DrugFilterType.ALL,
+                selectedSystemFilter = null,
+                bookmarkedDrugIds = _uiState.value.bookmarkedDrugIds
+            )
+        )
         // Compute initial calculator results
         computeEgfr()
         computeBsa()
@@ -111,19 +139,49 @@ class ClinicalViewModel : ViewModel() {
     }
 
     fun updateSearchQuery(query: String) {
-        _uiState.value = _uiState.value.copy(searchQuery = query)
+        val current = _uiState.value
+        _uiState.value = current.copy(
+            searchQuery = query,
+            filteredDrugs = filterDrugs(
+                searchQuery = query,
+                searchMode = current.searchMode,
+                activeFilter = current.activeFilter,
+                selectedSystemFilter = current.selectedSystemFilter,
+                bookmarkedDrugIds = current.bookmarkedDrugIds
+            )
+        )
     }
 
     fun setFilter(filter: DrugFilterType) {
-        _uiState.value = _uiState.value.copy(activeFilter = filter, selectedSystemFilter = null)
+        val current = _uiState.value
+        _uiState.value = current.copy(
+            activeFilter = filter,
+            selectedSystemFilter = null,
+            filteredDrugs = filterDrugs(
+                searchQuery = current.searchQuery,
+                searchMode = current.searchMode,
+                activeFilter = filter,
+                selectedSystemFilter = null,
+                bookmarkedDrugIds = current.bookmarkedDrugIds
+            )
+        )
     }
 
     fun filterBySystem(systemName: String) {
-        _uiState.value = _uiState.value.copy(
+        val current = _uiState.value
+        val sysFilter = if (systemName == "All Systems") null else systemName
+        _uiState.value = current.copy(
             currentScreen = NavigationScreen.SEARCH,
-            selectedSystemFilter = if (systemName == "All Systems") null else systemName,
+            selectedSystemFilter = sysFilter,
             activeFilter = DrugFilterType.ALL,
-            searchQuery = ""
+            searchQuery = "",
+            filteredDrugs = filterDrugs(
+                searchQuery = "",
+                searchMode = current.searchMode,
+                activeFilter = DrugFilterType.ALL,
+                selectedSystemFilter = sysFilter,
+                bookmarkedDrugIds = current.bookmarkedDrugIds
+            )
         )
     }
 
@@ -145,7 +203,45 @@ class ClinicalViewModel : ViewModel() {
         } else {
             current.add(drugId)
         }
-        _uiState.value = _uiState.value.copy(bookmarkedDrugIds = current)
+        val curState = _uiState.value
+        _uiState.value = curState.copy(
+            bookmarkedDrugIds = current,
+            filteredDrugs = filterDrugs(
+                searchQuery = curState.searchQuery,
+                searchMode = curState.searchMode,
+                activeFilter = curState.activeFilter,
+                selectedSystemFilter = curState.selectedSystemFilter,
+                bookmarkedDrugIds = current
+            )
+        )
+    }
+
+    fun setSearchMode(mode: SearchMode) {
+        val current = _uiState.value
+        _uiState.value = current.copy(
+            searchMode = mode,
+            filteredDrugs = filterDrugs(
+                searchQuery = current.searchQuery,
+                searchMode = mode,
+                activeFilter = current.activeFilter,
+                selectedSystemFilter = current.selectedSystemFilter,
+                bookmarkedDrugIds = current.bookmarkedDrugIds
+            )
+        )
+    }
+
+    fun toggleInteractionDrug(drugId: String) {
+        val current = _uiState.value.selectedInteractionDrugIds.toMutableSet()
+        if (current.contains(drugId)) {
+            current.remove(drugId)
+        } else {
+            current.add(drugId)
+        }
+        _uiState.value = _uiState.value.copy(selectedInteractionDrugIds = current)
+    }
+
+    fun clearInteractionDrugs() {
+        _uiState.value = _uiState.value.copy(selectedInteractionDrugIds = emptySet())
     }
 
     fun updatePatientWeight(weight: Double) {
@@ -163,8 +259,58 @@ class ClinicalViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(fontSizeScale = scale)
     }
 
+    // Practitioner Authentication / Profile
+    fun openLoginDialog() {
+        _uiState.value = _uiState.value.copy(isLoginDialogOpen = true)
+    }
+
+    fun closeLoginDialog() {
+        _uiState.value = _uiState.value.copy(isLoginDialogOpen = false)
+    }
+
+    fun loginOrUpdateProfile(name: String, degree: String, councilNo: String) {
+        _uiState.value = _uiState.value.copy(
+            isLoggedIn = true,
+            doctorName = name.trim(),
+            doctorDegree = degree.trim(),
+            doctorCouncilNo = councilNo.trim(),
+            isLoginDialogOpen = false
+        )
+    }
+
+    fun logout() {
+        _uiState.value = _uiState.value.copy(
+            isLoggedIn = false,
+            doctorName = "",
+            doctorDegree = "",
+            doctorCouncilNo = "",
+            isLoginDialogOpen = false
+        )
+    }
+
+    // Sidebar Drawer Controls
+    fun openSidebar() {
+        _uiState.value = _uiState.value.copy(isSidebarOpen = true)
+    }
+
+    fun closeSidebar() {
+        _uiState.value = _uiState.value.copy(isSidebarOpen = false)
+    }
+
+    fun toggleSidebar() {
+        _uiState.value = _uiState.value.copy(isSidebarOpen = !_uiState.value.isSidebarOpen)
+    }
+
+    fun openCompaniesModal() {
+        _uiState.value = _uiState.value.copy(isCompaniesModalOpen = true, isSidebarOpen = false)
+    }
+
+    fun closeCompaniesModal() {
+        _uiState.value = _uiState.value.copy(isCompaniesModalOpen = false)
+    }
+
     fun updateDoctorProfile(name: String, nmc: String) {
-        _uiState.value = _uiState.value.copy(doctorName = name, doctorNmc = nmc)
+        loginOrUpdateProfile(name = name, degree = _uiState.value.doctorDegree, councilNo = nmc)
     }
 
     // Gemini Chat
@@ -272,29 +418,51 @@ class ClinicalViewModel : ViewModel() {
     }
 
     fun getFilteredDrugs(): List<Drug> {
-        val state = _uiState.value
-        val q = state.searchQuery.trim().lowercase()
+        return _uiState.value.filteredDrugs
+    }
+
+    private fun filterDrugs(
+        searchQuery: String,
+        searchMode: SearchMode,
+        activeFilter: DrugFilterType,
+        selectedSystemFilter: String?,
+        bookmarkedDrugIds: Set<String>
+    ): List<Drug> {
+        val q = searchQuery.trim().lowercase()
 
         return ClinicalRepository.drugs.filter { drug ->
             val matchesSearch = if (q.isEmpty()) true else {
-                drug.genericName.lowercase().contains(q) ||
-                drug.system.lowercase().contains(q) ||
-                drug.drugClass.lowercase().contains(q) ||
-                drug.indications.lowercase().contains(q) ||
-                drug.brandsNepal.any { it.name.lowercase().contains(q) || it.company.lowercase().contains(q) } ||
-                drug.brandsIndia.any { it.name.lowercase().contains(q) || it.company.lowercase().contains(q) }
+                when (searchMode) {
+                    SearchMode.BRAND -> {
+                        drug.brandsNepal.any { it.name.lowercase().contains(q) || it.company.lowercase().contains(q) } ||
+                        drug.brandsIndia.any { it.name.lowercase().contains(q) || it.company.lowercase().contains(q) } ||
+                        drug.genericName.lowercase().contains(q)
+                    }
+                    SearchMode.GENERIC -> {
+                        drug.genericName.lowercase().contains(q) ||
+                        drug.drugClass.lowercase().contains(q)
+                    }
+                    SearchMode.INDICATION -> {
+                        drug.indications.lowercase().contains(q)
+                    }
+                    SearchMode.HERBAL -> {
+                        drug.system.lowercase().contains(q) ||
+                        drug.drugClass.lowercase().contains(q) ||
+                        drug.genericName.lowercase().contains(q)
+                    }
+                }
             }
 
-            val matchesFilter = when (state.activeFilter) {
+            val matchesFilter = when (activeFilter) {
                 DrugFilterType.ALL -> true
                 DrugFilterType.NEPAL -> drug.brandsNepal.isNotEmpty()
                 DrugFilterType.INDIA -> drug.brandsIndia.isNotEmpty()
                 DrugFilterType.BLACK_BOX -> drug.blackBoxWarning != null
-                DrugFilterType.BOOKMARKS -> state.bookmarkedDrugIds.contains(drug.id)
+                DrugFilterType.BOOKMARKS -> bookmarkedDrugIds.contains(drug.id)
             }
 
-            val matchesSystem = if (state.selectedSystemFilter == null) true else {
-                drug.system.equals(state.selectedSystemFilter, ignoreCase = true)
+            val matchesSystem = if (selectedSystemFilter == null) true else {
+                drug.system.equals(selectedSystemFilter, ignoreCase = true)
             }
 
             matchesSearch && matchesFilter && matchesSystem

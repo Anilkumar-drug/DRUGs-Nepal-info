@@ -159,31 +159,40 @@ object ClinicalRepository {
             system = "Anti-Infectives & Antimicrobials",
             drugClass = "Macrolide Antibiotic (Azalide)",
             blackBoxWarning = null,
-            indications = "Community-acquired pneumonia, Acute bacterial exacerbation of COPD, Pharyngitis/Tonsillitis, Enteric fever (Typhoid), Chlamydia trachomatis urethritis/cervicitis.",
+            indications = "Community-acquired pneumonia (CAP), Acute bacterial exacerbation of COPD, Pharyngitis/Tonsillitis, Enteric fever (Typhoid), Chlamydia trachomatis urethritis/cervicitis, Skin and soft tissue infections.",
             doses = "Adult: 500 mg PO Day 1, then 250 mg PO OD Days 2-5 (or 500 mg PO OD for 3-5 days). Typhoid fever: 1 g PO OD for 5-7 days.\nPediatric: 10 mg/kg PO Day 1, then 5 mg/kg PO OD Days 2-5.",
             administration = "Can be taken with or without food. Tablets may be taken with food to reduce GI upset; oral suspension preferred on empty stomach.",
             timing = "Once daily at the same time.",
             specialInstructions = "Avoid co-administration with aluminum or magnesium antacids (delays absorption). Caution in patients with pre-existing QT prolongation or uncorrected hypokalemia.",
             pkPd = "Bioavailability ~37%. Massive tissue distribution (volume of distribution ~31 L/kg). Concentrates inside macrophages. Biliary elimination. Terminal half-life 68 hours.",
-            renalAdj = "No dose adjustment required in mild to moderate renal impairment. Caution with GFR <10 mL/min.",
-            hepaticAdj = "Caution in patients with severe hepatic impairment; excreted primarily via biliary system.",
-            pregnancy = "Category B (Considered safe when indicated)",
-            lactation = "Present in breast milk in small amounts; safe for use during breastfeeding.",
-            sideEffects = "Nausea, abdominal cramps, diarrhea, vomiting, headache, QT prolongation, cholestatic jaundice (rare).",
-            priceNpr = "NPR 25.00 - 45.00 per tab (500mg)",
-            priceInr = "INR 18.00 - 32.00 per tab (500mg)",
+            renalAdj = "No dose adjustment required in mild to moderate renal impairment (CrCl ≥10 mL/min). Exercise caution with severe renal impairment (CrCl <10 mL/min).",
+            hepaticAdj = "Caution in patients with severe hepatic impairment; excreted primarily via biliary system. Monitor LFTs.",
+            pregnancy = "Category B (Safe when clearly indicated; no evidence of fetal harm)",
+            lactation = "Present in breast milk in small amounts; safe for use during breastfeeding. Observe infant for gastrointestinal effects.",
+            sideEffects = "Nausea, abdominal cramps, diarrhea, vomiting, flatulence, headache, dizziness, QT prolongation, rare cholestatic jaundice.",
+            priceNpr = "NPR 35.00 per tab (500mg)",
+            priceInr = "INR 22.00 per tab (500mg)",
             brandsNepal = listOf(
-                BrandInfo("Azith", "Deurali-Janta Pharmaceuticals", "Tab", "500 mg"),
-                BrandInfo("Zithro", "Lomus Pharmaceuticals", "Tab / Syr", "500 mg / 200mg/5ml"),
-                BrandInfo("Azithral-NPL", "Nepal Pharmaceuticals Lab", "Tab", "500 mg")
+                BrandInfo("Azi Mx", "Doctor Tims Pharmaceuticals Ltd.", "Tablet", "500 mg"),
+                BrandInfo("Azi Mx", "Doctor Tims Pharmaceuticals Ltd.", "Powder for Suspension", "200 mg/5 ml"),
+                BrandInfo("Azith", "Deurali-Janta Pharmaceuticals", "Tablet", "500 mg"),
+                BrandInfo("Zithro", "Lomus Pharmaceuticals", "Tablet / Syr", "500 mg / 200mg/5ml"),
+                BrandInfo("Azithral-NPL", "Nepal Pharmaceuticals Lab", "Tablet", "500 mg")
             ),
             brandsIndia = listOf(
-                BrandInfo("Azee", "Cipla Ltd.", "Tab / Syr", "250 / 500 mg"),
-                BrandInfo("Azithral", "Alembic Pharmaceuticals", "Tab", "500 mg"),
-                BrandInfo("Zady", "Mankind Pharma", "Tab", "500 mg")
+                BrandInfo("Azee", "Cipla Ltd.", "Tablet / Suspension", "250 / 500 mg"),
+                BrandInfo("Azithral", "Alembic Pharmaceuticals", "Tablet", "500 mg"),
+                BrandInfo("Zady", "Mankind Pharma", "Tablet", "500 mg")
             ),
             pediatricDosePerKg = 10.0,
-            pediatricInterval = "Day 1 (then 5mg/kg OD)"
+            pediatricInterval = "Day 1 (then 5mg/kg OD Days 2-5)",
+            adultDose = "• Standard respiratory / skin infections: 500 mg PO on Day 1, followed by 250 mg PO once daily on Days 2–5 (or 500 mg PO once daily for 3 days).\n• Typhoid fever: 1 g PO once daily for 5–7 days.\n• Chlamydia trachomatis genital infections: 1 g PO as a single dose.\n• Severe community-acquired pneumonia: 500 mg IV once daily for at least 2 days, then switched to 500 mg PO once daily to complete a 7–10 day course.",
+            childDose = "• Pediatric patients (≥6 months):\n  - Day 1: 10 mg/kg PO once daily (Max: 500 mg/day)\n  - Days 2–5: 5 mg/kg PO once daily (Max: 250 mg/day)\n• Acute otitis media: 30 mg/kg as single dose, or 10 mg/kg once daily for 3 days.\n• Pharyngitis/Tonsillitis: 12 mg/kg PO once daily for 5 days.",
+            contraindications = "• Known hypersensitivity to azithromycin, erythromycin, or any macrolide/ketolide antibiotic.\n• History of cholestatic jaundice or hepatic dysfunction associated with prior azithromycin use.\n• Co-administration with pimozide, ergotamine, or dihydroergotamine.",
+            modeOfAction = "Binds reversibly to the 23S rRNA of the 50S ribosomal subunit of susceptible microorganisms, inhibiting transpeptidation and protein synthesis. Concentrates within lysosomal compartments of phagocytes and fibroblasts, providing sustained intracellular concentrations at infection sites.",
+            interactions = "• Antacids containing aluminum or magnesium: Reduce Cmax by 24% (space by ≥2 hours).\n• QT-prolonging drugs (amiodarone, sotalol, fluoroquinolones): Increased risk of torsades de pointes.\n• Warfarin / oral anticoagulants: May potentiate anticoagulation effect; monitor INR.\n• Digoxin: May increase serum digoxin levels by inhibiting P-glycoprotein.",
+            packSize = "Blister pack of 3 / 6 tablets (500mg); 15ml / 30ml bottle (200mg/5ml suspension)",
+            precautions = "• QT prolongation and risk of ventricular arrhythmia / torsades de pointes.\n• Hepatotoxicity: Abnormal liver function tests, hepatitis, and rare fulminant hepatic necrosis.\n• Clostridioides difficile-associated diarrhea (CDAD) ranging from mild diarrhea to fatal colitis.\n• Exacerbation of muscle weakness in myasthenia gravis."
         ),
         Drug(
             id = "d6",
@@ -550,4 +559,141 @@ object ClinicalRepository {
             urgency = "CRITICAL"
         )
     )
+
+    val interactions: List<com.example.data.model.DrugInteraction> = listOf(
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Amoxicillin + Potassium Clavulanate",
+            drug2Generic = "Warfarin",
+            severity = com.example.data.model.InteractionSeverity.SERIOUS,
+            effect = "Significantly increased INR and risk of severe or fatal hemorrhage.",
+            mechanism = "Eradication of vitamin K-producing normal gut microbiota by broad-spectrum penicillin enhances the anticoagulant effect of warfarin.",
+            clinicalAction = "Monitor INR within 3-5 days of initiating antibiotic. Empirically reduce warfarin dose by 10-20% if prolonged therapy is required."
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Amlodipine Besylate",
+            drug2Generic = "Atorvastatin Calcium",
+            severity = com.example.data.model.InteractionSeverity.MODERATE,
+            effect = "Increased systemic exposure of statin; heightened risk of myopathy or rhabdomyolysis.",
+            mechanism = "Weak inhibition of CYP3A4-mediated hepatic metabolism of statins by amlodipine.",
+            clinicalAction = "Clinical monitoring for muscle pain, tenderness, or weakness. Limit concurrent simvastatin to 20 mg/day; monitor CPK if symptomatic."
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Metformin Hydrochloride",
+            drug2Generic = "Iodinated Radiocontrast",
+            severity = com.example.data.model.InteractionSeverity.CONTRAINDICATED,
+            effect = "Acute renal impairment leading to severe lactic acidosis.",
+            mechanism = "Contrast-induced acute kidney injury (CI-AKI) impairs renal excretion of metformin, promoting toxic systemic accumulation.",
+            clinicalAction = "Discontinue metformin 48 hours prior to or at time of procedure. Re-evaluate eGFR 48 hours post-procedure before resuming."
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Ciprofloxacin Hydrochloride",
+            drug2Generic = "Theophylline",
+            severity = com.example.data.model.InteractionSeverity.CONTRAINDICATED,
+            effect = "Theophylline toxicity, intractable cardiac arrhythmias, and life-threatening seizures.",
+            mechanism = "Potent inhibition of hepatic cytochrome CYP1A2 by ciprofloxacin increases serum theophylline concentrations by 100-300%.",
+            clinicalAction = "Avoid concurrent use. If mandatory, reduce theophylline dose by 50% and perform daily serum theophylline level monitoring."
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Pantoprazole Sodium",
+            drug2Generic = "Clopidogrel",
+            severity = com.example.data.model.InteractionSeverity.MODERATE,
+            effect = "Possible reduction in antiplatelet efficacy of clopidogrel.",
+            mechanism = "CYP2C19 competitive inhibition. Note: Pantoprazole has the lowest CYP2C19 affinity among PPIs and is clinically preferred over Omeprazole.",
+            clinicalAction = "Pantoprazole is preferred over omeprazole in patients on dual antiplatelet therapy (DAPT). Dose spacing by 12 hours may be utilized."
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Paracetamol (Acetaminophen)",
+            drug2Generic = "Chronic Alcohol / Isoniazid",
+            severity = com.example.data.model.InteractionSeverity.SERIOUS,
+            effect = "Accelerated hepatotoxicity at lower or therapeutic doses of paracetamol.",
+            mechanism = "Induction of cytochrome CYP2E1 increases toxic NAPQI metabolite production while chronic malnutrition/alcohol depletes hepatic glutathione.",
+            clinicalAction = "Cap maximum paracetamol daily dose to 2.0 grams (2000 mg) per 24 hours in chronic alcohol use or concurrent INH therapy."
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Azithromycin Dihydrate",
+            drug2Generic = "Ciprofloxacin Hydrochloride",
+            severity = com.example.data.model.InteractionSeverity.SERIOUS,
+            effect = "Additive QT interval prolongation and elevated risk of Torsades de Pointes (TdP) ventricular tachycardia.",
+            mechanism = "Synergistic cardiac hERG potassium channel blockade delaying myocardial repolarization.",
+            clinicalAction = "Avoid dual QT-prolonging regimen if possible. Perform baseline ECG (QTc) and correct serum potassium/magnesium before initiation."
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Amlodipine Besylate",
+            drug2Generic = "Ciprofloxacin Hydrochloride",
+            severity = com.example.data.model.InteractionSeverity.MODERATE,
+            effect = "Exaggerated hypotension, bradycardia, and peripheral edema.",
+            mechanism = "CYP3A4 inhibition by fluoroquinolones elevates serum amlodipine bioavailability.",
+            clinicalAction = "Monitor blood pressure and heart rate closely during antibiotic course."
+        )
+    )
+
+    fun findInteractions(selectedDrugIds: Set<String>): List<com.example.data.model.DrugInteraction> {
+        if (selectedDrugIds.size < 2) return emptyList()
+        val selectedDrugs = drugs.filter { selectedDrugIds.contains(it.id) }
+        val results = mutableListOf<com.example.data.model.DrugInteraction>()
+
+        for (i in 0 until selectedDrugs.size) {
+            for (j in i + 1 until selectedDrugs.size) {
+                val d1 = selectedDrugs[i]
+                val d2 = selectedDrugs[j]
+
+                val match = interactions.find {
+                    (it.drug1Generic.contains(d1.genericName.split(" ").first(), ignoreCase = true) &&
+                     it.drug2Generic.contains(d2.genericName.split(" ").first(), ignoreCase = true)) ||
+                    (it.drug1Generic.contains(d2.genericName.split(" ").first(), ignoreCase = true) &&
+                     it.drug2Generic.contains(d1.genericName.split(" ").first(), ignoreCase = true))
+                }
+
+                if (match != null) {
+                    results.add(match)
+                } else {
+                    // Check for class-level interactions
+                    if (d1.drugClass.contains("Beta-lactam") && d2.drugClass.contains("Macrolide") ||
+                        d2.drugClass.contains("Beta-lactam") && d1.drugClass.contains("Macrolide")) {
+                        results.add(
+                            com.example.data.model.DrugInteraction(
+                                drug1Generic = d1.genericName,
+                                drug2Generic = d2.genericName,
+                                severity = com.example.data.model.InteractionSeverity.MODERATE,
+                                effect = "Potential bacteriostatic antagonism of bactericidal cell wall synthesis.",
+                                mechanism = "Macrolides inhibit protein synthesis (bacteriostatic) which may blunt beta-lactam bactericidal action on actively dividing cells.",
+                                clinicalAction = "Acceptable in severe atypical pneumonia (e.g. CAP guidelines), but monitor clinical response."
+                            )
+                        )
+                    }
+                }
+            }
+        }
+        return results
+    }
+
+    fun getAllCompanies(): List<com.example.data.model.CompanyProfile> {
+        val map = mutableMapOf<String, MutableList<com.example.data.model.CompanyDrugBrand>>()
+        drugs.forEach { drug ->
+            drug.brandsNepal.forEach { b ->
+                if (b.company.isNotBlank()) {
+                    map.getOrPut(b.company) { mutableListOf() }.add(
+                        com.example.data.model.CompanyDrugBrand(drug, b, true)
+                    )
+                }
+            }
+            drug.brandsIndia.forEach { b ->
+                if (b.company.isNotBlank()) {
+                    map.getOrPut(b.company) { mutableListOf() }.add(
+                        com.example.data.model.CompanyDrugBrand(drug, b, false)
+                    )
+                }
+            }
+        }
+        return map.map { (compName, products) ->
+            val hasNepal = products.any { it.isNepal }
+            val hasIndia = products.any { !it.isNepal }
+            val country = when {
+                hasNepal && hasIndia -> "Nepal & India"
+                hasNepal -> "Nepal 🇳🇵"
+                else -> "India 🇮🇳"
+            }
+            com.example.data.model.CompanyProfile(compName, country, products)
+        }.sortedBy { it.name }
+    }
 }

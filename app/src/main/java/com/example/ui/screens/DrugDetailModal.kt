@@ -1,7 +1,16 @@
 package com.example.ui.screens
 
+import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -9,25 +18,36 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.BookmarkAdd
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.data.model.BrandInfo
 import com.example.data.model.Drug
 import com.example.ui.theme.*
 
+private val DimsEmeraldHeader = Color(0xFF005A4E)
+private val DimsHeaderPillBg = Color(0xFFE0F2F1)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DrugDetailModal(
     drug: Drug,
@@ -37,246 +57,383 @@ fun DrugDetailModal(
     onWeightChanged: (Double) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+
+    // Brands list for switching
+    val allBrands = remember(drug) {
+        val list = mutableListOf<BrandInfo>()
+        list.addAll(drug.brandsNepal)
+        list.addAll(drug.brandsIndia)
+        if (list.isEmpty()) {
+            list.add(BrandInfo(drug.genericName, "Standard Formulation", "Tablet", "Standard"))
+        }
+        list
+    }
+
+    var selectedBrand by remember(drug) {
+        mutableStateOf(allBrands.firstOrNull() ?: BrandInfo(drug.genericName, "Generic Pharma", "Tablet", "500 mg"))
+    }
+
+    var showOtherBrandDialog by remember { mutableStateOf(false) }
     var weightInput by remember(patientWeightKg) { mutableStateOf(patientWeightKg.toString()) }
+
+    // Map of expanded accordion sections. Order matches user screenshot exactly.
+    // 0: Indications, 1: Adult dose, 2: Child dose, 3: Renal dose, 4: Administration
+    // 5: Contraindications, 6: Side effects, 7: Precautions & warnings, 8: Pregnancy & Lactation
+    // 9: Therapeutic Class, 10: Mode of Action, 11: Interaction, 12: Pack size & Price
+    val expandedSections = remember {
+        mutableStateMapOf(
+            0 to true, // Indications open initially
+            1 to false,
+            2 to false,
+            3 to false,
+            4 to false,
+            5 to false,
+            6 to false,
+            7 to false,
+            8 to false,
+            9 to false,
+            10 to false,
+            11 to false,
+            12 to false
+        )
+    }
+
+    // 13 standard clinical sections in exact order from DIMS screenshot
+    val sections = remember(drug) {
+        listOf(
+            "Indications" to drug.indications,
+            "Adult dose" to drug.resolvedAdultDose,
+            "Child dose" to drug.resolvedChildDose,
+            "Renal dose" to drug.renalAdj,
+            "Administration" to buildString {
+                append(drug.administration)
+                if (drug.timing.isNotBlank()) {
+                    append("\n\nTiming: ${drug.timing}")
+                }
+                if (drug.specialInstructions.isNotBlank()) {
+                    append("\n\nSpecial Instructions: ${drug.specialInstructions}")
+                }
+            },
+            "Contraindications" to drug.resolvedContraindications,
+            "Side effects" to drug.sideEffects,
+            "Precautions & warnings" to drug.resolvedPrecautions,
+            "Pregnancy & Lactation" to drug.resolvedPregnancyLactation,
+            "Therapeutic Class" to "${drug.drugClass}\n\nOrgan System: ${drug.system}",
+            "Mode of Action" to drug.resolvedModeOfAction,
+            "Interaction" to drug.resolvedInteractions,
+            "Pack size & Price" to drug.resolvedPackSizePrice
+        )
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true
+        )
     ) {
-        Card(
+        Surface(
             modifier = Modifier
-                .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.92f)
-                .padding(vertical = 12.dp)
+                .fillMaxSize()
                 .testTag("drug_detail_modal"),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            color = MaterialTheme.colorScheme.background
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // Top Header Bar
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                // Top App Bar (Brand Details)
+                Surface(
+                    color = DimsEmeraldHeader,
+                    shadowElevation = 4.dp
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer
+                    Column {
+                        Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .padding(horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "Rx",
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                        Column {
-                            Text(
-                                text = drug.genericName,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 1
-                            )
-                            Text(
-                                text = drug.drugClass,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1
-                            )
-                        }
-                    }
+                            IconButton(
+                                onClick = onDismiss,
+                                modifier = Modifier.testTag("modal_back_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.White
+                                )
+                            }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        IconButton(
-                            onClick = onBookmarkToggle,
-                            modifier = Modifier.testTag("modal_bookmark_button")
-                        ) {
-                            Icon(
-                                imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkAdd,
-                                contentDescription = "Bookmark Drug",
-                                tint = if (isBookmarked) Amber500 else MaterialTheme.colorScheme.onSurfaceVariant
+                            Text(
+                                text = "Brand Details",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 8.dp)
                             )
-                        }
-                        IconButton(
-                            onClick = onDismiss,
-                            modifier = Modifier.testTag("modal_close_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Close Dialog",
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
+
+                            // Heart / Favorite Icon
+                            IconButton(
+                                onClick = onBookmarkToggle,
+                                modifier = Modifier.testTag("modal_bookmark_button")
+                            ) {
+                                Icon(
+                                    imageVector = if (isBookmarked) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
+                                    contentDescription = "Bookmark",
+                                    tint = if (isBookmarked) Red500 else Color.White
+                                )
+                            }
+
+                            // Home Icon
+                            IconButton(
+                                onClick = onDismiss,
+                                modifier = Modifier.testTag("modal_home_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Home,
+                                    contentDescription = "Home",
+                                    tint = Color.White
+                                )
+                            }
                         }
                     }
                 }
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-
-                // Scrollable Content
+                // Scrollable Body
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // System & Pregnancy Category Badges
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    // Header Card (Teal Hero Section matching Screenshot)
+                    Surface(
+                        color = DimsEmeraldHeader,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 18.dp, vertical = 14.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Text(
-                                text = drug.system,
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                            )
-                        }
+                            // Brand Name + Strength + Pill Icon
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = selectedBrand.name,
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                if (selectedBrand.strength.isNotBlank()) {
+                                    Text(
+                                        text = selectedBrand.strength,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.White.copy(alpha = 0.9f)
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.Default.Medication,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
 
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = Amber500.copy(alpha = 0.15f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Amber500.copy(alpha = 0.4f))
-                        ) {
+                            // Dosage Form
                             Text(
-                                text = "Pregnancy: ${drug.pregnancy}",
-                                color = Amber500,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                text = selectedBrand.form.ifBlank { "Tablet" },
+                                fontSize = 14.sp,
+                                color = Color.White.copy(alpha = 0.85f)
                             )
+
+                            // Generic Name (Italicized)
+                            Text(
+                                text = drug.genericName,
+                                fontSize = 15.sp,
+                                fontStyle = FontStyle.Italic,
+                                color = Color.White.copy(alpha = 0.95f),
+                                fontWeight = FontWeight.Normal
+                            )
+
+                            // Manufacturer / Company
+                            Text(
+                                text = selectedBrand.company.ifBlank { "Pharmaceutical Ltd." },
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White
+                            )
+
+                            // "Also Available:" formulations
+                            Text(
+                                text = "Also Available:",
+                                fontSize = 13.sp,
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontWeight = FontWeight.Normal
+                            )
+
+                            // Horizontal Form / Strength Chips
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                allBrands.take(6).forEach { brand ->
+                                    val isSelected = brand == selectedBrand
+                                    val chipLabel = "${brand.strength} | ${brand.form}".trim()
+
+                                    Surface(
+                                        onClick = { selectedBrand = brand },
+                                        shape = RoundedCornerShape(20.dp),
+                                        color = if (isSelected) Color.White.copy(alpha = 0.9f) else DimsHeaderPillBg.copy(alpha = 0.85f),
+                                        border = if (isSelected) BorderStroke(1.5.dp, Color.White) else null,
+                                        modifier = Modifier.height(34.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            if (isSelected) {
+                                                Icon(
+                                                    imageVector = Icons.Default.CheckCircle,
+                                                    contentDescription = "Selected",
+                                                    tint = DimsEmeraldHeader,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+                                            Text(
+                                                text = chipLabel,
+                                                fontSize = 12.sp,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                color = Color(0xFF1B3B36)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            // Unit Price & Action Buttons (Other Brand & WEB)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                // Unit Price
+                                Text(
+                                    text = "Unit Price : ${drug.priceNpr.ifBlank { "Rs. 25.00 NPR" }}",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.White,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    // Other Brand Button
+                                    OutlinedButton(
+                                        onClick = { showOtherBrandDialog = true },
+                                        shape = RoundedCornerShape(8.dp),
+                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.8f)),
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            contentColor = Color.White
+                                        ),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                        modifier = Modifier.height(36.dp)
+                                    ) {
+                                        Text("Other Brand", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
+
+                                    // WEB Button
+                                    OutlinedButton(
+                                        onClick = {
+                                            clipboardManager.setText(AnnotatedString("${drug.genericName} dosing monograph clinical guidelines"))
+                                            Toast.makeText(context, "Search term copied for ${drug.genericName}", Toast.LENGTH_SHORT).show()
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.8f)),
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            contentColor = Color.White
+                                        ),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                        modifier = Modifier.height(36.dp)
+                                    ) {
+                                        Text("WEB", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Icon(
+                                            imageVector = Icons.Default.Language,
+                                            contentDescription = "Web",
+                                            modifier = Modifier.size(16.dp),
+                                            tint = Color.White
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
 
-                    // FDA Black Box Warning (if exists)
-                    if (drug.blackBoxWarning != null) {
-                        Box(
+                    // Dose Calculation Card ("beside dose calculation")
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                    ) {
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(
-                                    Brush.horizontalGradient(
-                                        listOf(Red950.copy(alpha = 0.9f), Color(0xFF1E0202))
-                                    )
-                                )
-                                .border(1.5.dp, Red500.copy(alpha = 0.8f), RoundedCornerShape(14.dp))
-                                .padding(14.dp)
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.Warning,
-                                        contentDescription = "Warning",
-                                        tint = Red400,
+                                        imageVector = Icons.Default.Calculate,
+                                        contentDescription = null,
+                                        tint = DimsTealPrimary,
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Text(
-                                        text = "FDA BLACK BOX WARNING",
-                                        color = Red400,
-                                        fontWeight = FontWeight.Black,
-                                        fontSize = 12.sp,
-                                        letterSpacing = 1.sp
+                                        text = "Clinical Dose Calculation",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
-                                Text(
-                                    text = drug.blackBoxWarning,
-                                    color = Color(0xFFFEE2E2),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    lineHeight = 18.sp
-                                )
-                            }
-                        }
-                    }
 
-                    // Section 1: Indications & Standard Dosing
-                    DetailCard(
-                        title = "Indications & Administration",
-                        icon = Icons.Default.MedicalServices,
-                        iconColor = MaterialTheme.colorScheme.primary
-                    ) {
-                        InfoRow(label = "Indications", value = drug.indications)
-                        InfoRow(label = "Standard Dosing", value = drug.doses)
-                        InfoRow(label = "Route & Timing", value = "${drug.administration} (${drug.timing})")
-                        if (drug.specialInstructions.isNotBlank()) {
-                            InfoRow(
-                                label = "Clinical Pearls / Instructions",
-                                value = drug.specialInstructions,
-                                highlight = true
-                            )
-                        }
-                    }
-
-                    // Section 2: Organ Dose Adjustments
-                    DetailCard(
-                        title = "Organ Dose Adjustments",
-                        icon = Icons.Default.Tune,
-                        iconColor = Indigo400
-                    ) {
-                        InfoRow(label = "Renal Clearance / eGFR", value = drug.renalAdj)
-                        InfoRow(label = "Hepatic Impairment", value = drug.hepaticAdj)
-                        InfoRow(label = "Lactation Compatibility", value = drug.lactation)
-                    }
-
-                    // Section 3: PK/PD & Adverse Effects
-                    DetailCard(
-                        title = "Pharmacokinetics & Adverse Effects",
-                        icon = Icons.Default.Analytics,
-                        iconColor = Emerald400
-                    ) {
-                        InfoRow(label = "PK / PD Profile", value = drug.pkPd)
-                        InfoRow(label = "Side Effects & Toxicity", value = drug.sideEffects, isWarning = true)
-                    }
-
-                    // Section 4: Interactive Weight-Based Dose Calculator
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-                        ),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(14.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Calculate,
-                                    contentDescription = "Calculator",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Text(
-                                    text = "Patient Dose Calculator",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
+                                if (drug.pediatricDosePerKg != null) {
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = Emerald500.copy(alpha = 0.15f)
+                                    ) {
+                                        Text(
+                                            text = "${drug.pediatricDosePerKg} mg/kg",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Emerald500,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
                             }
 
                             Row(
@@ -286,44 +443,86 @@ fun DrugDetailModal(
                             ) {
                                 OutlinedTextField(
                                     value = weightInput,
-                                    onValueChange = { newVal ->
-                                        weightInput = newVal
-                                        newVal.toDoubleOrNull()?.let { onWeightChanged(it) }
+                                    onValueChange = {
+                                        weightInput = it
+                                        it.toDoubleOrNull()?.let { w ->
+                                            if (w in 1.0..300.0) onWeightChanged(w)
+                                        }
                                     },
-                                    label = { Text("Patient Wt (kg)") },
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    label = { Text("Patient Weight (kg)") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                    singleLine = true,
                                     modifier = Modifier
-                                        .width(130.dp)
-                                        .testTag("patient_weight_input"),
-                                    singleLine = true
+                                        .weight(1f)
+                                        .height(56.dp)
                                 )
 
-                                Column(modifier = Modifier.weight(1f)) {
-                                    val pedDose = drug.pediatricDosePerKg
-                                    if (pedDose != null) {
-                                        val totalMg = (patientWeightKg * pedDose).toInt()
-                                        Text(
-                                            text = "Calculated Pediatric Dose:",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                // Quick Weight Preset Chips
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    listOf(10.0, 20.0, 50.0, 70.0).forEach { preset ->
+                                        SuggestionChip(
+                                            onClick = {
+                                                weightInput = preset.toInt().toString()
+                                                onWeightChanged(preset)
+                                            },
+                                            label = { Text("${preset.toInt()}kg", fontSize = 11.sp) }
                                         )
-                                        Text(
-                                            text = "$totalMg mg/day ${drug.pediatricInterval ?: ""}",
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Emerald500
-                                        )
+                                    }
+                                }
+                            }
+
+                            // Calculated Dose Output
+                            val calculatedDoseMg = remember(drug, patientWeightKg) {
+                                drug.pediatricDosePerKg?.let { perKg ->
+                                    (perKg * patientWeightKg).toInt()
+                                }
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = MaterialTheme.colorScheme.surface,
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    if (calculatedDoseMg != null) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Calculated Pediatric Dose:",
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                text = "$calculatedDoseMg mg/day",
+                                                fontSize = 15.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Emerald500
+                                            )
+                                        }
+                                        if (drug.pediatricInterval != null) {
+                                            Text(
+                                                text = "Regimen: ${drug.pediatricInterval}",
+                                                fontSize = 12.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
                                     } else {
                                         Text(
-                                            text = "Standard Adult Dose:",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        Text(
-                                            text = "1 Unit Dose (Fixed)",
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
+                                            text = "Standard Adult Regimen: ${drug.resolvedAdultDose.lines().firstOrNull() ?: drug.resolvedAdultDose}",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                     }
                                 }
@@ -331,135 +530,210 @@ fun DrugDetailModal(
                         }
                     }
 
-                    // Section 5: Estimated Price Strip
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceAround
+                    // The 13 Collapsible Sections (exact ordering & labels from Screenshot)
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.surface
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Nepal Est. Price", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(drug.priceNpr, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = Emerald500)
-                        }
-                        VerticalDivider(modifier = Modifier.height(32.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("India Est. Price", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(drug.priceInr, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                        }
-                    }
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            sections.forEachIndexed { index, (title, content) ->
+                                val isExpanded = expandedSections[index] == true
 
-                    // Section 6: Regional Brands
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text(
-                            text = "Commercial Brands in Nepal & India",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        // Nepal Brands
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Text("🇳🇵 Nepalese Manufacturers", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Emerald400)
-                                drug.brandsNepal.forEach { brand ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text("• ${brand.name} (${brand.strength} ${brand.form})", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
-                                        Text(brand.company, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                CollapsibleSectionRow(
+                                    title = title,
+                                    content = content,
+                                    isExpanded = isExpanded,
+                                    onToggle = {
+                                        expandedSections[index] = !isExpanded
                                     }
-                                }
-                            }
-                        }
+                                )
 
-                        // India Brands
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Text("🇮🇳 Indian Manufacturers", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                                drug.brandsIndia.forEach { brand ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text("• ${brand.name} (${brand.strength})", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
-                                        Text(brand.company, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                }
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
+                                    thickness = 0.8.dp
+                                )
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(40.dp))
                 }
             }
         }
     }
+
+    // "Other Brand" Dialog showing all Nepal & India Brands
+    if (showOtherBrandDialog) {
+        AlertDialog(
+            onDismissRequest = { showOtherBrandDialog = false },
+            title = {
+                Text(
+                    text = "Brands for ${drug.genericName}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    if (drug.brandsNepal.isNotEmpty()) {
+                        Text(
+                            text = "🇳🇵 Nepal Brands",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = DimsTealPrimary
+                        )
+                        drug.brandsNepal.forEach { brand ->
+                            BrandSelectionItem(
+                                brand = brand,
+                                isSelected = brand == selectedBrand,
+                                onClick = {
+                                    selectedBrand = brand
+                                    showOtherBrandDialog = false
+                                }
+                            )
+                        }
+                    }
+
+                    if (drug.brandsIndia.isNotEmpty()) {
+                        Text(
+                            text = "🇮🇳 India Brands",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = Indigo400
+                        )
+                        drug.brandsIndia.forEach { brand ->
+                            BrandSelectionItem(
+                                brand = brand,
+                                isSelected = brand == selectedBrand,
+                                onClick = {
+                                    selectedBrand = brand
+                                    showOtherBrandDialog = false
+                                }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showOtherBrandDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
 }
 
 @Composable
-private fun DetailCard(
+private fun CollapsibleSectionRow(
     title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    iconColor: Color,
-    content: @Composable ColumnScope.() -> Unit
+    content: String,
+    isExpanded: Boolean,
+    onToggle: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
-    ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+    val rotationAngle by animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        label = "arrow_rotation"
+    )
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onToggle)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // Chevron arrow directly on the left (matching the DIMS screenshot)
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowDown,
+                contentDescription = if (isExpanded) "Collapse $title" else "Expand $title",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .size(22.dp)
+                    .rotate(rotationAngle)
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Text(
+                text = title,
+                fontSize = 15.sp,
+                fontWeight = if (isExpanded) FontWeight.Bold else FontWeight.Normal,
+                color = if (isExpanded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        AnimatedVisibility(
+            visible = isExpanded,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f))
+                    .padding(start = 48.dp, end = 18.dp, top = 8.dp, bottom = 16.dp)
             ) {
-                Icon(imageVector = icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(18.dp))
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
+                    text = content.ifBlank { "No specific clinical precautions documented for this parameter." },
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontSize = 13.5.sp,
+                    lineHeight = 20.sp,
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
-            content()
         }
     }
 }
 
 @Composable
-private fun InfoRow(
-    label: String,
-    value: String,
-    highlight: Boolean = false,
-    isWarning: Boolean = false
+private fun BrandSelectionItem(
+    brand: BrandInfo,
+    isSelected: Boolean,
+    onClick: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = if (isWarning) Red400 else if (highlight) Amber400 else MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
-            color = if (isWarning) Red400.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurface,
-            lineHeight = 18.sp
-        )
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(10.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "${brand.name} (${brand.strength})",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "${brand.company} • ${brand.form}",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Selected",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
     }
 }

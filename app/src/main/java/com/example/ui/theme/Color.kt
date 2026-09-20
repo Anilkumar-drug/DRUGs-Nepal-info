@@ -70,3 +70,19 @@ fun getSystemColor(system: String): Color {
         else -> MedicalBlue600
     }
 }
+
+// Medscape / UpToDate Clinical Header Navy Palette
+val NavyDeep = Color(0xFF091629)
+val NavyCard = Color(0xFF102544)
+val NavyCardBorder = Color(0xFF1E3A66)
+val NavyPill = Color(0xFF162E54)
+val SparkleViolet = Color(0xFFE879F9)
+val SparklePink = Color(0xFFF43F5E)
+
+// DIMS Teal Palette
+val DimsTealPrimary = Color(0xFF005B52)
+val DimsTealDark = Color(0xFF003832)
+val DimsTealLight = Color(0xFFE6F4F1)
+val DimsTealBorder = Color(0xFFB2DFDB)
+val DimsYellowMascot = Color(0xFFFFDE59)
+val DimsCyanMascot = Color(0xFF7DD3FC)

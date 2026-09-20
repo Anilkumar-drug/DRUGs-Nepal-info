@@ -44,13 +44,15 @@ fun GeminiChatScreen(
         }
     }
 
-    val suggestedQueries = listOf(
-        "Check interaction: Telmisartan + Spironolactone",
-        "Metformin renal dosing & contrast guidelines",
-        "Amox-Clav pediatric otitis media dose",
-        "Emergency Organophosphate atropinization protocol",
-        "Paracetamol max daily dose in liver disease"
-    )
+    val suggestedQueries = remember {
+        listOf(
+            "Check interaction: Telmisartan + Spironolactone",
+            "Metformin renal dosing & contrast guidelines",
+            "Amox-Clav pediatric otitis media dose",
+            "Emergency Organophosphate atropinization protocol",
+            "Paracetamol max daily dose in liver disease"
+        )
+    }
 
     Column(
         modifier = Modifier

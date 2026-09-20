@@ -1,5 +1,7 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,11 +16,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,118 +32,135 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.Drug
 import com.example.ui.theme.*
 import com.example.viewmodel.DrugFilterType
+import com.example.viewmodel.SearchMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DrugSearchScreen(
     searchQuery: String,
+    searchMode: SearchMode = SearchMode.BRAND,
     activeFilter: DrugFilterType,
     selectedSystemFilter: String?,
     filteredDrugs: List<Drug>,
     bookmarkedDrugIds: Set<String>,
     onSearchChange: (String) -> Unit,
+    onSearchModeChange: (SearchMode) -> Unit = {},
     onFilterChange: (DrugFilterType) -> Unit,
     onClearSystemFilter: () -> Unit,
     onDrugClick: (Drug) -> Unit,
     onBookmarkToggle: (String) -> Unit
 ) {
+    var showHistoryDialog by remember { mutableStateOf(false) }
+
+    val recentSearches = remember {
+        listOf(
+            "Moxclave 625", "Dolo-650", "Pantocid 40",
+            "Amoxicillin", "Paracetamol", "Azithromycin",
+            "Amlodipine", "Metformin 500", "Ciprofloxacin"
+        )
+    }
+
+    val tabs = remember {
+        listOf(
+            Triple(SearchMode.BRAND, "Brand", Icons.Default.Medication),
+            Triple(SearchMode.GENERIC, "Generic", Icons.Default.Science),
+            Triple(SearchMode.INDICATION, "Indication", Icons.Default.Hub),
+            Triple(SearchMode.HERBAL, "Herbal", Icons.Default.Spa)
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
 
-        // Hero Registry Info Banner (compact, clinical)
-        if (searchQuery.isEmpty() && selectedSystemFilter == null && activeFilter == DrugFilterType.ALL) {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+        // 4 Mode Selector Tabs (Brand, Generic, Indication, Herbal) exactly formatted as Screenshot 1
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            tabs.forEach { (mode, label, icon) ->
+                val isSelected = searchMode == mode
+                Surface(
+                    onClick = { onSearchModeChange(mode) },
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isSelected) DimsTealPrimary else MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(
+                        1.dp,
+                        if (isSelected) DimsTealPrimary else MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(42.dp)
+                        .testTag("search_tab_${label.lowercase()}")
                 ) {
                     Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.MedicalServices,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                        Column {
-                            Text(
-                                text = "Nepal National Drug Registry",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "Department of Drug Administration (DDA) • 2024 EML",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = Emerald500.copy(alpha = 0.15f),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Emerald500.copy(alpha = 0.3f))
-                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "OFFLINE",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Emerald500,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                            text = label,
+                            fontSize = 12.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
             }
         }
 
-        // Search TextField
+        // Search Input Box with History & Clear buttons (Formatted as in Screenshot 1)
         OutlinedTextField(
             value = searchQuery,
             onValueChange = onSearchChange,
-            placeholder = { 
+            placeholder = {
                 Text(
-                    "Search Generic, Brand (e.g. Moxclave, Dolo), System...",
+                    text = when (searchMode) {
+                        SearchMode.BRAND -> "Search by brand.... (e.g. Moxclave, Dolo)"
+                        SearchMode.GENERIC -> "Search by generic.... (e.g. Amoxicillin)"
+                        SearchMode.INDICATION -> "Search by indication.... (e.g. Infection)"
+                        SearchMode.HERBAL -> "Search by herbal or organ system...."
+                    },
                     fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                ) 
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+                )
             },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "Search",
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = DimsTealPrimary
                 )
             },
             trailingIcon = {
-                if (searchQuery.isNotEmpty()) {
-                    IconButton(onClick = { onSearchChange("") }) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { onSearchChange("") }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    IconButton(onClick = { showHistoryDialog = true }) {
                         Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Clear search",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            imageVector = Icons.Default.History,
+                            contentDescription = "Search History",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
                     }
                 }
@@ -145,12 +168,12 @@ fun DrugSearchScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("global_search_input"),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(14.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.surface,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                focusedBorderColor = DimsTealPrimary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
             ),
             singleLine = true
         )
@@ -160,7 +183,7 @@ fun DrugSearchScreen(
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = Emerald500.copy(alpha = 0.15f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Emerald500.copy(alpha = 0.4f)),
+                border = BorderStroke(1.dp, Emerald500.copy(alpha = 0.4f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -200,7 +223,7 @@ fun DrugSearchScreen(
             }
         }
 
-        // Quick Filter Tags
+        // Quick Filter Tags (Nepal, India, Black Box, Bookmarks)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -226,7 +249,7 @@ fun DrugSearchScreen(
                             imageVector = filterIcon,
                             contentDescription = null,
                             modifier = Modifier.size(14.dp),
-                            tint = if (isSelected) Color.White else if (filterType == DrugFilterType.BLACK_BOX) Red500 else MaterialTheme.colorScheme.primary
+                            tint = if (isSelected) Color.White else if (filterType == DrugFilterType.BLACK_BOX) Red500 else DimsTealPrimary
                         )
                     },
                     label = {
@@ -238,7 +261,7 @@ fun DrugSearchScreen(
                     },
                     shape = RoundedCornerShape(18.dp),
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = if (filterType == DrugFilterType.BLACK_BOX) Red600 else MaterialTheme.colorScheme.primary,
+                        selectedContainerColor = if (filterType == DrugFilterType.BLACK_BOX) Red600 else DimsTealPrimary,
                         selectedLabelColor = Color.White,
                         containerColor = MaterialTheme.colorScheme.surface,
                         labelColor = if (filterType == DrugFilterType.BLACK_BOX) Red400 else MaterialTheme.colorScheme.onSurface
@@ -253,7 +276,75 @@ fun DrugSearchScreen(
             }
         }
 
-        // Results Count and Prescriber Note
+        // Empty Search Prompt with Friendly Mascot / Magnifier as in Screenshot 1
+        if (searchQuery.isEmpty() && selectedSystemFilter == null && activeFilter == DrugFilterType.ALL) {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Custom Magnifying Glass Character Illustration (Screenshot 1 Style)
+                    MascotMagnifyingGlass(modifier = Modifier.size(110.dp))
+
+                    Text(
+                        text = when (searchMode) {
+                            SearchMode.BRAND -> "Search by Brand name"
+                            SearchMode.GENERIC -> "Search by Generic name"
+                            SearchMode.INDICATION -> "Search by Indication"
+                            SearchMode.HERBAL -> "Search Herbal Formulations"
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Text(
+                        text = "Instant access to 10,000+ Nepal DDA registered drugs, prices, and international equivalents.",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+
+                    // Quick Suggested Tap Chips
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        recentSearches.take(6).forEach { chip ->
+                            Surface(
+                                onClick = { onSearchChange(chip.split(" ").first()) },
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+                            ) {
+                                Text(
+                                    text = chip,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Results Header
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -272,13 +363,13 @@ fun DrugSearchScreen(
                 Icon(
                     imageVector = Icons.Default.TouchApp,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = DimsTealPrimary,
                     modifier = Modifier.size(13.dp)
                 )
                 Text(
                     text = "Tap card for full monograph",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = DimsTealPrimary,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -295,7 +386,7 @@ fun DrugSearchScreen(
                 Card(
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
                     modifier = Modifier.fillMaxWidth(0.9f)
                 ) {
                     Column(
@@ -324,7 +415,7 @@ fun DrugSearchScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Search by Nepal brand (e.g. Moxclave, Dolo, Pantocid), generic name, or organ system.",
+                            text = "Search by Nepal brand (e.g. Moxclave, Dolo, Pantocid), generic name, or change tab above.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -351,6 +442,120 @@ fun DrugSearchScreen(
             }
         }
     }
+
+    // Recent Searches Dialog
+    if (showHistoryDialog) {
+        AlertDialog(
+            onDismissRequest = { showHistoryDialog = false },
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = null,
+                        tint = DimsTealPrimary
+                    )
+                    Text("Frequent Searches", fontWeight = FontWeight.Bold)
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    recentSearches.forEach { term ->
+                        Surface(
+                            onClick = {
+                                onSearchChange(term.split(" ").first())
+                                showHistoryDialog = false
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(text = term, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
+                                Icon(
+                                    imageVector = Icons.Default.NorthWest,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showHistoryDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun MascotMagnifyingGlass(modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val centerOffset = Offset(size.width * 0.45f, size.height * 0.42f)
+        val lensRadius = size.width * 0.32f
+
+        // Handle
+        drawLine(
+            color = DimsTealPrimary,
+            start = Offset(centerOffset.x + lensRadius * 0.7f, centerOffset.y + lensRadius * 0.7f),
+            end = Offset(size.width * 0.92f, size.height * 0.92f),
+            strokeWidth = 14.dp.toPx(),
+            cap = StrokeCap.Round
+        )
+
+        // Glass Rim Background Fill
+        drawCircle(
+            color = DimsTealLight,
+            radius = lensRadius,
+            center = centerOffset
+        )
+
+        // Rim Border
+        drawCircle(
+            color = DimsTealPrimary,
+            radius = lensRadius,
+            center = centerOffset,
+            style = Stroke(width = 8.dp.toPx())
+        )
+
+        // Cartoon Eyes
+        val leftEye = Offset(centerOffset.x - lensRadius * 0.3f, centerOffset.y - lensRadius * 0.15f)
+        val rightEye = Offset(centerOffset.x + lensRadius * 0.3f, centerOffset.y - lensRadius * 0.15f)
+        drawCircle(color = DimsTealDark, radius = 4.dp.toPx(), center = leftEye)
+        drawCircle(color = DimsTealDark, radius = 4.dp.toPx(), center = rightEye)
+
+        // Cute Smile Arc
+        drawArc(
+            color = DimsTealDark,
+            startAngle = 20f,
+            sweepAngle = 140f,
+            useCenter = false,
+            topLeft = Offset(centerOffset.x - lensRadius * 0.25f, centerOffset.y),
+            size = Size(lensRadius * 0.5f, lensRadius * 0.35f),
+            style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+        )
+
+        // Sparkle / Glare Reflection Arc
+        drawArc(
+            color = Color.White.copy(alpha = 0.85f),
+            startAngle = 200f,
+            sweepAngle = 60f,
+            useCenter = false,
+            topLeft = Offset(centerOffset.x - lensRadius * 0.8f, centerOffset.y - lensRadius * 0.8f),
+            size = Size(lensRadius * 1.6f, lensRadius * 1.6f),
+            style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+        )
+    }
 }
 
 @Composable
@@ -361,12 +566,6 @@ private fun DrugCard(
     onBookmarkToggle: () -> Unit
 ) {
     val systemColor = getSystemColor(drug.system)
-    val pregnancyColor = when (drug.pregnancy.uppercase()) {
-        "A", "B" -> Emerald500
-        "C" -> Amber500
-        "D", "X" -> Red500
-        else -> MaterialTheme.colorScheme.primary
-    }
 
     Card(
         modifier = Modifier
@@ -376,9 +575,13 @@ private fun DrugCard(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+        ) {
             // Left Accent Strip indicating organ system
             Box(
                 modifier = Modifier
@@ -417,7 +620,7 @@ private fun DrugCard(
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
                                     color = Red950,
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, Red500)
+                                    border = BorderStroke(1.dp, Red500)
                                 ) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
@@ -467,36 +670,16 @@ private fun DrugCard(
                         }
                     }
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    IconButton(
+                        onClick = onBookmarkToggle,
+                        modifier = Modifier.size(36.dp)
                     ) {
-                        // Pregnancy Category Badge
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = pregnancyColor.copy(alpha = 0.12f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, pregnancyColor.copy(alpha = 0.35f))
-                        ) {
-                            Text(
-                                text = "Preg: ${drug.pregnancy}",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = pregnancyColor,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
-                            )
-                        }
-
-                        IconButton(
-                            onClick = onBookmarkToggle,
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                                contentDescription = "Bookmark",
-                                tint = if (isBookmarked) Amber500 else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                        Icon(
+                            imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                            contentDescription = "Bookmark",
+                            tint = if (isBookmarked) Amber500 else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
 
@@ -527,7 +710,7 @@ private fun DrugCard(
                     }
                 }
 
-                // Brands Strip with Nepal Flag icon/indicator
+                // Brands Strip with Nepal Flag indicator
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -538,7 +721,7 @@ private fun DrugCard(
                     Surface(
                         shape = RoundedCornerShape(6.dp),
                         color = Emerald500.copy(alpha = 0.12f),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Emerald500.copy(alpha = 0.3f))
+                        border = BorderStroke(1.dp, Emerald500.copy(alpha = 0.3f))
                     ) {
                         Text(
                             text = "🇳🇵 Nepal:",
@@ -553,7 +736,7 @@ private fun DrugCard(
                         Surface(
                             shape = RoundedCornerShape(6.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                         ) {
                             Text(
                                 text = "${brand.name} (${brand.company.split(" ").firstOrNull() ?: ""})",
@@ -568,7 +751,7 @@ private fun DrugCard(
                         Surface(
                             shape = RoundedCornerShape(6.dp),
                             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
                         ) {
                             Text(
                                 text = "🇮🇳 ${drug.brandsIndia.first().name}",
