@@ -1,0 +1,8 @@
+{
+  "name": "DRUGs Nepal",
+  "description": "Clinical Decision Support System for Nepal: Universal Drug Index, Organ Systems, Clinical Protocols, Toxicology & Antidotes, MDCalc Calculators, and Gemini AI Pharmacology Assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
