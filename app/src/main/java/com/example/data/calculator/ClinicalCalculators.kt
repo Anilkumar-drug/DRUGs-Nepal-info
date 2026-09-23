@@ -161,4 +161,126 @@ object ClinicalCalculators {
         val ml = if (mgInSyrup > 0) (totalMg * mlInSyrup) / mgInSyrup else 0.0
         return PediatricDoseResult(totalMg, ml)
     }
+
+    // --- 6. CHA2DS2-VASc Atrial Fibrillation Stroke Risk Stratification ---
+    data class Cha2Ds2VascResult(
+        val totalScore: Int,
+        val strokeRiskPercentPerYear: Double,
+        val riskStratum: String,
+        val recommendation: String
+    )
+
+    fun calculateCha2Ds2Vasc(
+        chf: Boolean,
+        hypertension: Boolean,
+        ageGroup: Int, // 0: <65 (0 pt), 1: 65-74 (1 pt), 2: >=75 (2 pts)
+        diabetes: Boolean,
+        strokeTiaThromboembolism: Boolean, // 2 pts
+        vascularDisease: Boolean, // MI, PAD, aortic plaque (1 pt)
+        isFemale: Boolean // 1 pt (if other risk factors present)
+    ): Cha2Ds2VascResult {
+        var score = 0
+        if (chf) score += 1
+        if (hypertension) score += 1
+        when (ageGroup) {
+            1 -> score += 1
+            2 -> score += 2
+        }
+        if (diabetes) score += 1
+        if (strokeTiaThromboembolism) score += 2
+        if (vascularDisease) score += 1
+        if (isFemale) score += 1
+
+        val annualRisk = when (score) {
+            0 -> 0.2
+            1 -> 0.6
+            2 -> 2.2
+            3 -> 3.2
+            4 -> 4.8
+            5 -> 7.2
+            6 -> 9.7
+            7 -> 11.2
+            8 -> 10.8
+            else -> 12.2
+        }
+
+        val riskStratum = when {
+            score == 0 -> "Low Risk (0 points)"
+            score == 1 && isFemale -> "Low Risk (1 pt from sex only)"
+            score == 1 -> "Intermediate Risk (1 point)"
+            else -> "High Risk ($score points)"
+        }
+
+        val recommendation = when {
+            score == 0 -> "No antithrombotic therapy required (ESC/AHA Guidelines)."
+            score == 1 && !isFemale -> "Oral Anticoagulation (DOAC e.g. Apixaban, Dabigatran, Rivaroxaban) should be considered based on individual bleeding risk."
+            score == 1 && isFemale -> "No antithrombotic therapy required if female sex is the solitary risk factor."
+            else -> "Oral Anticoagulation (DOAC e.g. Apixaban, Dabigatran, Rivaroxaban or Warfarin INR 2.0-3.0) is strongly recommended unless contraindicated."
+        }
+
+        return Cha2Ds2VascResult(score, annualRisk, riskStratum, recommendation)
+    }
+
+    // --- 7. CURB-65 Pneumonia Severity Score ---
+    data class Curb65Result(
+        val totalScore: Int,
+        val mortalityRiskPercent: Double,
+        val riskGroup: String,
+        val managementGuidance: String
+    )
+
+    fun calculateCurb65(
+        confusion: Boolean, // AMTS <= 8 or new disorientation
+        ureaElevated: Boolean, // BUN > 19 mg/dL or Urea > 7 mmol/L
+        respRateElevated: Boolean, // RR >= 30 breaths/min
+        bloodPressureLow: Boolean, // SBP < 90 mmHg or DBP <= 60 mmHg
+        age65OrOlder: Boolean // Age >= 65 years
+    ): Curb65Result {
+        var score = 0
+        if (confusion) score += 1
+        if (ureaElevated) score += 1
+        if (respRateElevated) score += 1
+        if (bloodPressureLow) score += 1
+        if (age65OrOlder) score += 1
+
+        val (mortality, riskGroup, guidance) = when (score) {
+            0 -> Triple(0.6, "Low Risk (Group 1)", "Outpatient care appropriate. Oral Amoxicillin 500mg-1g TID or Azithromycin/Doxycycline.")
+            1 -> Triple(2.7, "Low Risk (Group 1)", "Consider home treatment or brief observation. Oral antibiotics.")
+            2 -> Triple(6.8, "Moderate Risk (Group 2)", "Consider short-stay hospital admission or closely monitored outpatient therapy with Amoxicillin-Clavulanate + Macrolide.")
+            3 -> Triple(14.0, "High Risk (Group 3 - Severe CAP)", "Urgent hospital admission. IV Ceftriaxone 1-2g OD + Azithromycin 500mg IV OD.")
+            4 -> Triple(27.8, "Very High Risk (Group 3 - Critical)", "Urgent hospital admission, immediate ICU / HDU assessment. IV broad spectrum beta-lactam + macrolide.")
+            else -> Triple(33.0, "Extreme Risk (Group 3 - Critical)", "Immediate ICU admission with mechanical ventilatory and inotropic support readiness.")
+        }
+
+        return Curb65Result(score, mortality, riskGroup, guidance)
+    }
+
+    // --- 8. Glasgow Coma Scale (GCS) Assessment ---
+    data class GcsResult(
+        val eyeScore: Int,
+        val verbalScore: Int,
+        val motorScore: Int,
+        val totalScore: Int,
+        val severity: String,
+        val clinicalGuidance: String
+    )
+
+    fun calculateGcs(
+        eye: Int, // 1 to 4
+        verbal: Int, // 1 to 5
+        motor: Int // 1 to 6
+    ): GcsResult {
+        val total = eye.coerceIn(1, 4) + verbal.coerceIn(1, 5) + motor.coerceIn(1, 6)
+        val severity = when {
+            total <= 8 -> "Severe Head Injury / Coma (GCS <= 8)"
+            total in 9..12 -> "Moderate Brain Injury (GCS 9-12)"
+            else -> "Mild Brain Injury (GCS 13-15)"
+        }
+        val guidance = when {
+            total <= 8 -> "CRITICAL: 'GCS 8, Intubate!' High risk of aspiration and airway compromise. Secure endotracheal airway immediately, urgent NCCT Head, elevate head of bed 30 degrees, neurosurgical consult."
+            total in 9..12 -> "Urgent NCCT Head indicated. Close neuro-vitals monitoring q30-60min. Admit to High Dependency Unit (HDU) or Trauma Ward."
+            else -> "Monitor neuro-checks q2-4 hours. Check for red flags (recurrent vomiting, worsening headache, amnesia >30min, coagulopathy)."
+        }
+        return GcsResult(eye, verbal, motor, total, severity, guidance)
+    }
 }

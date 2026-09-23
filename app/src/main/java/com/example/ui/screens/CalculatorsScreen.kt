@@ -35,6 +35,9 @@ fun CalculatorsScreen(
             "egfr" to "eGFR (Cockcroft-Gault)",
             "bsa" to "BSA (Mosteller)",
             "child_pugh" to "Child-Pugh Score",
+            "cha2ds2" to "CHA₂DS₂-VASc AFib",
+            "curb65" to "CURB-65 Pneumonia",
+            "gcs" to "GCS Score & Coma",
             "rumack" to "Paracetamol Nomogram",
             "pediatric" to "Pediatric Liquid Dose"
         )
@@ -85,6 +88,9 @@ fun CalculatorsScreen(
                     "egfr" -> Icons.Default.WaterDrop
                     "bsa" -> Icons.Default.Straighten
                     "child_pugh" -> Icons.Default.LocalHospital
+                    "cha2ds2" -> Icons.Default.Favorite
+                    "curb65" -> Icons.Default.Air
+                    "gcs" -> Icons.Default.Psychology
                     "rumack" -> Icons.Default.Timeline
                     else -> Icons.Default.ChildCare
                 }
@@ -146,6 +152,9 @@ fun CalculatorsScreen(
                     "egfr" -> EgfrCalculatorView(state, viewModel)
                     "bsa" -> BsaCalculatorView(state, viewModel)
                     "child_pugh" -> ChildPughCalculatorView(state, viewModel)
+                    "cha2ds2" -> Cha2Ds2VascCalculatorView(state, viewModel)
+                    "curb65" -> Curb65CalculatorView(state, viewModel)
+                    "gcs" -> GcsCalculatorView(state, viewModel)
                     "rumack" -> ParacetamolCalculatorView(state, viewModel)
                     "pediatric" -> PediatricCalculatorView(state, viewModel)
                 }
@@ -581,6 +590,393 @@ private fun PediatricCalculatorView(state: ClinicalUiState, viewModel: ClinicalV
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Black,
                     color = Emerald400
+                )
+            }
+        }
+    }
+}
+
+// 6. CHA2DS2-VASc Atrial Fibrillation Stroke Risk View
+@Composable
+private fun Cha2Ds2VascCalculatorView(state: ClinicalUiState, viewModel: ClinicalViewModel) {
+    var chf by remember(state.chadsChf) { mutableStateOf(state.chadsChf) }
+    var htn by remember(state.chadsHypertension) { mutableStateOf(state.chadsHypertension) }
+    var ageGroup by remember(state.chadsAgeGroup) { mutableStateOf(state.chadsAgeGroup) }
+    var dm by remember(state.chadsDiabetes) { mutableStateOf(state.chadsDiabetes) }
+    var stroke by remember(state.chadsStrokeTia) { mutableStateOf(state.chadsStrokeTia) }
+    var vasc by remember(state.chadsVascular) { mutableStateOf(state.chadsVascular) }
+    var female by remember(state.chadsIsFemale) { mutableStateOf(state.chadsIsFemale) }
+
+    fun triggerCalc() {
+        viewModel.updateCha2Ds2VascInputs(chf, htn, ageGroup, dm, stroke, vasc, female)
+    }
+
+    Text(
+        text = "CHA₂DS₂-VASc Score for AFib Stroke Risk",
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.primary
+    )
+    Text(
+        text = "Risk stratification determining indication for oral anticoagulation (OAC / DOACs).",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+
+    // Age Category Chips
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text("Age Category:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(0 to "< 65 yrs (0 pt)", 1 to "65–74 yrs (+1)", 2 to "≥ 75 yrs (+2)").forEach { (idx, label) ->
+                FilterChip(
+                    selected = ageGroup == idx,
+                    onClick = { ageGroup = idx; triggerCalc() },
+                    label = { Text(label, fontSize = 11.sp) }
+                )
+            }
+        }
+    }
+
+    // Sex Category Chips
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text("Sex Category:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = !female,
+                onClick = { female = false; triggerCalc() },
+                label = { Text("Male (0 pt)", fontSize = 11.sp) }
+            )
+            FilterChip(
+                selected = female,
+                onClick = { female = true; triggerCalc() },
+                label = { Text("Female (+1 pt)", fontSize = 11.sp) }
+            )
+        }
+    }
+
+    // Risk factors switches / chips
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text("Clinical Risk Factors:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = chf,
+                onClick = { chf = !chf; triggerCalc() },
+                label = { Text("Congestive Heart Failure (+1)", fontSize = 11.sp) },
+                modifier = Modifier.weight(1f)
+            )
+            FilterChip(
+                selected = htn,
+                onClick = { htn = !htn; triggerCalc() },
+                label = { Text("Hypertension (+1)", fontSize = 11.sp) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = dm,
+                onClick = { dm = !dm; triggerCalc() },
+                label = { Text("Diabetes Mellitus (+1)", fontSize = 11.sp) },
+                modifier = Modifier.weight(1f)
+            )
+            FilterChip(
+                selected = stroke,
+                onClick = { stroke = !stroke; triggerCalc() },
+                label = { Text("Prior Stroke / TIA (+2)", fontSize = 11.sp) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        FilterChip(
+            selected = vasc,
+            onClick = { vasc = !vasc; triggerCalc() },
+            label = { Text("Vascular Disease (Prior MI, PAD, Aortic Plaque) (+1)", fontSize = 11.sp) }
+        )
+    }
+
+    val res = state.chadsResult
+    if (res != null) {
+        val badgeColor = when {
+            res.totalScore == 0 -> Emerald400
+            res.totalScore == 1 && female -> Emerald400
+            res.totalScore == 1 -> Amber400
+            else -> Red400
+        }
+        Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = badgeColor.copy(alpha = 0.15f),
+            border = androidx.compose.foundation.BorderStroke(1.dp, badgeColor.copy(alpha = 0.4f)),
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+        ) {
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "CHA₂DS₂-VASc: ${res.totalScore} pts",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Black,
+                        color = badgeColor
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = badgeColor.copy(alpha = 0.25f)
+                    ) {
+                        Text(
+                            text = "${res.strokeRiskPercentPerYear}% / yr stroke rate",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = badgeColor
+                        )
+                    }
+                }
+                Text(
+                    text = "Stratum: ${res.riskStratum}",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = res.recommendation,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}
+
+// 7. CURB-65 Pneumonia Severity Score View
+@Composable
+private fun Curb65CalculatorView(state: ClinicalUiState, viewModel: ClinicalViewModel) {
+    var conf by remember(state.curbConfusion) { mutableStateOf(state.curbConfusion) }
+    var urea by remember(state.curbUrea) { mutableStateOf(state.curbUrea) }
+    var rr by remember(state.curbRespRate) { mutableStateOf(state.curbRespRate) }
+    var bp by remember(state.curbBpLow) { mutableStateOf(state.curbBpLow) }
+    var age65 by remember(state.curbAge65) { mutableStateOf(state.curbAge65) }
+
+    fun triggerCalc() {
+        viewModel.updateCurb65Inputs(conf, urea, rr, bp, age65)
+    }
+
+    Text(
+        text = "CURB-65 Pneumonia Severity Score",
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.primary
+    )
+    Text(
+        text = "Calculates 30-day mortality risk in Community-Acquired Pneumonia (CAP) to guide site of care (Outpatient vs Hospital vs ICU).",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        FilterChip(
+            selected = conf,
+            onClick = { conf = !conf; triggerCalc() },
+            label = { Text("C — Confusion (New disorientation or AMTS ≤ 8) (+1)", fontSize = 12.sp) },
+            modifier = Modifier.fillMaxWidth()
+        )
+        FilterChip(
+            selected = urea,
+            onClick = { urea = !urea; triggerCalc() },
+            label = { Text("U — Urea > 7 mmol/L (or BUN > 19 mg/dL) (+1)", fontSize = 12.sp) },
+            modifier = Modifier.fillMaxWidth()
+        )
+        FilterChip(
+            selected = rr,
+            onClick = { rr = !rr; triggerCalc() },
+            label = { Text("R — Respiratory rate ≥ 30 breaths / min (+1)", fontSize = 12.sp) },
+            modifier = Modifier.fillMaxWidth()
+        )
+        FilterChip(
+            selected = bp,
+            onClick = { bp = !bp; triggerCalc() },
+            label = { Text("B — Blood pressure (SBP < 90 or DBP ≤ 60 mmHg) (+1)", fontSize = 12.sp) },
+            modifier = Modifier.fillMaxWidth()
+        )
+        FilterChip(
+            selected = age65,
+            onClick = { age65 = !age65; triggerCalc() },
+            label = { Text("65 — Age ≥ 65 years (+1)", fontSize = 12.sp) },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+
+    val res = state.curbResult
+    if (res != null) {
+        val color = when (res.totalScore) {
+            0, 1 -> Emerald400
+            2 -> Amber400
+            else -> Red400
+        }
+        Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = color.copy(alpha = 0.15f),
+            border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.4f)),
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+        ) {
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Score: ${res.totalScore} / 5 points",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Black,
+                        color = color
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = color.copy(alpha = 0.25f)
+                    ) {
+                        Text(
+                            text = "${res.mortalityRiskPercent}% 30-day mortality",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = color
+                        )
+                    }
+                }
+                Text(text = res.riskGroup, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                Text(text = "Guidance: ${res.managementGuidance}", style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
+// 8. Glasgow Coma Scale (GCS) View
+@Composable
+private fun GcsCalculatorView(state: ClinicalUiState, viewModel: ClinicalViewModel) {
+    var eye by remember(state.gcsEye) { mutableStateOf(state.gcsEye) }
+    var verbal by remember(state.gcsVerbal) { mutableStateOf(state.gcsVerbal) }
+    var motor by remember(state.gcsMotor) { mutableStateOf(state.gcsMotor) }
+
+    fun triggerCalc() {
+        viewModel.updateGcsInputs(eye, verbal, motor)
+    }
+
+    Text(
+        text = "Glasgow Coma Scale (GCS)",
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.primary
+    )
+    Text(
+        text = "Rapid objective assessment of level of consciousness in trauma, stroke, or poisoning.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+
+    // Eye Response (1 to 4)
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text("Eye Opening (E 1-4):", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+        Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf(
+                4 to "4 - Spontaneous",
+                3 to "3 - To Speech",
+                2 to "2 - To Pain",
+                1 to "1 - None"
+            ).forEach { (score, label) ->
+                FilterChip(
+                    selected = eye == score,
+                    onClick = { eye = score; triggerCalc() },
+                    label = { Text(label, fontSize = 11.sp) }
+                )
+            }
+        }
+    }
+
+    // Verbal Response (1 to 5)
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text("Verbal Response (V 1-5):", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+        Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf(
+                5 to "5 - Oriented",
+                4 to "4 - Confused",
+                3 to "3 - Inappropriate",
+                2 to "2 - Incomprehensible",
+                1 to "1 - None"
+            ).forEach { (score, label) ->
+                FilterChip(
+                    selected = verbal == score,
+                    onClick = { verbal = score; triggerCalc() },
+                    label = { Text(label, fontSize = 11.sp) }
+                )
+            }
+        }
+    }
+
+    // Motor Response (1 to 6)
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text("Motor Response (M 1-6):", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+        Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf(
+                6 to "6 - Obeys Commands",
+                5 to "5 - Localizes Pain",
+                4 to "4 - Withdraws (Flexion)",
+                3 to "3 - Decorticate (Abnormal Flexion)",
+                2 to "2 - Decerebrate (Extension)",
+                1 to "1 - None"
+            ).forEach { (score, label) ->
+                FilterChip(
+                    selected = motor == score,
+                    onClick = { motor = score; triggerCalc() },
+                    label = { Text(label, fontSize = 11.sp) }
+                )
+            }
+        }
+    }
+
+    val res = state.gcsResult
+    if (res != null) {
+        val color = when {
+            res.totalScore <= 8 -> Red400
+            res.totalScore in 9..12 -> Amber400
+            else -> Emerald400
+        }
+        Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = color.copy(alpha = 0.15f),
+            border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.4f)),
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+        ) {
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Total GCS: ${res.totalScore} / 15",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Black,
+                        color = color
+                    )
+                    Text(
+                        text = "E${res.eyeScore} V${res.verbalScore} M${res.motorScore}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Text(
+                    text = res.severity,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = color
+                )
+                Text(
+                    text = res.clinicalGuidance,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }

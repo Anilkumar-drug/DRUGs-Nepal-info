@@ -10,9 +10,13 @@ import com.example.data.model.Drug
 import com.example.data.model.FontSizeScale
 import com.example.data.model.MessageSender
 import com.example.data.repository.ClinicalRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -51,6 +55,9 @@ data class ClinicalUiState(
     val selectedSystemFilter: String? = null,
     val selectedDrug: Drug? = null,
     val isDrugModalOpen: Boolean = false,
+    val recentSearches: List<String> = listOf(
+        "Moxclave 625", "Dolo-650", "Pantocid 40", "Azithromycin", "Amlodipine"
+    ),
     val bookmarkedDrugIds: Set<String> = setOf("d1", "d4"),
     val selectedInteractionDrugIds: Set<String> = setOf("d1", "d5"),
     val patientWeightKg: Double = 60.0,
@@ -107,13 +114,63 @@ data class ClinicalUiState(
     val pedDoseMgKg: Double = 15.0,
     val pedSyrupMg: Double = 125.0,
     val pedSyrupMl: Double = 5.0,
-    val pedResult: ClinicalCalculators.PediatricDoseResult? = null
+    val pedResult: ClinicalCalculators.PediatricDoseResult? = null,
+    // CHA2DS2-VASc inputs
+    val chadsChf: Boolean = false,
+    val chadsHypertension: Boolean = true,
+    val chadsAgeGroup: Int = 1, // 0: <65, 1: 65-74, 2: >=75
+    val chadsDiabetes: Boolean = true,
+    val chadsStrokeTia: Boolean = false,
+    val chadsVascular: Boolean = false,
+    val chadsIsFemale: Boolean = false,
+    val chadsResult: ClinicalCalculators.Cha2Ds2VascResult? = null,
+    // CURB-65 inputs
+    val curbConfusion: Boolean = false,
+    val curbUrea: Boolean = false,
+    val curbRespRate: Boolean = true,
+    val curbBpLow: Boolean = false,
+    val curbAge65: Boolean = true,
+    val curbResult: ClinicalCalculators.Curb65Result? = null,
+    // GCS inputs
+    val gcsEye: Int = 4,
+    val gcsVerbal: Int = 5,
+    val gcsMotor: Int = 6,
+    val gcsResult: ClinicalCalculators.GcsResult? = null
 )
 
 class ClinicalViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(ClinicalUiState())
     val uiState: StateFlow<ClinicalUiState> = _uiState.asStateFlow()
+
+    private var searchJob: Job? = null
+
+    private data class IndexedDrug(
+        val drug: Drug,
+        val brandIndex: String,
+        val genericIndex: String,
+        val indicationIndex: String,
+        val allIndex: String
+    )
+
+    private val indexedDrugs: List<IndexedDrug> by lazy {
+        ClinicalRepository.drugs.map { drug ->
+            val nepBrands = drug.brandsNepal.joinToString(" ") { "${it.name} ${it.company}" }
+            val indBrands = drug.brandsIndia.joinToString(" ") { "${it.name} ${it.company}" }
+            val brandText = "$nepBrands $indBrands ${drug.genericName}".lowercase()
+            val genericText = "${drug.genericName} ${drug.drugClass}".lowercase()
+            val indicationText = drug.indications.lowercase()
+            val systemText = drug.system.lowercase()
+            val allText = "$brandText $genericText $indicationText $systemText".lowercase()
+            IndexedDrug(
+                drug = drug,
+                brandIndex = brandText,
+                genericIndex = genericText,
+                indicationIndex = indicationText,
+                allIndex = allText
+            )
+        }
+    }
 
     init {
         // Initialize precomputed drug list
@@ -132,6 +189,9 @@ class ClinicalViewModel : ViewModel() {
         computeChildPugh()
         computeParacetamol()
         computePediatric()
+        computeCha2Ds2Vasc()
+        computeCurb65()
+        computeGcs()
     }
 
     fun navigateTo(screen: NavigationScreen) {
@@ -139,53 +199,81 @@ class ClinicalViewModel : ViewModel() {
     }
 
     fun updateSearchQuery(query: String) {
-        val current = _uiState.value
-        _uiState.value = current.copy(
-            searchQuery = query,
-            filteredDrugs = filterDrugs(
-                searchQuery = query,
+        // Immediate UI feedback on the search text field
+        _uiState.update { it.copy(searchQuery = query) }
+
+        // Cancel previous search and filter on background coroutine
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch(Dispatchers.Default) {
+            if (query.isNotBlank()) {
+                delay(120) // Smooth debounce for fast keystrokes
+            }
+            val current = _uiState.value
+            val filtered = filterDrugs(
+                searchQuery = current.searchQuery,
                 searchMode = current.searchMode,
                 activeFilter = current.activeFilter,
                 selectedSystemFilter = current.selectedSystemFilter,
                 bookmarkedDrugIds = current.bookmarkedDrugIds
             )
-        )
+            _uiState.update { it.copy(filteredDrugs = filtered) }
+        }
     }
 
     fun setFilter(filter: DrugFilterType) {
         val current = _uiState.value
-        _uiState.value = current.copy(
+        val filtered = filterDrugs(
+            searchQuery = current.searchQuery,
+            searchMode = current.searchMode,
             activeFilter = filter,
             selectedSystemFilter = null,
-            filteredDrugs = filterDrugs(
-                searchQuery = current.searchQuery,
-                searchMode = current.searchMode,
+            bookmarkedDrugIds = current.bookmarkedDrugIds
+        )
+        _uiState.update {
+            it.copy(
                 activeFilter = filter,
                 selectedSystemFilter = null,
-                bookmarkedDrugIds = current.bookmarkedDrugIds
+                filteredDrugs = filtered
             )
-        )
+        }
     }
 
     fun filterBySystem(systemName: String) {
         val current = _uiState.value
         val sysFilter = if (systemName == "All Systems") null else systemName
-        _uiState.value = current.copy(
-            currentScreen = NavigationScreen.SEARCH,
-            selectedSystemFilter = sysFilter,
-            activeFilter = DrugFilterType.ALL,
+        val filtered = filterDrugs(
             searchQuery = "",
-            filteredDrugs = filterDrugs(
-                searchQuery = "",
-                searchMode = current.searchMode,
-                activeFilter = DrugFilterType.ALL,
+            searchMode = current.searchMode,
+            activeFilter = DrugFilterType.ALL,
+            selectedSystemFilter = sysFilter,
+            bookmarkedDrugIds = current.bookmarkedDrugIds
+        )
+        _uiState.update {
+            it.copy(
+                currentScreen = NavigationScreen.SEARCH,
                 selectedSystemFilter = sysFilter,
-                bookmarkedDrugIds = current.bookmarkedDrugIds
+                activeFilter = DrugFilterType.ALL,
+                searchQuery = "",
+                filteredDrugs = filtered
             )
+        }
+    }
+
+    fun addRecentSearch(query: String) {
+        val trimmed = query.trim()
+        if (trimmed.isEmpty()) return
+        val currentList = _uiState.value.recentSearches
+        val updatedList = listOf(trimmed) + currentList.filterNot { it.equals(trimmed, ignoreCase = true) }
+        _uiState.value = _uiState.value.copy(
+            recentSearches = updatedList.take(5)
         )
     }
 
     fun openDrug(drug: Drug) {
+        val drugLabel = drug.brandsNepal.firstOrNull()?.name
+            ?: drug.brandsIndia.firstOrNull()?.name
+            ?: drug.genericName
+        addRecentSearch(drugLabel)
         _uiState.value = _uiState.value.copy(
             selectedDrug = drug,
             isDrugModalOpen = true
@@ -204,30 +292,36 @@ class ClinicalViewModel : ViewModel() {
             current.add(drugId)
         }
         val curState = _uiState.value
-        _uiState.value = curState.copy(
-            bookmarkedDrugIds = current,
-            filteredDrugs = filterDrugs(
-                searchQuery = curState.searchQuery,
-                searchMode = curState.searchMode,
-                activeFilter = curState.activeFilter,
-                selectedSystemFilter = curState.selectedSystemFilter,
-                bookmarkedDrugIds = current
-            )
+        val filtered = filterDrugs(
+            searchQuery = curState.searchQuery,
+            searchMode = curState.searchMode,
+            activeFilter = curState.activeFilter,
+            selectedSystemFilter = curState.selectedSystemFilter,
+            bookmarkedDrugIds = current
         )
+        _uiState.update {
+            it.copy(
+                bookmarkedDrugIds = current,
+                filteredDrugs = filtered
+            )
+        }
     }
 
     fun setSearchMode(mode: SearchMode) {
         val current = _uiState.value
-        _uiState.value = current.copy(
+        val filtered = filterDrugs(
+            searchQuery = current.searchQuery,
             searchMode = mode,
-            filteredDrugs = filterDrugs(
-                searchQuery = current.searchQuery,
-                searchMode = mode,
-                activeFilter = current.activeFilter,
-                selectedSystemFilter = current.selectedSystemFilter,
-                bookmarkedDrugIds = current.bookmarkedDrugIds
-            )
+            activeFilter = current.activeFilter,
+            selectedSystemFilter = current.selectedSystemFilter,
+            bookmarkedDrugIds = current.bookmarkedDrugIds
         )
+        _uiState.update {
+            it.copy(
+                searchMode = mode,
+                filteredDrugs = filtered
+            )
+        }
     }
 
     fun toggleInteractionDrug(drugId: String) {
@@ -341,6 +435,20 @@ class ClinicalViewModel : ViewModel() {
         }
     }
 
+    fun clearChat() {
+        _uiState.value = _uiState.value.copy(
+            chatMessages = listOf(
+                ChatMessage(
+                    id = "init_reset",
+                    sender = MessageSender.AI,
+                    text = "Namaste Doctor! Gemini Clinical AI ready. Select a clinical module or type any clinical question."
+                )
+            ),
+            aiInputText = "",
+            isAiThinking = false
+        )
+    }
+
     // Calculators
     fun setCalcTab(tab: String) {
         _uiState.value = _uiState.value.copy(activeCalcTab = tab)
@@ -417,6 +525,92 @@ class ClinicalViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(pedResult = res)
     }
 
+    // CHA2DS2-VASc
+    fun updateCha2Ds2VascInputs(
+        chf: Boolean,
+        hypertension: Boolean,
+        ageGroup: Int,
+        diabetes: Boolean,
+        strokeTia: Boolean,
+        vascular: Boolean,
+        isFemale: Boolean
+    ) {
+        _uiState.value = _uiState.value.copy(
+            chadsChf = chf,
+            chadsHypertension = hypertension,
+            chadsAgeGroup = ageGroup,
+            chadsDiabetes = diabetes,
+            chadsStrokeTia = strokeTia,
+            chadsVascular = vascular,
+            chadsIsFemale = isFemale
+        )
+        computeCha2Ds2Vasc()
+    }
+
+    private fun computeCha2Ds2Vasc() {
+        val s = _uiState.value
+        val res = ClinicalCalculators.calculateCha2Ds2Vasc(
+            chf = s.chadsChf,
+            hypertension = s.chadsHypertension,
+            ageGroup = s.chadsAgeGroup,
+            diabetes = s.chadsDiabetes,
+            strokeTiaThromboembolism = s.chadsStrokeTia,
+            vascularDisease = s.chadsVascular,
+            isFemale = s.chadsIsFemale
+        )
+        _uiState.value = _uiState.value.copy(chadsResult = res)
+    }
+
+    // CURB-65
+    fun updateCurb65Inputs(
+        confusion: Boolean,
+        urea: Boolean,
+        respRate: Boolean,
+        bpLow: Boolean,
+        age65: Boolean
+    ) {
+        _uiState.value = _uiState.value.copy(
+            curbConfusion = confusion,
+            curbUrea = urea,
+            curbRespRate = respRate,
+            curbBpLow = bpLow,
+            curbAge65 = age65
+        )
+        computeCurb65()
+    }
+
+    private fun computeCurb65() {
+        val s = _uiState.value
+        val res = ClinicalCalculators.calculateCurb65(
+            confusion = s.curbConfusion,
+            ureaElevated = s.curbUrea,
+            respRateElevated = s.curbRespRate,
+            bloodPressureLow = s.curbBpLow,
+            age65OrOlder = s.curbAge65
+        )
+        _uiState.value = _uiState.value.copy(curbResult = res)
+    }
+
+    // GCS
+    fun updateGcsInputs(eye: Int, verbal: Int, motor: Int) {
+        _uiState.value = _uiState.value.copy(
+            gcsEye = eye,
+            gcsVerbal = verbal,
+            gcsMotor = motor
+        )
+        computeGcs()
+    }
+
+    private fun computeGcs() {
+        val s = _uiState.value
+        val res = ClinicalCalculators.calculateGcs(
+            eye = s.gcsEye,
+            verbal = s.gcsVerbal,
+            motor = s.gcsMotor
+        )
+        _uiState.value = _uiState.value.copy(gcsResult = res)
+    }
+
     fun getFilteredDrugs(): List<Drug> {
         return _uiState.value.filteredDrugs
     }
@@ -430,28 +624,8 @@ class ClinicalViewModel : ViewModel() {
     ): List<Drug> {
         val q = searchQuery.trim().lowercase()
 
-        return ClinicalRepository.drugs.filter { drug ->
-            val matchesSearch = if (q.isEmpty()) true else {
-                when (searchMode) {
-                    SearchMode.BRAND -> {
-                        drug.brandsNepal.any { it.name.lowercase().contains(q) || it.company.lowercase().contains(q) } ||
-                        drug.brandsIndia.any { it.name.lowercase().contains(q) || it.company.lowercase().contains(q) } ||
-                        drug.genericName.lowercase().contains(q)
-                    }
-                    SearchMode.GENERIC -> {
-                        drug.genericName.lowercase().contains(q) ||
-                        drug.drugClass.lowercase().contains(q)
-                    }
-                    SearchMode.INDICATION -> {
-                        drug.indications.lowercase().contains(q)
-                    }
-                    SearchMode.HERBAL -> {
-                        drug.system.lowercase().contains(q) ||
-                        drug.drugClass.lowercase().contains(q) ||
-                        drug.genericName.lowercase().contains(q)
-                    }
-                }
-            }
+        return indexedDrugs.asSequence().filter { item ->
+            val drug = item.drug
 
             val matchesFilter = when (activeFilter) {
                 DrugFilterType.ALL -> true
@@ -460,12 +634,21 @@ class ClinicalViewModel : ViewModel() {
                 DrugFilterType.BLACK_BOX -> drug.blackBoxWarning != null
                 DrugFilterType.BOOKMARKS -> bookmarkedDrugIds.contains(drug.id)
             }
+            if (!matchesFilter) return@filter false
 
             val matchesSystem = if (selectedSystemFilter == null) true else {
                 drug.system.equals(selectedSystemFilter, ignoreCase = true)
             }
+            if (!matchesSystem) return@filter false
 
-            matchesSearch && matchesFilter && matchesSystem
-        }
+            if (q.isEmpty()) return@filter true
+
+            when (searchMode) {
+                SearchMode.BRAND -> item.brandIndex.contains(q)
+                SearchMode.GENERIC -> item.genericIndex.contains(q)
+                SearchMode.INDICATION -> item.indicationIndex.contains(q)
+                SearchMode.HERBAL -> item.allIndex.contains(q)
+            }
+        }.map { it.drug }.toList()
     }
 }

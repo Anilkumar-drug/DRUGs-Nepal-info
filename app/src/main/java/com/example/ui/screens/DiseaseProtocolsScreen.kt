@@ -19,10 +19,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.DiseaseProtocol
 import com.example.data.repository.ClinicalRepository
+import com.example.ui.components.VoiceSearchButton
 import com.example.ui.theme.*
 
 @Composable
-fun DiseaseProtocolsScreen() {
+fun DiseaseProtocolsScreen(
+    onProtocolClick: ((DiseaseProtocol) -> Unit)? = null
+) {
     var searchQuery by remember { mutableStateOf("") }
 
     val protocols = remember(searchQuery) {
@@ -85,10 +88,28 @@ fun DiseaseProtocolsScreen() {
                 Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             },
             trailingIcon = {
-                if (searchQuery.isNotEmpty()) {
-                    IconButton(onClick = { searchQuery = "" }) {
-                        Icon(Icons.Default.Close, contentDescription = "Clear")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(end = 4.dp)
+                ) {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(
+                            onClick = { searchQuery = "" },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = "Clear", modifier = Modifier.size(18.dp))
+                        }
                     }
+                    VoiceSearchButton(
+                        onSpokenText = { spoken ->
+                            searchQuery = spoken
+                        },
+                        size = 32.dp,
+                        idleColor = Amber500,
+                        activeColor = Red500,
+                        testTag = "disease_voice_search_button"
+                    )
                 }
             },
             modifier = Modifier
@@ -109,15 +130,22 @@ fun DiseaseProtocolsScreen() {
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             items(protocols, key = { it.id }) { item ->
-                ProtocolCard(item)
+                ProtocolCard(
+                    protocol = item,
+                    onClick = { onProtocolClick?.invoke(item) }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun ProtocolCard(protocol: DiseaseProtocol) {
+private fun ProtocolCard(
+    protocol: DiseaseProtocol,
+    onClick: (() -> Unit)? = null
+) {
     Card(
+        onClick = { onClick?.invoke() },
         modifier = Modifier
             .fillMaxWidth()
             .testTag("protocol_card_${protocol.id}"),

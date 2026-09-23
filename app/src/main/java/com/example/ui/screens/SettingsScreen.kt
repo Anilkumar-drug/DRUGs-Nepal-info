@@ -283,6 +283,7 @@ fun SettingsScreen(
                     FontSizeScale.values().forEach { scale ->
                         val isSelected = state.fontSizeScale == scale
                         Surface(
+                            onClick = { viewModel.setFontSizeScale(scale) },
                             shape = RoundedCornerShape(12.dp),
                             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                             border = androidx.compose.foundation.BorderStroke(
@@ -294,9 +295,11 @@ fun SettingsScreen(
                                 .clip(RoundedCornerShape(12.dp))
                                 .testTag("font_scale_${scale.name.lowercase()}")
                         ) {
-                            TextButton(
-                                onClick = { viewModel.setFontSizeScale(scale) },
-                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 10.dp, horizontal = 4.dp),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = scale.label,
@@ -417,6 +420,7 @@ private fun ThemeOptionButton(
     onClick: () -> Unit
 ) {
     Surface(
+        onClick = onClick,
         shape = RoundedCornerShape(14.dp),
         color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
         border = androidx.compose.foundation.BorderStroke(
@@ -429,7 +433,8 @@ private fun ThemeOptionButton(
     ) {
         Column(
             modifier = Modifier
-                .padding(10.dp),
+                .fillMaxWidth()
+                .padding(vertical = 12.dp, horizontal = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
@@ -451,24 +456,19 @@ private fun ThemeOptionButton(
                 }
             }
 
-            TextButton(
-                onClick = onClick,
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontSize = 9.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontSize = 9.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

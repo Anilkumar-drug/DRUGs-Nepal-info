@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
@@ -19,8 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.ChatMessage
@@ -37,6 +42,7 @@ fun GeminiChatScreen(
 ) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    var selectedCategory by remember { mutableStateOf("⚡ Emergency") }
 
     LaunchedEffect(state.chatMessages.size, state.isAiThinking) {
         if (state.chatMessages.isNotEmpty()) {
@@ -44,23 +50,56 @@ fun GeminiChatScreen(
         }
     }
 
-    val suggestedQueries = remember {
-        listOf(
-            "Check interaction: Telmisartan + Spironolactone",
-            "Metformin renal dosing & contrast guidelines",
-            "Amox-Clav pediatric otitis media dose",
-            "Emergency Organophosphate atropinization protocol",
-            "Paracetamol max daily dose in liver disease"
+    val categories = remember {
+        listOf("⚡ Emergency", "🐍 Toxicology", "📋 Guidelines", "🔍 Interactions", "⚖️ Renal/Dosing")
+    }
+
+    val categoryPrompts = remember {
+        mapOf(
+            "⚡ Emergency" to listOf(
+                "Anaphylaxis Epinephrine Dosing (WAO/EAACI)",
+                "ACLS Pulseless VT/VF Algorithm & Amiodarone",
+                "PSVT Adenosine Protocol & Modified Valsalva",
+                "Status Epilepticus AES Protocol (Lorazepam + Levetiracetam)"
+            ),
+            "🐍 Toxicology" to listOf(
+                "Snakebite Polyvalent ASV Protocol (WHO & Nepal)",
+                "Emergency Organophosphate Atropinization & 2-PAM",
+                "Paracetamol NAC 3-Bag Infusion Protocol",
+                "Cyanide Hydroxocobalamin Dosing",
+                "Local Anesthetic Toxicity (LAST) 20% Lipid Rescue"
+            ),
+            "📋 Guidelines" to listOf(
+                "Asthma GINA 2024 Track 1 SMART Regimen",
+                "Acute MI AHA/ACC STEMI & DAPT Protocol",
+                "Acute Ischemic Stroke ASA Alteplase & BP Targets",
+                "TB WHO 2HRZE / 4HR Regimen & BPaLM",
+                "Acute Pancreatitis ACG Fluid Resuscitation",
+                "Ulcerative Colitis ACG 5-ASA & ASUC Flare",
+                "H. Pylori ACG 2024 Bismuth Quadruple Therapy"
+            ),
+            "🔍 Interactions" to listOf(
+                "Check interaction: Telmisartan + Spironolactone",
+                "Aspirin + Ticagrelor safety limits in ACS",
+                "Amiodarone + Digoxin / Warfarin interaction"
+            ),
+            "⚖️ Renal/Dosing" to listOf(
+                "Metformin renal dosing & contrast guidelines",
+                "Levetiracetam renal clearance adjustment",
+                "Amox-Clav pediatric otitis media dose"
+            )
         )
     }
+
+    val currentPrompts = categoryPrompts[selectedCategory] ?: emptyList()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // AI Banner
+        // AI Banner with Controls
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = Indigo950.copy(alpha = 0.5f),
@@ -91,14 +130,29 @@ fun GeminiChatScreen(
                         }
                     }
                     Column {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(
+                                text = "Gemini Clinical AI",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Indigo400
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Emerald600.copy(alpha = 0.2f),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Emerald400.copy(alpha = 0.3f))
+                            ) {
+                                Text(
+                                    text = "3.5 Flash",
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Emerald400,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
                         Text(
-                            text = "Gemini Clinical Pharmacology AI",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Indigo400
-                        )
-                        Text(
-                            text = "Ask drug interactions, renal dosing, and clinical pharmacology",
+                            text = "AHA, GINA, ASA, ACG, AES, WHO & Nepal Protocols",
                             style = MaterialTheme.typography.bodySmall,
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -106,40 +160,66 @@ fun GeminiChatScreen(
                     }
                 }
 
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = Indigo600.copy(alpha = 0.25f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Indigo400.copy(alpha = 0.3f))
+                IconButton(
+                    onClick = { viewModel.clearChat() },
+                    modifier = Modifier.size(32.dp)
                 ) {
-                    Text(
-                        text = "v3.5 Flash",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Indigo400,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Reset Chat",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
         }
 
-        // Quick Clinical Prompt Chips
+        // Clinical Category Selector Row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            categories.forEach { cat ->
+                val isSelected = selectedCategory == cat
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { selectedCategory = cat },
+                    label = { Text(cat, fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Indigo600,
+                        selectedLabelColor = Color.White,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        labelColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        borderColor = if (isSelected) Indigo400 else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        enabled = true,
+                        selected = isSelected
+                    )
+                )
+            }
+        }
+
+        // Quick Clinical Prompt Chips for Selected Category
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            suggestedQueries.forEach { query ->
+            currentPrompts.forEach { query ->
                 SuggestionChip(
                     onClick = { viewModel.sendAiMessage(query) },
                     label = { Text(query, fontSize = 11.sp) },
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = SuggestionChipDefaults.suggestionChipColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                         labelColor = MaterialTheme.colorScheme.onSurface
                     ),
                     border = SuggestionChipDefaults.suggestionChipBorder(
-                        borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                        borderColor = Indigo500.copy(alpha = 0.35f),
                         enabled = true
                     )
                 )
@@ -215,7 +295,7 @@ fun GeminiChatScreen(
             OutlinedTextField(
                 value = state.aiInputText,
                 onValueChange = { viewModel.updateAiInput(it) },
-                placeholder = { Text("Ask Gemini pharmacology query...", fontSize = 13.sp) },
+                placeholder = { Text("Ask clinical pharmacology query...", fontSize = 13.sp) },
                 modifier = Modifier
                     .weight(1f)
                     .testTag("gemini_chat_input"),
@@ -226,7 +306,13 @@ fun GeminiChatScreen(
                     focusedBorderColor = Indigo500,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
                 ),
-                maxLines = 3
+                maxLines = 3,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                keyboardActions = KeyboardActions(onSend = {
+                    if (state.aiInputText.isNotBlank() && !state.isAiThinking) {
+                        viewModel.sendAiMessage()
+                    }
+                })
             )
 
             IconButton(
@@ -251,6 +337,8 @@ fun GeminiChatScreen(
 @Composable
 private fun ChatBubble(message: ChatMessage) {
     val isUser = message.sender == MessageSender.USER
+    val clipboardManager = LocalClipboardManager.current
+    var copied by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -279,7 +367,7 @@ private fun ChatBubble(message: ChatMessage) {
             ),
             color = if (isUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
             border = if (!isUser) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)) else null,
-            modifier = Modifier.widthIn(max = 300.dp)
+            modifier = Modifier.widthIn(max = 320.dp)
         ) {
             Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
                 Text(
@@ -289,6 +377,30 @@ private fun ChatBubble(message: ChatMessage) {
                     color = if (isUser) Color.White else MaterialTheme.colorScheme.onSurface,
                     lineHeight = 19.sp
                 )
+
+                if (!isUser) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(message.text))
+                                copied = true
+                            },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (copied) Icons.Default.Check else Icons.Default.ContentCopy,
+                                contentDescription = "Copy Response",
+                                tint = if (copied) Emerald400 else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
 

@@ -23,7 +23,9 @@ import com.example.data.repository.ClinicalRepository
 import com.example.ui.theme.*
 
 @Composable
-fun AntidoteToxicologyScreen() {
+fun AntidoteToxicologyScreen(
+    onAntidoteClick: ((Antidote) -> Unit)? = null
+) {
     var searchQuery by remember { mutableStateOf("") }
 
     val antidotes = remember(searchQuery) {
@@ -109,15 +111,22 @@ fun AntidoteToxicologyScreen() {
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             items(antidotes, key = { it.id }) { antidote ->
-                AntidoteCard(antidote)
+                AntidoteCard(
+                    item = antidote,
+                    onClick = { onAntidoteClick?.invoke(antidote) }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun AntidoteCard(item: Antidote) {
+private fun AntidoteCard(
+    item: Antidote,
+    onClick: (() -> Unit)? = null
+) {
     Card(
+        onClick = { onClick?.invoke() },
         modifier = Modifier
             .fillMaxWidth()
             .testTag("antidote_card_${item.id}"),
