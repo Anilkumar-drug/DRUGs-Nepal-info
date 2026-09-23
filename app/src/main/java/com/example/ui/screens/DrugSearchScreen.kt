@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.*
@@ -57,7 +58,8 @@ fun DrugSearchScreen(
     onFilterChange: (DrugFilterType) -> Unit,
     onClearSystemFilter: () -> Unit,
     onDrugClick: (Drug) -> Unit,
-    onBookmarkToggle: (String) -> Unit
+    onBookmarkToggle: (String) -> Unit,
+    onOpenPharmacologyReview: () -> Unit = {}
 ) {
     var showHistoryDialog by remember { mutableStateOf(false) }
 
@@ -252,6 +254,67 @@ fun DrugSearchScreen(
             }
         }
 
+        // Quick Pharmacology & MOA Guides Banner
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = Color(0xFF6366F1).copy(alpha = 0.12f),
+            border = BorderStroke(1.dp, Color(0xFF818CF8).copy(alpha = 0.35f)),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .clickable(onClick = onOpenPharmacologyReview)
+                .testTag("quick_pharm_review_banner")
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MenuBook,
+                    contentDescription = null,
+                    tint = Color(0xFFA5B4FC),
+                    modifier = Modifier.size(20.dp)
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "Pharmacology Review & MOA Guide",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = Color(0xFF6366F1).copy(alpha = 0.3f)
+                        ) {
+                            Text(
+                                text = "14 CHAPTERS",
+                                fontSize = 8.5.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color(0xFFA5B4FC),
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = "Insulins, Steroids, AEDs, Anti-TB, Chelators & Teratogens",
+                        fontSize = 10.5.sp,
+                        color = Slate400
+                    )
+                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = Color(0xFFA5B4FC),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+
         // Recent Searches section for quick navigation (Last 5 drugs or protocols searched)
         if (effectiveRecentSearches.isNotEmpty()) {
             Column(
@@ -379,101 +442,6 @@ fun DrugSearchScreen(
                     ),
                     modifier = Modifier.testTag("filter_${filterType.name.lowercase()}")
                 )
-            }
-        }
-
-        // Empty Search Prompt with Friendly Mascot / Magnifier as in Screenshot 1
-        if (searchQuery.isEmpty() && selectedSystemFilter == null && activeFilter == DrugFilterType.ALL) {
-            Card(
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Custom Magnifying Glass Character Illustration (Screenshot 1 Style)
-                    MascotMagnifyingGlass(modifier = Modifier.size(110.dp))
-
-                    Text(
-                        text = when (searchMode) {
-                            SearchMode.BRAND -> "Search by Brand name"
-                            SearchMode.GENERIC -> "Search by Generic name"
-                            SearchMode.INDICATION -> "Search by Indication"
-                            SearchMode.HERBAL -> "Search Herbal Formulations"
-                        },
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Text(
-                        text = "Instant access to 10,000+ Nepal DDA registered drugs, prices, and international equivalents.",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-
-                    // Quick Suggested Tap Chips
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = Red500.copy(alpha = 0.12f),
-                            border = BorderStroke(1.dp, Red500.copy(alpha = 0.35f))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                VoiceSearchButton(
-                                    onSpokenText = { spoken -> onSearchChange(spoken) },
-                                    size = 26.dp,
-                                    idleColor = Red500,
-                                    activeColor = Red600,
-                                    testTag = "empty_state_voice_search_button"
-                                )
-                                Text(
-                                    text = "Tap to speak",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Red500
-                                )
-                            }
-                        }
-
-                        effectiveRecentSearches.take(6).forEach { chip ->
-                            Surface(
-                                onClick = { onSearchChange(chip.split(" ").first()) },
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
-                            ) {
-                                Text(
-                                    text = chip,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                                )
-                            }
-                        }
-                    }
-                }
             }
         }
 

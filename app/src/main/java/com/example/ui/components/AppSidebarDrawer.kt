@@ -31,8 +31,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AccountTree
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Domain
@@ -82,6 +84,8 @@ fun AppSidebarDrawer(
     onDrugsBySystemClick: () -> Unit,
     onCalculatorsClick: () -> Unit,
     onAiAssistantClick: () -> Unit,
+    onSavedClick: () -> Unit = {},
+    onPharmacologyClick: () -> Unit = {},
     onInteractionsClick: () -> Unit,
     onAntidotesClick: () -> Unit,
     onSettingsClick: () -> Unit
@@ -362,7 +366,33 @@ fun AppSidebarDrawer(
                                 testTag = "sidebar_ai_item"
                             )
 
-                            // 6. Drug Reminder & Interaction Checker
+                            // 6. Pharmacology Review & MOA
+                            SidebarItemCard(
+                                icon = Icons.AutoMirrored.Filled.MenuBook,
+                                iconColor = Color(0xFF818CF8),
+                                iconBg = Color(0xFF818CF8).copy(alpha = 0.15f),
+                                title = "PHARMACOLOGY REVIEW & MOA",
+                                subtitle = "इन्सुलिन, स्टेरोइड, एन्टिडोट र टेराटोजेन चार्टहरू",
+                                badge = "14 Topics",
+                                badgeColor = Color(0xFF818CF8),
+                                onClick = onPharmacologyClick,
+                                testTag = "sidebar_pharm_review_item"
+                            )
+
+                            // 7. Saved Clinical Favorites
+                            SidebarItemCard(
+                                icon = Icons.Default.Bookmark,
+                                iconColor = Color(0xFFF59E0B),
+                                iconBg = Color(0xFFF59E0B).copy(alpha = 0.15f),
+                                title = "SAVED CLINICAL FAVORITES",
+                                subtitle = "बुकमार्क गरिएका औषधि र प्रोटोकलहरू",
+                                badge = "Favorites",
+                                badgeColor = Color(0xFFF59E0B),
+                                onClick = onSavedClick,
+                                testTag = "sidebar_saved_item"
+                            )
+
+                            // 7. Drug Reminder & Interaction Checker
                             SidebarItemCard(
                                 icon = Icons.Default.ElectricBolt,
                                 iconColor = Color(0xFFF43F5E),
@@ -375,7 +405,7 @@ fun AppSidebarDrawer(
                                 testTag = "sidebar_interactions_item"
                             )
 
-                            // 7. Health Guides & Antidotes
+                            // 8. Health Guides & Antidotes
                             SidebarItemCard(
                                 icon = Icons.Default.Warning,
                                 iconColor = Color(0xFFF59E0B),
@@ -388,7 +418,7 @@ fun AppSidebarDrawer(
                                 testTag = "sidebar_antidotes_item"
                             )
 
-                            // 8. Settings & Prescriber Profile
+                            // 9. Settings & Prescriber Profile
                             SidebarItemCard(
                                 icon = Icons.Default.Settings,
                                 iconColor = Slate400,

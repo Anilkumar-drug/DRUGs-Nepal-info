@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +25,8 @@ import com.example.ui.theme.*
 
 @Composable
 fun DiseaseProtocolsScreen(
+    bookmarkedProtocolIds: Set<String> = emptySet(),
+    onBookmarkToggle: ((String) -> Unit)? = null,
     onProtocolClick: ((DiseaseProtocol) -> Unit)? = null
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -130,8 +133,11 @@ fun DiseaseProtocolsScreen(
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             items(protocols, key = { it.id }) { item ->
+                val isBookmarked = bookmarkedProtocolIds.contains(item.id)
                 ProtocolCard(
                     protocol = item,
+                    isBookmarked = isBookmarked,
+                    onBookmarkToggle = { onBookmarkToggle?.invoke(item.id) },
                     onClick = { onProtocolClick?.invoke(item) }
                 )
             }
@@ -142,6 +148,8 @@ fun DiseaseProtocolsScreen(
 @Composable
 private fun ProtocolCard(
     protocol: DiseaseProtocol,
+    isBookmarked: Boolean = false,
+    onBookmarkToggle: (() -> Unit)? = null,
     onClick: (() -> Unit)? = null
 ) {
     Card(
@@ -171,18 +179,37 @@ private fun ProtocolCard(
                     color = Amber400,
                     modifier = Modifier.weight(1f)
                 )
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Amber950.copy(alpha = 0.5f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Amber500.copy(alpha = 0.4f))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text(
-                        text = protocol.category,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Amber400,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Amber950.copy(alpha = 0.5f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Amber500.copy(alpha = 0.4f))
+                    ) {
+                        Text(
+                            text = protocol.category,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Amber400,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+
+                    if (onBookmarkToggle != null) {
+                        IconButton(
+                            onClick = onBookmarkToggle,
+                            modifier = Modifier.size(32.dp).testTag("bookmark_protocol_${protocol.id}")
+                        ) {
+                            Icon(
+                                imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Outlined.BookmarkBorder,
+                                contentDescription = if (isBookmarked) "Unbookmark protocol" else "Bookmark protocol",
+                                tint = if (isBookmarked) Amber400 else Slate400,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
                 }
             }
 

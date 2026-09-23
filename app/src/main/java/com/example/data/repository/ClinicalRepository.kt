@@ -1510,40 +1510,205 @@ object ClinicalRepository {
         if (selectedDrugIds.size < 2) return emptyList()
         val selectedDrugs = drugs.filter { selectedDrugIds.contains(it.id) }
         val results = mutableListOf<com.example.data.model.DrugInteraction>()
+        val seenPairs = mutableSetOf<String>()
+
+        fun getCoreName(generic: String): String {
+            return generic.split(" ").first().replace("(", "").replace(")", "").lowercase()
+        }
 
         for (i in 0 until selectedDrugs.size) {
             for (j in i + 1 until selectedDrugs.size) {
                 val d1 = selectedDrugs[i]
                 val d2 = selectedDrugs[j]
+                val pairKey = if (d1.id < d2.id) "${d1.id}_${d2.id}" else "${d2.id}_${d1.id}"
+                if (seenPairs.contains(pairKey)) continue
+                seenPairs.add(pairKey)
 
-                val match = interactions.find {
-                    (it.drug1Generic.contains(d1.genericName.split(" ").first(), ignoreCase = true) &&
-                     it.drug2Generic.contains(d2.genericName.split(" ").first(), ignoreCase = true)) ||
-                    (it.drug1Generic.contains(d2.genericName.split(" ").first(), ignoreCase = true) &&
-                     it.drug2Generic.contains(d1.genericName.split(" ").first(), ignoreCase = true))
+                val c1 = getCoreName(d1.genericName)
+                val c2 = getCoreName(d2.genericName)
+
+                // 1. Direct registry interaction lookup
+                val match = interactions.find { inter ->
+                    val i1 = getCoreName(inter.drug1Generic)
+                    val i2 = getCoreName(inter.drug2Generic)
+                    (i1 == c1 && i2 == c2) || (i1 == c2 && i2 == c1) ||
+                    (inter.drug1Generic.contains(c1, ignoreCase = true) && inter.drug2Generic.contains(c2, ignoreCase = true)) ||
+                    (inter.drug1Generic.contains(c2, ignoreCase = true) && inter.drug2Generic.contains(c1, ignoreCase = true))
                 }
 
                 if (match != null) {
                     results.add(match)
                 } else {
-                    // Check for class-level interactions
-                    if (d1.drugClass.contains("Beta-lactam") && d2.drugClass.contains("Macrolide") ||
-                        d2.drugClass.contains("Beta-lactam") && d1.drugClass.contains("Macrolide")) {
-                        results.add(
-                            com.example.data.model.DrugInteraction(
-                                drug1Generic = d1.genericName,
-                                drug2Generic = d2.genericName,
-                                severity = com.example.data.model.InteractionSeverity.MODERATE,
-                                effect = "Potential bacteriostatic antagonism of bactericidal cell wall synthesis.",
-                                mechanism = "Macrolides inhibit protein synthesis (bacteriostatic) which may blunt beta-lactam bactericidal action on actively dividing cells.",
-                                clinicalAction = "Acceptable in severe atypical pneumonia (e.g. CAP guidelines), but monitor clinical response."
+                    // 2. Comprehensive Rule-Based Clinical Engine
+                    val isNsaid1 = d1.drugClass.contains("NSAID", ignoreCase = true) || d1.genericName.contains("Ibuprofen", ignoreCase = true) || d1.genericName.contains("Diclofenac", ignoreCase = true) || d1.genericName.contains("Ketorolac", ignoreCase = true)
+                    val isNsaid2 = d2.drugClass.contains("NSAID", ignoreCase = true) || d2.genericName.contains("Ibuprofen", ignoreCase = true) || d2.genericName.contains("Diclofenac", ignoreCase = true) || d2.genericName.contains("Ketorolac", ignoreCase = true)
+
+                    val isAnticoag1 = d1.drugClass.contains("Anticoagulant", ignoreCase = true) || d1.genericName.contains("Warfarin", ignoreCase = true) || d1.genericName.contains("Apixaban", ignoreCase = true) || d1.genericName.contains("Enoxaparin", ignoreCase = true)
+                    val isAnticoag2 = d2.drugClass.contains("Anticoagulant", ignoreCase = true) || d2.genericName.contains("Warfarin", ignoreCase = true) || d2.genericName.contains("Apixaban", ignoreCase = true) || d2.genericName.contains("Enoxaparin", ignoreCase = true)
+
+                    val isSteroid1 = d1.drugClass.contains("Corticosteroid", ignoreCase = true) || d1.genericName.contains("Prednisolone", ignoreCase = true) || d1.genericName.contains("Dexamethasone", ignoreCase = true) || d1.genericName.contains("Hydrocortisone", ignoreCase = true)
+                    val isSteroid2 = d2.drugClass.contains("Corticosteroid", ignoreCase = true) || d2.genericName.contains("Prednisolone", ignoreCase = true) || d2.genericName.contains("Dexamethasone", ignoreCase = true) || d2.genericName.contains("Hydrocortisone", ignoreCase = true)
+
+                    val isRaas1 = d1.drugClass.contains("ACE", ignoreCase = true) || d1.drugClass.contains("ARB", ignoreCase = true) || d1.drugClass.contains("Angiotensin", ignoreCase = true) || d1.genericName.contains("Ramipril", ignoreCase = true) || d1.genericName.contains("Losartan", ignoreCase = true) || d1.genericName.contains("Telmisartan", ignoreCase = true)
+                    val isRaas2 = d2.drugClass.contains("ACE", ignoreCase = true) || d2.drugClass.contains("ARB", ignoreCase = true) || d2.drugClass.contains("Angiotensin", ignoreCase = true) || d2.genericName.contains("Ramipril", ignoreCase = true) || d2.genericName.contains("Losartan", ignoreCase = true) || d2.genericName.contains("Telmisartan", ignoreCase = true)
+
+                    val isKSpaSparing1 = d1.genericName.contains("Spironolactone", ignoreCase = true)
+                    val isKSpaSparing2 = d2.genericName.contains("Spironolactone", ignoreCase = true)
+
+                    val isAntiplatelet1 = d1.genericName.contains("Clopidogrel", ignoreCase = true)
+                    val isAntiplatelet2 = d2.genericName.contains("Clopidogrel", ignoreCase = true)
+
+                    val isPpi1 = d1.drugClass.contains("Proton Pump", ignoreCase = true) || d1.genericName.contains("Omeprazole", ignoreCase = true) || d1.genericName.contains("Pantoprazole", ignoreCase = true)
+                    val isPpi2 = d2.drugClass.contains("Proton Pump", ignoreCase = true) || d2.genericName.contains("Omeprazole", ignoreCase = true) || d2.genericName.contains("Pantoprazole", ignoreCase = true)
+
+                    val isQtDrug1 = d1.genericName.contains("Ciprofloxacin", ignoreCase = true) || d1.genericName.contains("Azithromycin", ignoreCase = true) || d1.genericName.contains("Ondansetron", ignoreCase = true)
+                    val isQtDrug2 = d2.genericName.contains("Ciprofloxacin", ignoreCase = true) || d2.genericName.contains("Azithromycin", ignoreCase = true) || d2.genericName.contains("Ondansetron", ignoreCase = true)
+
+                    val isOpioidOrSedative1 = d1.genericName.contains("Tramadol", ignoreCase = true) || d1.genericName.contains("Alprazolam", ignoreCase = true)
+                    val isOpioidOrSedative2 = d2.genericName.contains("Tramadol", ignoreCase = true) || d2.genericName.contains("Alprazolam", ignoreCase = true)
+
+                    when {
+                        // Anticoagulant + NSAID
+                        (isAnticoag1 && isNsaid2) || (isAnticoag2 && isNsaid1) -> {
+                            val anti = if (isAnticoag1) d1 else d2
+                            val nsaid = if (isAnticoag1) d2 else d1
+                            results.add(
+                                com.example.data.model.DrugInteraction(
+                                    drug1Generic = anti.genericName,
+                                    drug2Generic = nsaid.genericName,
+                                    severity = com.example.data.model.InteractionSeverity.CONTRAINDICATED,
+                                    effect = "Catastrophic Gastrointestinal Hemorrhage and Major Bleeding Events.",
+                                    mechanism = "Synergistic pharmacodynamic bleeding risk: NSAIDs inhibit COX-1 platelet aggregation and cause gastric mucosal erosions, while Anticoagulants suppress clotting factor synthesis.",
+                                    clinicalAction = "Strictly avoid concurrent use. If analgesia is required, use paracetamol (up to 2g/day) or topical analgesic. If mandatory, prescribe gastroprotective PPI and monitor CBC/INR closely."
+                                )
                             )
-                        )
+                        }
+
+                        // Duplicate NSAIDs
+                        isNsaid1 && isNsaid2 -> {
+                            results.add(
+                                com.example.data.model.DrugInteraction(
+                                    drug1Generic = d1.genericName,
+                                    drug2Generic = d2.genericName,
+                                    severity = com.example.data.model.InteractionSeverity.CONTRAINDICATED,
+                                    effect = "Acute Kidney Injury, Severe Peptic Ulcer Perforation, and Gastrointestinal Bleeding with Zero Added Analgesia.",
+                                    mechanism = "Duplicate non-steroidal anti-inflammatory therapy produces additive renal vasoconstriction and mucosal ulceration without increasing therapeutic efficacy.",
+                                    clinicalAction = "Never combine two systemic NSAIDs. Discontinue one immediately and optimize single-agent dosing or switch to an agent with a different analgesic mechanism."
+                                )
+                            )
+                        }
+
+                        // Clopidogrel + Omeprazole
+                        ((isAntiplatelet1 && d2.genericName.contains("Omeprazole", ignoreCase = true)) ||
+                         (isAntiplatelet2 && d1.genericName.contains("Omeprazole", ignoreCase = true))) -> {
+                            results.add(
+                                com.example.data.model.DrugInteraction(
+                                    drug1Generic = "Clopidogrel",
+                                    drug2Generic = "Omeprazole",
+                                    severity = com.example.data.model.InteractionSeverity.SERIOUS,
+                                    effect = "Loss of Antiplatelet Efficacy; Increased Risk of Stent Thrombosis, Re-infarction, and Ischemic Stroke.",
+                                    mechanism = "Omeprazole strongly inhibits CYP2C19, which is required to convert clopidogrel prodrug into its active thiol metabolite.",
+                                    clinicalAction = "Avoid Omeprazole with Clopidogrel. Switch PPI to Pantoprazole or Rabeprazole, which exhibit negligible CYP2C19 inhibition."
+                                )
+                            )
+                        }
+
+                        // RAAS Inhibitor + Spironolactone
+                        ((isRaas1 && isKSpaSparing2) || (isRaas2 && isKSpaSparing1)) -> {
+                            val raas = if (isRaas1) d1 else d2
+                            results.add(
+                                com.example.data.model.DrugInteraction(
+                                    drug1Generic = raas.genericName,
+                                    drug2Generic = "Spironolactone",
+                                    severity = com.example.data.model.InteractionSeverity.SERIOUS,
+                                    effect = "Severe Life-Threatening Hyperkalemia (>5.5 mEq/L) and Cardiac Arrhythmias.",
+                                    mechanism = "Combined suppression of aldosterone secretion and renal mineralocorticoid receptor blockade halts urinary potassium excretion.",
+                                    clinicalAction = "Check baseline serum potassium and creatinine. Recheck at Day 3, Day 7, and monthly. Withhold if potassium >5.0 mEq/L in renal insufficiency."
+                                )
+                            )
+                        }
+
+                        // Steroid + NSAID
+                        ((isSteroid1 && isNsaid2) || (isSteroid2 && isNsaid1)) -> {
+                            val steroid = if (isSteroid1) d1 else d2
+                            val nsaid = if (isSteroid1) d2 else d1
+                            results.add(
+                                com.example.data.model.DrugInteraction(
+                                    drug1Generic = steroid.genericName,
+                                    drug2Generic = nsaid.genericName,
+                                    severity = com.example.data.model.InteractionSeverity.SERIOUS,
+                                    effect = "4-Fold Increased Risk of Gastrointestinal Ulceration, Hemorrhage, and Perforation.",
+                                    mechanism = "Synergistic inhibition of protective gastric prostaglandins coupled with steroid-mediated impairment of epithelial healing and wound repair.",
+                                    clinicalAction = "Co-prescribe a prophylactic Proton Pump Inhibitor (e.g. Pantoprazole 40mg daily) and instruct patient to report any melena, hematemesis, or severe epigastric pain."
+                                )
+                            )
+                        }
+
+                        // Dual QT Prolonging Drugs
+                        (isQtDrug1 && isQtDrug2) -> {
+                            results.add(
+                                com.example.data.model.DrugInteraction(
+                                    drug1Generic = d1.genericName,
+                                    drug2Generic = d2.genericName,
+                                    severity = com.example.data.model.InteractionSeverity.SERIOUS,
+                                    effect = "Additive QTc Interval Prolongation, Risk of Torsades de Pointes and Fatal Ventricular Fibrillation.",
+                                    mechanism = "Concurrent blockade of myocardial IKr potassium channels delaying cardiac ventricular repolarization.",
+                                    clinicalAction = "Obtain baseline 12-lead ECG. Monitor QTc interval and serum electrolytes (potassium, magnesium). Discontinue or substitute if QTc exceeds 500 ms."
+                                )
+                            )
+                        }
+
+                        // Opioid + Benzodiazepine (Tramadol + Alprazolam)
+                        (d1.genericName.contains("Tramadol", ignoreCase = true) && d2.genericName.contains("Alprazolam", ignoreCase = true)) ||
+                        (d2.genericName.contains("Tramadol", ignoreCase = true) && d1.genericName.contains("Alprazolam", ignoreCase = true)) -> {
+                            results.add(
+                                com.example.data.model.DrugInteraction(
+                                    drug1Generic = "Tramadol",
+                                    drug2Generic = "Alprazolam",
+                                    severity = com.example.data.model.InteractionSeverity.CONTRAINDICATED,
+                                    effect = "Severe Central Nervous System and Respiratory Depression, Coma, and Fatal Overdose.",
+                                    mechanism = "Additive pharmacodynamic depression of respiratory centers in the brainstem via mu-opioid and GABA-A receptor activation.",
+                                    clinicalAction = "FDA Black Box warning: Avoid concurrent prescribing unless no alternative exists. Limit dosage and duration to absolute minimum; educate family on naloxone availability."
+                                )
+                            )
+                        }
+
+                        // Beta-lactam + Macrolide
+                        (d1.drugClass.contains("Beta-lactam") && d2.drugClass.contains("Macrolide")) ||
+                        (d2.drugClass.contains("Beta-lactam") && d1.drugClass.contains("Macrolide")) -> {
+                            results.add(
+                                com.example.data.model.DrugInteraction(
+                                    drug1Generic = d1.genericName,
+                                    drug2Generic = d2.genericName,
+                                    severity = com.example.data.model.InteractionSeverity.MODERATE,
+                                    effect = "Theoretical Bacteriostatic Antagonism of Bactericidal Cell Wall Lysis.",
+                                    mechanism = "Macrolides halt bacterial protein synthesis (bacteriostatic), which may decrease the bactericidal cell wall killing of beta-lactams requiring active cellular division.",
+                                    clinicalAction = "Clinical efficacy is well-established in severe community-acquired pneumonia (CAP guidelines); acceptable combination with standard patient monitoring."
+                                )
+                            )
+                        }
+
+                        // Levothyroxine + Multivalent Cation / Binder
+                        (d1.genericName.contains("Levothyroxine", ignoreCase = true) && (d2.genericName.contains("Calcium", ignoreCase = true) || d2.genericName.contains("Sucralfate", ignoreCase = true))) ||
+                        (d2.genericName.contains("Levothyroxine", ignoreCase = true) && (d1.genericName.contains("Calcium", ignoreCase = true) || d1.genericName.contains("Sucralfate", ignoreCase = true))) -> {
+                            results.add(
+                                com.example.data.model.DrugInteraction(
+                                    drug1Generic = "Levothyroxine Sodium",
+                                    drug2Generic = if (d1.genericName.contains("Levothyroxine", ignoreCase = true)) d2.genericName else d1.genericName,
+                                    severity = com.example.data.model.InteractionSeverity.MODERATE,
+                                    effect = "Decreased Absorption of Levothyroxine and Loss of Thyroid Hormone Control.",
+                                    mechanism = "Insoluble chelation complexes formed in acidic gastric environment impede levothyroxine mucosal absorption.",
+                                    clinicalAction = "Separate administration times by at least 4 hours. Take levothyroxine in fasting morning state with plain water."
+                                )
+                            )
+                        }
                     }
                 }
             }
         }
-        return results
+
+        // Sort results by severity level descending (CONTRAINDICATED -> SERIOUS -> MODERATE -> MINOR)
+        return results.sortedByDescending { it.severity.level }
     }
 
     fun getAllCompanies(): List<com.example.data.model.CompanyProfile> {

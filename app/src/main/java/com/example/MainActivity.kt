@@ -98,17 +98,17 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
             ),
             NavItem(
                 screen = NavigationScreen.DISEASE,
-                label = "Conditions",
+                label = "Protocols",
                 selectedIcon = Icons.Filled.LocalHospital,
                 unselectedIcon = Icons.Outlined.LocalHospital,
                 activeColor = Emerald500
             ),
             NavItem(
-                screen = NavigationScreen.INTERACTION,
-                label = "Interactions",
-                selectedIcon = Icons.Filled.ElectricBolt,
-                unselectedIcon = Icons.Outlined.ElectricBolt,
-                activeColor = Red500
+                screen = NavigationScreen.SAVED,
+                label = "Saved",
+                selectedIcon = Icons.Filled.Bookmark,
+                unselectedIcon = Icons.Outlined.BookmarkBorder,
+                activeColor = Amber500
             ),
             NavItem(
                 screen = NavigationScreen.CALCULATOR,
@@ -184,11 +184,6 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                             label = "searchPillBorder"
                         )
                         Surface(
-                            onClick = {
-                                if (state.currentScreen != NavigationScreen.SEARCH) {
-                                    viewModel.navigateTo(NavigationScreen.SEARCH)
-                                }
-                            },
                             shape = RoundedCornerShape(22.dp),
                             color = NavyPill,
                             border = BorderStroke(1.2.dp, searchPillBorderColor),
@@ -211,13 +206,44 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                     modifier = Modifier.size(18.dp)
                                 )
 
-                                Text(
-                                    text = if (state.searchQuery.isNotBlank()) state.searchQuery else "Search drug or protocol...",
-                                    fontSize = 12.sp,
-                                    color = if (state.searchQuery.isNotBlank()) Color.White else Slate400,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f)
+                                BasicTextField(
+                                    value = state.searchQuery,
+                                    onValueChange = { query ->
+                                        viewModel.updateSearchQuery(query)
+                                        if (state.currentScreen != NavigationScreen.SEARCH) {
+                                            viewModel.navigateTo(NavigationScreen.SEARCH)
+                                        }
+                                    },
+                                    singleLine = true,
+                                    textStyle = TextStyle(
+                                        color = Color.White,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    cursorBrush = SolidColor(MedicalBlue400),
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                    keyboardActions = KeyboardActions(onSearch = {
+                                        keyboardController?.hide()
+                                        if (state.searchQuery.isNotBlank()) {
+                                            viewModel.addRecentSearch(state.searchQuery)
+                                        }
+                                        viewModel.navigateTo(NavigationScreen.SEARCH)
+                                    }),
+                                    decorationBox = { innerTextField ->
+                                        if (state.searchQuery.isEmpty()) {
+                                            Text(
+                                                text = "Search drug or protocol...",
+                                                fontSize = 12.sp,
+                                                color = Slate400,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                        innerTextField()
+                                    },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("top_search_text_input")
                                 )
 
                                 if (state.searchQuery.isNotBlank()) {
@@ -334,28 +360,27 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                         }
 
                         // Bookmarks / Saved Button (Right 2) - Animated golden bookmark
-                        val isBookmarkFiltered = state.activeFilter == DrugFilterType.BOOKMARKS
+                        val isSavedActive = state.currentScreen == NavigationScreen.SAVED
                         val bookmarkScale by animateFloatAsState(
-                            targetValue = if (isBookmarkFiltered) 1.12f else 1f,
+                            targetValue = if (isSavedActive) 1.12f else 1f,
                             animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
                             label = "bookmarkScale"
                         )
                         val bookmarkBgColor by animateColorAsState(
-                            targetValue = if (isBookmarkFiltered) Amber500 else NavyPill,
+                            targetValue = if (isSavedActive) Amber500 else NavyPill,
                             label = "bookmarkBg"
                         )
                         Surface(
                             onClick = {
-                                viewModel.navigateTo(NavigationScreen.SEARCH)
-                                if (isBookmarkFiltered) {
-                                    viewModel.setFilter(DrugFilterType.ALL)
+                                if (isSavedActive) {
+                                    viewModel.navigateTo(NavigationScreen.SEARCH)
                                 } else {
-                                    viewModel.setFilter(DrugFilterType.BOOKMARKS)
+                                    viewModel.navigateTo(NavigationScreen.SAVED)
                                 }
                             },
                             shape = CircleShape,
                             color = bookmarkBgColor,
-                            border = BorderStroke(1.4.dp, if (isBookmarkFiltered) Amber400 else NavyCardBorder),
+                            border = BorderStroke(1.4.dp, if (isSavedActive) Amber400 else NavyCardBorder),
                             modifier = Modifier
                                 .size(38.dp)
                                 .scale(bookmarkScale)
@@ -363,9 +388,9 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
-                                    imageVector = if (isBookmarkFiltered) Icons.Default.Bookmark else Icons.Outlined.BookmarkBorder,
-                                    contentDescription = "Bookmarks",
-                                    tint = if (isBookmarkFiltered) Color.Black else Amber400,
+                                    imageVector = if (isSavedActive) Icons.Default.Bookmark else Icons.Outlined.BookmarkBorder,
+                                    contentDescription = "Saved Favorites",
+                                    tint = if (isSavedActive) Color.Black else Amber400,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -461,7 +486,8 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                     onFilterChange = { viewModel.setFilter(it) },
                     onClearSystemFilter = { viewModel.filterBySystem("All Systems") },
                     onDrugClick = { viewModel.openDrug(it) },
-                    onBookmarkToggle = { viewModel.toggleBookmark(it) }
+                    onBookmarkToggle = { viewModel.toggleBookmark(it) },
+                    onOpenPharmacologyReview = { viewModel.navigateTo(NavigationScreen.PHARMACOLOGY_GUIDE) }
                 )
 
                 NavigationScreen.INTERACTION -> InteractionCheckerScreen(
@@ -475,7 +501,19 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                     }
                 )
 
+                NavigationScreen.SAVED -> SavedScreen(
+                    state = state,
+                    viewModel = viewModel
+                )
+
+                NavigationScreen.PHARMACOLOGY_GUIDE -> PharmacologyReviewScreen(
+                    bookmarkedGuideIds = state.bookmarkedGuideIds,
+                    onBookmarkToggle = { viewModel.toggleBookmarkGuide(it) }
+                )
+
                 NavigationScreen.DISEASE -> DiseaseProtocolsScreen(
+                    bookmarkedProtocolIds = state.bookmarkedProtocolIds,
+                    onBookmarkToggle = { viewModel.toggleBookmarkProtocol(it) },
                     onProtocolClick = { protocol ->
                         viewModel.addRecentSearch(protocol.name)
                     }
@@ -572,6 +610,14 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
         onAiAssistantClick = {
             viewModel.closeSidebar()
             viewModel.navigateTo(NavigationScreen.GEMINI)
+        },
+        onSavedClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.SAVED)
+        },
+        onPharmacologyClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.PHARMACOLOGY_GUIDE)
         },
         onInteractionsClick = {
             viewModel.closeSidebar()

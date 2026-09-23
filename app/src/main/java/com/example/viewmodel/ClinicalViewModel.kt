@@ -1,15 +1,20 @@
 package com.example.viewmodel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.ai.GeminiClinicalService
 import com.example.data.calculator.ClinicalCalculators
+import com.example.data.local.AppDatabase
+import com.example.data.local.entity.SavedItemEntity
 import com.example.data.model.AppThemeMode
 import com.example.data.model.ChatMessage
 import com.example.data.model.Drug
 import com.example.data.model.FontSizeScale
 import com.example.data.model.MessageSender
 import com.example.data.repository.ClinicalRepository
+import com.example.data.repository.SavedItemRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -24,6 +29,8 @@ enum class NavigationScreen(val title: String) {
     SEARCH("Universal Drug Search"),
     SYSTEM("Browse by Organ System"),
     DISEASE("Disease & Protocols"),
+    PHARMACOLOGY_GUIDE("Pharmacology Review & MOA"),
+    SAVED("Saved Clinical Favorites"),
     INTERACTION("Drug Interaction Checker"),
     ANTIDOTE("Antidote & Toxicology"),
     CALCULATOR("MDCalc Clinical Suite"),
@@ -58,7 +65,13 @@ data class ClinicalUiState(
     val recentSearches: List<String> = listOf(
         "Moxclave 625", "Dolo-650", "Pantocid 40", "Azithromycin", "Amlodipine"
     ),
+    val savedItems: List<SavedItemEntity> = emptyList(),
     val bookmarkedDrugIds: Set<String> = setOf("d1", "d4"),
+    val bookmarkedProtocolIds: Set<String> = setOf("dp1", "dp3"),
+    val bookmarkedCalculatorIds: Set<String> = setOf("egfr", "child_pugh"),
+    val bookmarkedGuideIds: Set<String> = setOf("pg_insulin", "pg_corticosteroids"),
+    val savedSearchQuery: String = "",
+    val savedCategoryFilter: String = "All",
     val selectedInteractionDrugIds: Set<String> = setOf("d1", "d5"),
     val patientWeightKg: Double = 60.0,
     // Theme & Settings
@@ -138,10 +151,13 @@ data class ClinicalUiState(
     val gcsResult: ClinicalCalculators.GcsResult? = null
 )
 
-class ClinicalViewModel : ViewModel() {
+class ClinicalViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(ClinicalUiState())
     val uiState: StateFlow<ClinicalUiState> = _uiState.asStateFlow()
+
+    private val appDb: AppDatabase = AppDatabase.getInstance(application.applicationContext)
+    private val savedItemRepository: SavedItemRepository = SavedItemRepository(appDb.savedItemDao())
 
     private var searchJob: Job? = null
 
@@ -192,6 +208,115 @@ class ClinicalViewModel : ViewModel() {
         computeCha2Ds2Vasc()
         computeCurb65()
         computeGcs()
+
+        // Observe saved items from Room DB reactively
+        if (savedItemRepository != null) {
+            viewModelScope.launch {
+                savedItemRepository.allSavedItems.collect { items ->
+                    val drugIds = items.filter { it.itemType == "DRUG" }.map { it.targetId }.toSet()
+                    val protocolIds = items.filter { it.itemType == "PROTOCOL" }.map { it.targetId }.toSet()
+                    val calcIds = items.filter { it.itemType == "CALCULATOR" }.map { it.targetId }.toSet()
+                    val guideIds = items.filter { it.itemType == "GUIDE" }.map { it.targetId }.toSet()
+
+                    _uiState.update { current ->
+                        val filtered = filterDrugs(
+                            searchQuery = current.searchQuery,
+                            searchMode = current.searchMode,
+                            activeFilter = current.activeFilter,
+                            selectedSystemFilter = current.selectedSystemFilter,
+                            bookmarkedDrugIds = if (drugIds.isNotEmpty()) drugIds else current.bookmarkedDrugIds
+                        )
+                        current.copy(
+                            savedItems = items,
+                            bookmarkedDrugIds = if (drugIds.isNotEmpty()) drugIds else current.bookmarkedDrugIds,
+                            bookmarkedProtocolIds = if (protocolIds.isNotEmpty()) protocolIds else current.bookmarkedProtocolIds,
+                            bookmarkedCalculatorIds = if (calcIds.isNotEmpty()) calcIds else current.bookmarkedCalculatorIds,
+                            bookmarkedGuideIds = if (guideIds.isNotEmpty()) guideIds else current.bookmarkedGuideIds,
+                            filteredDrugs = filtered
+                        )
+                    }
+
+                    if (items.isEmpty()) {
+                        seedDefaultFavorites()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun seedDefaultFavorites() {
+        viewModelScope.launch(Dispatchers.IO) {
+            savedItemRepository?.let { repo ->
+                ClinicalRepository.drugs.find { it.id == "d1" }?.let { drug ->
+                    val brand = drug.brandsNepal.firstOrNull()?.name ?: drug.brandsIndia.firstOrNull()?.name ?: drug.genericName
+                    repo.saveItem(
+                        SavedItemEntity(
+                            id = "drug_d1",
+                            itemType = "DRUG",
+                            targetId = "d1",
+                            title = drug.genericName,
+                            subtitle = "$brand • ${drug.drugClass}",
+                            category = drug.system
+                        )
+                    )
+                }
+                ClinicalRepository.drugs.find { it.id == "d4" }?.let { drug ->
+                    val brand = drug.brandsNepal.firstOrNull()?.name ?: drug.brandsIndia.firstOrNull()?.name ?: drug.genericName
+                    repo.saveItem(
+                        SavedItemEntity(
+                            id = "drug_d4",
+                            itemType = "DRUG",
+                            targetId = "d4",
+                            title = drug.genericName,
+                            subtitle = "$brand • Analgesic & Antipyretic",
+                            category = drug.system
+                        )
+                    )
+                }
+                ClinicalRepository.diseaseProtocols.find { it.id == "dp1" }?.let { proto ->
+                    repo.saveItem(
+                        SavedItemEntity(
+                            id = "protocol_dp1",
+                            itemType = "PROTOCOL",
+                            targetId = "dp1",
+                            title = proto.name,
+                            subtitle = proto.firstLine.take(80) + "...",
+                            category = proto.category
+                        )
+                    )
+                }
+                repo.saveItem(
+                    SavedItemEntity(
+                        id = "calc_egfr",
+                        itemType = "CALCULATOR",
+                        targetId = "egfr",
+                        title = "eGFR (Cockcroft-Gault CrCl)",
+                        subtitle = "Renal clearance & organ dose titration formula",
+                        category = "Nephrology / Dosing"
+                    )
+                )
+                repo.saveItem(
+                    SavedItemEntity(
+                        id = "guide_pg_insulin",
+                        itemType = "GUIDE",
+                        targetId = "pg_insulin",
+                        title = "Insulin Preparations & Anti-Diabetic Agents",
+                        subtitle = "Onset, duration, pH 4.0 rule & oral classes",
+                        category = "Endocrinology"
+                    )
+                )
+                repo.saveItem(
+                    SavedItemEntity(
+                        id = "guide_pg_corticosteroids",
+                        itemType = "GUIDE",
+                        targetId = "pg_corticosteroids",
+                        title = "Corticosteroids & Synthesis Inhibitors",
+                        subtitle = "Potency spectrum, GLUCOCORTICOIDS mnemonic & inhibitors",
+                        category = "Endocrinology"
+                    )
+                )
+            }
+        }
     }
 
     fun navigateTo(screen: NavigationScreen) {
@@ -284,26 +409,190 @@ class ClinicalViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(isDrugModalOpen = false)
     }
 
-    fun toggleBookmark(drugId: String) {
-        val current = _uiState.value.bookmarkedDrugIds.toMutableSet()
-        if (current.contains(drugId)) {
-            current.remove(drugId)
+    fun toggleBookmarkDrug(drugId: String) {
+        val drug = ClinicalRepository.drugs.find { it.id == drugId } ?: return
+        val brand = drug.brandsNepal.firstOrNull()?.name ?: drug.brandsIndia.firstOrNull()?.name ?: drug.genericName
+        val repo = savedItemRepository
+        if (repo != null) {
+            viewModelScope.launch(Dispatchers.IO) {
+                repo.toggleSave(
+                    id = "drug_$drugId",
+                    itemType = "DRUG",
+                    targetId = drugId,
+                    title = drug.genericName,
+                    subtitle = "$brand • ${drug.drugClass}",
+                    category = drug.system
+                )
+            }
         } else {
-            current.add(drugId)
-        }
-        val curState = _uiState.value
-        val filtered = filterDrugs(
-            searchQuery = curState.searchQuery,
-            searchMode = curState.searchMode,
-            activeFilter = curState.activeFilter,
-            selectedSystemFilter = curState.selectedSystemFilter,
-            bookmarkedDrugIds = current
-        )
-        _uiState.update {
-            it.copy(
-                bookmarkedDrugIds = current,
-                filteredDrugs = filtered
+            val current = _uiState.value.bookmarkedDrugIds.toMutableSet()
+            if (current.contains(drugId)) {
+                current.remove(drugId)
+            } else {
+                current.add(drugId)
+            }
+            val curState = _uiState.value
+            val filtered = filterDrugs(
+                searchQuery = curState.searchQuery,
+                searchMode = curState.searchMode,
+                activeFilter = curState.activeFilter,
+                selectedSystemFilter = curState.selectedSystemFilter,
+                bookmarkedDrugIds = current
             )
+            _uiState.update {
+                it.copy(
+                    bookmarkedDrugIds = current,
+                    filteredDrugs = filtered
+                )
+            }
+        }
+    }
+
+    fun toggleBookmark(drugId: String) {
+        toggleBookmarkDrug(drugId)
+    }
+
+    fun toggleBookmarkProtocol(protocolId: String) {
+        val proto = ClinicalRepository.diseaseProtocols.find { it.id == protocolId } ?: return
+        val repo = savedItemRepository
+        if (repo != null) {
+            viewModelScope.launch(Dispatchers.IO) {
+                repo.toggleSave(
+                    id = "protocol_$protocolId",
+                    itemType = "PROTOCOL",
+                    targetId = protocolId,
+                    title = proto.name,
+                    subtitle = proto.firstLine.take(85) + "...",
+                    category = proto.category
+                )
+            }
+        } else {
+            val current = _uiState.value.bookmarkedProtocolIds.toMutableSet()
+            if (current.contains(protocolId)) {
+                current.remove(protocolId)
+            } else {
+                current.add(protocolId)
+            }
+            _uiState.update { it.copy(bookmarkedProtocolIds = current) }
+        }
+    }
+
+    fun toggleBookmarkCalculator(calcKey: String) {
+        val (title, sub, cat) = when (calcKey) {
+            "egfr" -> Triple("eGFR (Cockcroft-Gault CrCl)", "Renal clearance & organ dose titration formula", "Nephrology / Dosing")
+            "bsa" -> Triple("Body Surface Area (BSA - Mosteller)", "Chemotherapy & fluid dosing standard", "Oncology / ICU")
+            "child_pugh" -> Triple("Child-Pugh Score for Cirrhosis", "Severity of chronic liver disease & hepatic dosing", "Hepatology")
+            "cha2ds2" -> Triple("CHA₂DS₂-VASc AFib Stroke Risk", "Atrial fibrillation thromboembolic risk score", "Cardiology")
+            "curb65" -> Triple("CURB-65 Pneumonia Severity", "Mortality risk & inpatient/ICU stratification", "Pulmonology")
+            "gcs" -> Triple("Glasgow Coma Scale (GCS)", "Acute neurological assessment & coma scale", "Neurology / Trauma")
+            "rumack" -> Triple("Paracetamol Rumack-Matthew Nomogram", "Acute acetaminophen toxicity 4h-24h risk", "Toxicology")
+            "pediatric" -> Triple("Pediatric Liquid Dose Calculator", "Weight-based suspension & drop dosing", "Pediatrics")
+            else -> Triple("Clinical Calculator ($calcKey)", "Evidence-based formula", "Clinical Tools")
+        }
+        val repo = savedItemRepository
+        if (repo != null) {
+            viewModelScope.launch(Dispatchers.IO) {
+                repo.toggleSave(
+                    id = "calc_$calcKey",
+                    itemType = "CALCULATOR",
+                    targetId = calcKey,
+                    title = title,
+                    subtitle = sub,
+                    category = cat
+                )
+            }
+        } else {
+            val current = _uiState.value.bookmarkedCalculatorIds.toMutableSet()
+            if (current.contains(calcKey)) {
+                current.remove(calcKey)
+            } else {
+                current.add(calcKey)
+            }
+            _uiState.update { it.copy(bookmarkedCalculatorIds = current) }
+        }
+    }
+
+    fun toggleBookmarkGuide(guideId: String) {
+        val guide = com.example.data.repository.PharmacologyReviewData.guides.find { it.id == guideId } ?: return
+        val repo = savedItemRepository
+        if (repo != null) {
+            viewModelScope.launch(Dispatchers.IO) {
+                repo.toggleSave(
+                    id = "guide_$guideId",
+                    itemType = "GUIDE",
+                    targetId = guideId,
+                    title = guide.title,
+                    subtitle = guide.subtitle.take(85) + "...",
+                    category = guide.category
+                )
+            }
+        } else {
+            val current = _uiState.value.bookmarkedGuideIds.toMutableSet()
+            if (current.contains(guideId)) {
+                current.remove(guideId)
+            } else {
+                current.add(guideId)
+            }
+            _uiState.update { it.copy(bookmarkedGuideIds = current) }
+        }
+    }
+
+    fun removeSavedItem(id: String) {
+        val repo = savedItemRepository
+        if (repo != null) {
+            viewModelScope.launch(Dispatchers.IO) {
+                repo.removeItem(id)
+            }
+        } else {
+            _uiState.update { it.copy(savedItems = it.savedItems.filterNot { item -> item.id == id }) }
+        }
+    }
+
+    fun clearAllSaved() {
+        val repo = savedItemRepository
+        if (repo != null) {
+            viewModelScope.launch(Dispatchers.IO) {
+                repo.clearAll()
+            }
+        } else {
+            _uiState.update {
+                it.copy(
+                    savedItems = emptyList(),
+                    bookmarkedDrugIds = emptySet(),
+                    bookmarkedProtocolIds = emptySet(),
+                    bookmarkedCalculatorIds = emptySet(),
+                    bookmarkedGuideIds = emptySet()
+                )
+            }
+        }
+    }
+
+    fun setSavedSearchQuery(query: String) {
+        _uiState.update { it.copy(savedSearchQuery = query) }
+    }
+
+    fun setSavedCategoryFilter(category: String) {
+        _uiState.update { it.copy(savedCategoryFilter = category) }
+    }
+
+    fun openSavedItem(item: SavedItemEntity) {
+        when (item.itemType) {
+            "DRUG" -> {
+                val drug = ClinicalRepository.drugs.find { it.id == item.targetId }
+                if (drug != null) {
+                    openDrug(drug)
+                }
+            }
+            "PROTOCOL" -> {
+                navigateTo(NavigationScreen.DISEASE)
+            }
+            "CALCULATOR" -> {
+                setCalcTab(item.targetId)
+                navigateTo(NavigationScreen.CALCULATOR)
+            }
+            "GUIDE" -> {
+                navigateTo(NavigationScreen.PHARMACOLOGY_GUIDE)
+            }
         }
     }
 

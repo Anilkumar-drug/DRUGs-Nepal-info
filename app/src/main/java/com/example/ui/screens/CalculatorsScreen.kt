@@ -9,6 +9,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,26 +52,48 @@ fun CalculatorsScreen(
     ) {
         // Header
         Row(
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Icon(
-                imageVector = Icons.Default.Calculate,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-            Column {
-                Text(
-                    text = "MDCalc Clinical Suite",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Calculate,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
                 )
-                Text(
-                    text = "Evidence-based clinical formulas for precision dosage adjustment",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                Column {
+                    Text(
+                        text = "MDCalc Clinical Suite",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Evidence-based clinical formulas for precision dosage adjustment",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            val isCalcBookmarked = state.bookmarkedCalculatorIds.contains(state.activeCalcTab)
+            IconButton(
+                onClick = { viewModel.toggleBookmarkCalculator(state.activeCalcTab) },
+                modifier = Modifier
+                    .size(38.dp)
+                    .testTag("bookmark_calc_${state.activeCalcTab}")
+            ) {
+                Icon(
+                    imageVector = if (isCalcBookmarked) Icons.Default.Bookmark else Icons.Outlined.BookmarkBorder,
+                    contentDescription = if (isCalcBookmarked) "Unbookmark calculator" else "Bookmark calculator",
+                    tint = if (isCalcBookmarked) Amber400 else Slate400,
+                    modifier = Modifier.size(22.dp)
                 )
             }
         }
