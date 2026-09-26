@@ -2,6 +2,7 @@ package com.example.data.repository
 
 import com.example.data.model.Antidote
 import com.example.data.model.BrandInfo
+import com.example.data.model.CalculatorSummary
 import com.example.data.model.DiseaseProtocol
 import com.example.data.model.Drug
 
@@ -19,6 +20,73 @@ object ClinicalRepository {
         "Renal & Genitourinary",
         "Dermatology",
         "Emergency & Critical Care"
+    )
+
+    val allCalculators: List<CalculatorSummary> = listOf(
+        CalculatorSummary(
+            id = "egfr",
+            title = "eGFR (Cockcroft-Gault)",
+            category = "Renal & Dosing",
+            description = "Estimates Creatinine Clearance (CrCl) for kidney function evaluation and antibiotic / renal dose adjustment.",
+            formulaSummary = "CrCl = [(140 - Age) × Wt] / (72 × SCr) [× 0.85 if female]",
+            aliases = listOf("eGFR", "GFR", "Cockcroft-Gault", "Creatinine Clearance", "CrCl", "Kidney Function", "Renal Dose", "Amox-Clav Dosing")
+        ),
+        CalculatorSummary(
+            id = "bsa",
+            title = "BSA (Mosteller Formula)",
+            category = "Renal & Dosing",
+            description = "Calculates Body Surface Area in m² for narrow-therapeutic-index dosing, chemotherapy & burn estimation.",
+            formulaSummary = "BSA (m²) = √[(Height in cm × Weight in kg) / 3600]",
+            aliases = listOf("BSA", "Body Surface Area", "Mosteller", "Chemotherapy Dose", "Burn Surface", "DuBois")
+        ),
+        CalculatorSummary(
+            id = "child_pugh",
+            title = "Child-Pugh Score",
+            category = "Hepatology",
+            description = "Assesses prognosis and 1- to 2-year mortality in cirrhosis / chronic liver disease. Guides hepatic drug dosing.",
+            formulaSummary = "Class A (5-6) • Class B (7-9) • Class C (10-15)",
+            aliases = listOf("Child-Pugh", "Cirrhosis Score", "Liver Function", "Child Turcotte Pugh", "Hepatic Impairment", "Ascites", "Encephalopathy")
+        ),
+        CalculatorSummary(
+            id = "cha2ds2",
+            title = "CHA₂DS₂-VASc AFib Score",
+            category = "Cardiology",
+            description = "Calculates 1-year thromboembolic stroke risk in non-valvular Atrial Fibrillation. Guides oral anticoagulation.",
+            formulaSummary = "Score 0 (Low) • 1 (Intermediate) • ≥2 (Anticoagulation Indicated)",
+            aliases = listOf("CHA2DS2-VASc", "CHADS", "Atrial Fibrillation", "AFib", "Stroke Risk", "Anticoagulation", "DOAC", "Warfarin")
+        ),
+        CalculatorSummary(
+            id = "curb65",
+            title = "CURB-65 Pneumonia Score",
+            category = "Critical Care",
+            description = "Predicts 30-day mortality in Community-Acquired Pneumonia. Directs Outpatient vs Inpatient Ward vs ICU admission.",
+            formulaSummary = "Score 0-1 Outpatient • 2 Inpatient Ward • 3-5 ICU Care",
+            aliases = listOf("CURB-65", "CURB65", "Pneumonia Severity", "CAP Risk Score", "Pneumonia Admission", "BUN Score")
+        ),
+        CalculatorSummary(
+            id = "gcs",
+            title = "Glasgow Coma Scale (GCS)",
+            category = "Critical Care",
+            description = "Gold-standard objective neurological scoring for acute level of consciousness in trauma and critical care.",
+            formulaSummary = "Eye Response (1-4) + Verbal (1-5) + Motor (1-6)",
+            aliases = listOf("GCS", "Glasgow Coma Scale", "Coma Score", "Consciousness Score", "Neurological Scale", "Trauma Score", "Intubation GCS")
+        ),
+        CalculatorSummary(
+            id = "rumack",
+            title = "Paracetamol Nomogram",
+            category = "Toxicology",
+            description = "Rumack-Matthew Nomogram evaluating single acute acetaminophen overdose hepatotoxicity vs time.",
+            formulaSummary = "Treatment Line: 150 mcg/mL at 4h post-ingestion for NAC therapy",
+            aliases = listOf("Rumack-Matthew", "Paracetamol Nomogram", "Acetaminophen Overdose", "NAC Dosing", "Tylenol Toxicity", "N-Acetylcysteine")
+        ),
+        CalculatorSummary(
+            id = "pediatric",
+            title = "Pediatric Liquid Dose",
+            category = "Pediatrics",
+            description = "Calculates precise liquid syrup/suspension volume (mL) from weight-based mg/kg to prevent 10-fold errors.",
+            formulaSummary = "Dose Volume (mL) = [Weight (kg) × Dose (mg/kg)] / Concentration",
+            aliases = listOf("Pediatric Dose", "Liquid Dose Calculator", "Syrup Volume", "mg/kg Calculator", "Child Dosing", "Suspension mL")
+        )
     )
 
     private val baseDrugs: List<Drug> = listOf(
@@ -1105,190 +1173,9 @@ object ClinicalRepository {
         )
     )
 
-    val drugs: List<Drug> = baseDrugs + AdditionalDrugsData.additionalDrugs
+    val drugs: List<Drug> = baseDrugs + AdditionalDrugsData.additionalDrugs + ExpandedDrugsData.expandedDrugs
 
-    val diseaseProtocols: List<DiseaseProtocol> = listOf(
-        DiseaseProtocol(
-            id = "dp1",
-            name = "Community-Acquired Pneumonia (CAP)",
-            category = "Respiratory & Infectious",
-            firstLine = "Outpatient (No comorbidities): Amoxicillin 1 g PO TID x 5-7 days OR Azithromycin 500 mg PO Day 1 then 250 mg OD x 4 days.",
-            secondLine = "Outpatient (With comorbidities/smoker/elderly): Amoxicillin-Clavulanate 625 mg PO TID + Azithromycin 500 mg PO OD x 5-7 days OR Levofloxacin 750 mg PO OD.",
-            inpatient = "Non-severe Inpatient: Ceftriaxone 1-2 g IV OD + Azithromycin 500 mg IV/PO OD.\nSevere ICU Admission: Ceftriaxone 2 g IV OD + Azithromycin 500 mg IV OD + consideration of Piperacillin-Tazobactam if pseudomonas risk.",
-            guidelines = "ATS/IDSA Guidelines 2019, WHO Essential Medicine Protocols & Harrison's 21st Edition."
-        ),
-        DiseaseProtocol(
-            id = "dp2",
-            name = "Essential Hypertension",
-            category = "Cardiovascular",
-            firstLine = "Stage 1 (BP 130-139 / 80-89 mmHg): Lifestyle modification x 3 months. If unresolved or Stage 2 (≥140/90 mmHg): Telmisartan 40 mg PO OD OR Amlodipine 5 mg PO OD.",
-            secondLine = "Dual Combination Therapy: Telmisartan 40 mg + Amlodipine 5 mg FDC PO OD. If uncontrolled: Add Chlorthalidone 12.5 mg OD.",
-            inpatient = "Hypertensive Emergency (BP >180/120 with target organ damage): Labetalol IV infusion (20 mg bolus, then 40-80 mg q10min or 1-2 mg/min infusion) OR Nicardipine IV. Goal: Reduce MAP by no more than 25% over the first hour.",
-            guidelines = "ACC/AHA 2017 & ESC/ESH 2023 Guidelines for the Management of Arterial Hypertension."
-        ),
-        DiseaseProtocol(
-            id = "dp3",
-            name = "Acute Paracetamol Toxicity",
-            category = "Emergency Toxicology",
-            firstLine = "N-Acetylcysteine (NAC) IV 3-bag protocol: 150 mg/kg IV over 60 min, then 50 mg/kg over 4 hours, then 100 mg/kg over 16 hours. Or Oral NAC 140 mg/kg load then 70 mg/kg q4h x 17 doses.",
-            secondLine = "Activated Charcoal 1 g/kg (max 50 g) orally if presentation is within 1-2 hours of ingestion and airway is secure.",
-            inpatient = "Assess Rumack-Matthew nomogram at 4h post-ingestion. Monitor LFTs, INR, Serum Creatinine, Blood Gas (Lactate), and arterial pH every 12 hours. Consult Liver Transplant team if King's College Criteria are met (pH <7.30 or INR >6.5 + Cr >3.4 mg/dL + encephalopathy).",
-            guidelines = "WHO Toxicology Protocols & Rumack-Matthew Nomogram."
-        ),
-        DiseaseProtocol(
-            id = "dp4",
-            name = "Type 2 Diabetes Mellitus",
-            category = "Endocrine & Metabolic",
-            firstLine = "Metformin 500 mg PO BID with meals, titrate weekly up to 1000 mg BID. Target HbA1c <7.0% (<53 mmol/mol). Lifestyle: 150 min/wk moderate exercise + dietary control.",
-            secondLine = "If HbA1c remains >7.0% after 3 months: Add SGLT2 inhibitor (Dapagliflozin 10 mg OD) or DPP-4 inhibitor (Sitagliptin 100 mg OD). If ASCVD or CKD present: prioritize SGLT2i or GLP-1 RA.",
-            inpatient = "Diabetic Ketoacidosis (DKA) / HHS: Normal Saline IV fluid resuscitation (1-1.5 L in 1st hour) + Regular Insulin IV infusion at 0.1 units/kg/hour once potassium is ≥3.3 mEq/L. Maintain blood glucose 150-200 mg/dL with 5% Dextrose infusion once glucose drops <250 mg/dL.",
-            guidelines = "American Diabetes Association (ADA) Standards of Care 2024 & WHO Package of Essential NCD Interventions."
-        ),
-        DiseaseProtocol(
-            id = "dp5",
-            name = "Acute Exacerbation of COPD",
-            category = "Respiratory",
-            firstLine = "Nebulized Salbutamol 2.5-5 mg + Ipratropium 500 mcg q20-30 min x 3 doses, then q2-4h PRN. Controlled oxygen via Venturi mask (target SpO2 88-92% to prevent hypercapnic respiratory arrest).",
-            secondLine = "Oral Prednisolone 40 mg PO once daily for 5 days. Add Antibiotics (Amoxicillin-Clavulanate 625 mg TID or Azithromycin 500 mg OD x 5 days) if Anthonisen criteria met (increased dyspnea, sputum volume, sputum purulence).",
-            inpatient = "Non-invasive positive pressure ventilation (BiPAP/NIV) for acute hypercapnic respiratory acidosis (pH <7.35, PaCO2 >45 mmHg). Intubate if NIV fails or GCS deteriorates.",
-            guidelines = "GOLD 2024 Global Strategy for Prevention, Diagnosis and Management of COPD."
-        ),
-        DiseaseProtocol(
-            id = "dp6",
-            name = "Uncomplicated Urinary Tract Infection (Acute Cystitis)",
-            category = "Renal & Genitourinary",
-            firstLine = "Nitrofurantoin Monohydrate/Macrocrystals 100 mg PO BID with meals x 5 days OR Fosfomycin Trometamol 3 g PO single dose.",
-            secondLine = "Amoxicillin-Clavulanate 625 mg PO BID x 5-7 days OR Ciprofloxacin 500 mg PO BID x 3 days (reserve fluoroquinolones for complicated cases).",
-            inpatient = "Acute Pyelonephritis (Inpatient): Ceftriaxone 1 g IV OD for 10-14 days or Ciprofloxacin 400 mg IV q12h. Switch to oral antibiotics once afebrile for 48 hours.",
-            guidelines = "IDSA Guidelines for Treatment of Uncomplicated Cystitis and Pyelonephritis."
-        ),
-        DiseaseProtocol(
-            id = "dp7",
-            name = "Organophosphate / Carbamate Poisoning",
-            category = "Emergency Toxicology",
-            firstLine = "Airway de-escalation & decontamination (remove contaminated clothing, copious skin washing). Atropine Sulfate 2 to 5 mg IV push immediately; repeat doubling dose every 5-10 minutes until ATROPINIZATION achieved: clear chest on auscultation (no crackles/bronchorrhea), HR >80 bpm, systolic BP >90 mmHg, dry axillae.",
-            secondLine = "Pralidoxime (2-PAM) 1 to 2 g IV in 100 mL NS over 30 minutes, followed by continuous infusion of 500 mg/hour until recovery (effective only if given within 24-48h before oxime aging occurs).",
-            inpatient = "Maintain intensive atropine infusion. Watch for Intermediate Syndrome (cranial nerve palsies, neck flexion weakness, diaphragmatic failure 24-96h post-ingestion) requiring mechanical ventilation.",
-            guidelines = "WHO Inter-Regional Clinical Toxicology & Critical Care Management Protocols."
-        ),
-        DiseaseProtocol(
-            id = "dp8",
-            name = "Bronchial Asthma (GINA 2024 Guidelines)",
-            category = "Respiratory & Allergy",
-            firstLine = "Track 1 (Preferred Controller & Reliever): Low-dose Inhaled Corticosteroid (ICS)-Formoterol (e.g., Budesonide 160 mcg / Formoterol 4.5 mcg) 1-2 puffs PRN as needed for symptoms (Steps 1-2), or 1 puff BID plus PRN (Step 3).\nTrack 2 (Alternative): Regular daily low-dose ICS + SABA (Salbutamol 100-200 mcg) PRN for reliever.",
-            secondLine = "Step 4: Medium-dose ICS-Formoterol maintenance and reliever (SMART therapy) or add LAMA (Tiotropium Respimat 5 mcg OD).\nStep 5: High-dose ICS-LABA + add LAMA + evaluate phenotype (IgE, Blood Eosinophils) for Biologics (Omalizumab, Mepolizumab, Dupilumab).",
-            inpatient = "Acute Severe Exacerbation: High-flow O2 (target SpO2 93-95% adults, 94-98% children). Continuous/frequent Nebulized Salbutamol 5 mg + Ipratropium 500 mcg q20min x 3 doses. IV/Oral Systemic Corticosteroids: Prednisolone 40-50 mg PO OD x 5-7 days or Hydrocortisone 100 mg IV q6h. Severe refractoriness: IV Magnesium Sulfate 2 g in 100 mL NS over 20 min.",
-            guidelines = "Global Initiative for Asthma (GINA) 2024 Strategy Report & British Thoracic Society (BTS/SIGN)."
-        ),
-        DiseaseProtocol(
-            id = "dp9",
-            name = "Acute Myocardial Infarction - STEMI & NSTEMI (AHA/ACC Guidelines)",
-            category = "Cardiovascular & Critical Care",
-            firstLine = "Initial Emergency Therapy (MONA-B): Aspirin 300-325 mg non-enteric chewable PO immediately. Sublingual Nitroglycerin 0.4 mg SL q5min up to 3 doses (contraindicated if SBP <90, HR <50 or >100, RV infarction, or PDE-5 inhibitors in past 24-48h). Supplemental O2 only if SpO2 <90%. Morphine 2-4 mg IV only if pain refractory.",
-            secondLine = "Dual Antiplatelet Therapy (DAPT): Add P2Y12 inhibitor (Ticagrelor 180 mg loading then 90 mg BID, or Prasugrel 60 mg load then 10 mg OD, or Clopidogrel 600 mg load then 75 mg OD). Anticoagulation: Unfractionated Heparin (UFH 60 units/kg IV bolus max 4000 units, then 12 units/kg/hr) or Enoxaparin 1 mg/kg SC q12h. High-intensity Statin: Atorvastatin 80 mg PO immediately.",
-            inpatient = "STEMI Reperfusion Strategy: Primary PCI within 90 minutes of first medical contact (door-to-balloon <90 min). If PCI unavailable within 120 minutes, administer Fibrinolysis (Tenecteplase weight-based IV bolus over 5-10 sec, or Alteplase/Streptokinase 1.5 million units IV over 60 min) within 30 min (door-to-needle <30 min). Post-MI: Early oral Beta-blocker (Metoprolol 25-50 mg BID within 24h if hemodynamically stable, no heart block or acute heart failure) + ACE-I/ARB + Aldosterone antagonist if LVEF ≤40%.",
-            guidelines = "2023 ACC/AHA & ESC Guidelines for the Management of Acute Coronary Syndromes."
-        ),
-        DiseaseProtocol(
-            id = "dp10",
-            name = "Acute Ischemic Stroke (AHA/ASA Guidelines)",
-            category = "Central Nervous System & Emergency",
-            firstLine = "Rapid Triage & Neuroimaging (Non-contrast Brain CT/MRI within 20 min of arrival). Airway & Oxygenation (target SpO2 >94%). Blood Glucose correction (target 140-180 mg/dL, treat hypoglycemia immediately). Blood Pressure control: If candidate for IV thrombolysis, lower BP to <185/110 mmHg with Labetalol 10-20 mg IV over 1-2 min or Nicardipine IV infusion.",
-            secondLine = "IV Thrombolysis: IV Alteplase (0.9 mg/kg, max 90 mg; 10% as bolus over 1 min, remaining 90% infused over 60 min) or Tenecteplase (0.25 mg/kg IV single bolus, max 25 mg) administered within 4.5 hours of symptom onset / last known well. Mechanical Thrombectomy: Indicated for Large Vessel Occlusion (LVO) of anterior circulation within 6 to 24 hours (DAWN/DEFUSE-3 criteria).",
-            inpatient = "Post-Thrombolysis Management: ICU monitoring, strict BP control maintaining <180/105 mmHg for at least 24 hours. Hold all antiplatelets and anticoagulants for 24 hours until repeat CT/MRI excludes intracranial hemorrhage. At 24 hours post-tPA: Aspirin 160-300 mg PO daily + Clopidogrel 75 mg (DAPT x 21 days for minor stroke NIHSS ≤3 or high-risk TIA ABCD2 ≥4) + High-intensity Atorvastatin 80 mg PO OD.",
-            guidelines = "AHA/ASA Guidelines for the Early Management of Patients with Acute Ischemic Stroke (2019/2023 Update)."
-        ),
-        DiseaseProtocol(
-            id = "dp11",
-            name = "Status Epilepticus & Acute Seizure (AES / Neurocritical Care Guidelines)",
-            category = "Central Nervous System & Critical Care",
-            firstLine = "Phase 1 (0–5 minutes): ABCDE, high-flow O2, check fingerstick glucose (if <60 mg/dL, give 50 mL 50% Dextrose + Thiamine 100 mg IV). IV access.\nPhase 2 Emergent Initial Therapy (5–20 minutes): First-line Benzodiazepine: Lorazepam 4 mg IV slow push (0.1 mg/kg) over 2 min (repeat once if seizures continue at 5-10 min) OR Midazolam 10 mg IM (if no IV access) OR Diazepam 10 mg IV (0.2 mg/kg) at 2-5 mg/min.",
-            secondLine = "Phase 3 Urgent Control Therapy (20–40 minutes): Second-line IV Antiseizure Medication: Levetiracetam (Keppra) 60 mg/kg IV (max 4500 mg) over 10 min OR Fosphenytoin 20 mg PE/kg IV (max 1500 mg PE) at 150 mg PE/min with cardiac monitoring OR Sodium Valproate 40 mg/kg IV (max 3000 mg) over 5-10 min.",
-            inpatient = "Phase 4 Refractory Status Epilepticus (>40 minutes): Continuous General Anesthesia & Endotracheal Intubation with continuous EEG monitoring. Propofol (2 mg/kg IV bolus then 2-10 mg/kg/hr) OR Midazolam infusion (0.2 mg/kg bolus then 0.05-2 mg/kg/hr) OR Ketamine (1-2 mg/kg load then 1-5 mg/kg/hr). Titrate to burst suppression on EEG for 24-48 hours.",
-            guidelines = "American Epilepsy Society (AES) Guidelines & Neurocritical Care Society Status Epilepticus Protocol."
-        ),
-        DiseaseProtocol(
-            id = "dp12",
-            name = "Anaphylaxis & Severe Hypersensitivity (WAO / EAACI Guidelines)",
-            category = "Emergency & Critical Care",
-            firstLine = "IMMEDIATE FIRST-LINE: Epinephrine (Adrenaline) 1:1000 (1 mg/mL) given Intramuscularly (IM) into mid-anterolateral thigh. Adult Dose: 0.5 mg (0.5 mL) IM. Pediatric Dose: 0.01 mg/kg IM (max 0.3 mg). Repeat every 5 to 15 minutes if symptoms persist or deteriorate. Place patient supine with legs elevated (do NOT allow patient to sit up or stand suddenly, risk of empty ventricle syndrome).",
-            secondLine = "High-flow Oxygen (10-15 L/min via non-rebreather mask). Rapid IV Fluid Resuscitation: Crystalloids (Normal Saline or Ringer's Lactate) 1-2 L rapid bolus in adults (20 mL/kg in children) for anaphylactic shock/hypotension. Inhaled Salbutamol 2.5-5 mg nebulized for refractory bronchospasm.",
-            inpatient = "Secondary Adjunctive Medications (Never delay epinephrine): Chlorpheniramine 10 mg IV/IM or Diphenhydramine 25-50 mg IV (H1 antihistamine) + Ranitidine/Famotidine 20 mg IV (H2 antagonist) + Hydrocortisone 200 mg IV (prevents biphasic reaction). Epinephrine Refractory Shock: Start continuous Epinephrine IV infusion (0.1-1 mcg/kg/min). If patient taking beta-blockers: Glucagon 1-5 mg IV over 5 min followed by infusion 5-15 mcg/min. Monitor in hospital for at least 6-12 hours (risk of late biphasic anaphylaxis in up to 20% of patients).",
-            guidelines = "World Allergy Organization (WAO) Anaphylaxis Guidelines 2020 & Resuscitation Council UK."
-        ),
-        DiseaseProtocol(
-            id = "dp13",
-            name = "Ventricular Tachycardia (VT) - Monomorphic & Polymorphic (AHA/ACLS Guidelines)",
-            category = "Cardiology & Emergency ACLS",
-            firstLine = "Assessment: Check Pulses & Hemodynamic Stability.\nUnstable VT (Hypotension, altered mental status, signs of shock, ischemic chest discomfort, acute heart failure): IMMEDIATE Synchronized Cardioversion: Monophasic/Biphasic synchronized shock starting at 100 J (escalate to 200 J, 300 J, 360 J if unsuccessful). Administer conscious sedation (Etomidate 0.15 mg/kg or Midazolam 2-5 mg IV) if patient conscious.",
-            secondLine = "Stable Monomorphic VT with Pulse: Amiodarone 150 mg IV over 10 minutes (repeat 150 mg if VT recurs; follow with maintenance infusion of 1 mg/min for 6 hours, then 0.5 mg/min for 18 hours, max 2.2 g/24h) OR Procainamide 20-50 mg/min IV (max 17 mg/kg) until arrhythmia suppressed or QRS widens >50% OR Lidocaine 1-1.5 mg/kg IV bolus.",
-            inpatient = "Polymorphic VT / Torsades de Pointes (Prolonged QT): IV Magnesium Sulfate 2 g diluted in 100 mL D5W infused over 5-10 minutes (repeat in 15 min if needed). Overdrive transvenous pacing or Isoproterenol infusion (target HR >100 bpm). Correct hypokalemia (target K+ >4.5 mEq/L) and hypomagnesemia (target Mg2+ >2.5 mg/dL). Discontinue all QT-prolonging drugs.",
-            guidelines = "AHA/ACC/HRS Guidelines for Management of Patients with Ventricular Arrhythmias & ACLS Protocols."
-        ),
-        DiseaseProtocol(
-            id = "dp14",
-            name = "Ventricular Fibrillation (VF) & Pulseless VT (AHA/ACLS Guidelines)",
-            category = "Emergency Resuscitation (ACLS)",
-            firstLine = "IMMEDIATE DEFIBRILLATION (Shockable Rhythm): High-quality CPR immediately while charging defibrillator. Defibrillate with unsynchronized high-energy shock: Biphasic 120-200 J (manufacturer recommendation, or max dose e.g., 200 J) or Monophasic 360 J. Immediately resume CPR for 2 full minutes without pausing to check pulse.",
-            secondLine = "Vascular Access & Vasopressors: Obtain IV or IO access. Administer Epinephrine 1 mg IV/IO push after second shock; repeat every 3 to 5 minutes. Advanced Airway (Endotracheal tube or Supraglottic device) with continuous capnography (ETCO2 target >10-20 mmHg indicating effective chest compressions).",
-            inpatient = "Refractory VF / Pulseless VT (persisting after 3rd shock): Administer Amiodarone 300 mg IV/IO bolus push (repeat second dose 150 mg IV/IO once after subsequent shock) OR Lidocaine 1 to 1.5 mg/kg first dose, then 0.5 to 0.75 mg/kg. Reversible Causes (H's and T's): Hypovolemia, Hypoxia, Hydrogen ion (acidosis), Hypo/Hyperkalemia, Hypothermia, Tension pneumothorax, Tamponade (cardiac), Toxins, Thrombosis (pulmonary PE or coronary MI). Post-Cardiac Arrest Care: Targeted Temperature Management (TTM 32-36°C for 24h), emergent coronary angiography if STEMI.",
-            guidelines = "AHA ACLS Cardiac Arrest Algorithm 2020/2023 Update & ILCOR Consensus on CPR."
-        ),
-        DiseaseProtocol(
-            id = "dp15",
-            name = "Paroxysmal Supraventricular Tachycardia (PSVT / AVNRT / AVRT) (AHA/ACC/HRS)",
-            category = "Cardiology & Emergency ACLS",
-            firstLine = "Hemodynamically Stable: 1. Vagal Maneuvers: Modified Valsalva Maneuver (strain against closed glottis at 40 mmHg for 15 seconds, followed immediately by supine positioning with passive leg raise to 45 degrees for 15 seconds; converts up to 43% of SVT). 2. Carotid Sinus Massage (unilateral, 5-10 seconds; check for bruits first).",
-            secondLine = "Pharmacologic Conversion: Adenosine Rapid IV Push: First dose 6 mg IV rapid push via large antecubital vein over 1-2 seconds, immediately followed by 20 mL Normal Saline flush and arm elevation. If SVT does not terminate within 1-2 minutes: Second dose 12 mg IV rapid push with 20 mL saline flush. Warn patient of transient impending doom, flushing, and brief sinus arrest.",
-            inpatient = "Refractory PSVT or Adenosine Contraindicated (Asthma / severe bronchospasm): IV Non-dihydropyridine Calcium Channel Blocker: Diltiazem 0.25 mg/kg IV over 2 min (e.g., 20 mg), may repeat 0.35 mg/kg (25 mg) after 15 min, or Verapamil 2.5-5 mg IV over 2 min (repeat 5-10 mg after 15-30 min) OR IV Beta-blocker (Metoprolol 5 mg IV q5min up to 15 mg). Unstable PSVT (hypotension, pulmonary edema, chest pain): Immediate Synchronized Cardioversion at 50-100 J biphasic. Long-term: Catheter RF Ablation (curative in >95% cases) or oral Diltiazem/Verapamil/Beta-blocker prophylaxis.",
-            guidelines = "ACC/AHA/HRS Guideline for the Management of Adult Patients with Supraventricular Tachycardia."
-        ),
-        DiseaseProtocol(
-            id = "dp16",
-            name = "Tuberculosis - Pulmonary & Extrapulmonary (WHO Guidelines 2024)",
-            category = "Infectious Diseases & Pulmonary",
-            firstLine = "Drug-Susceptible TB (Standard 6-Month 2HRZE / 4HR Regimen):\n• Intensive Phase (First 2 Months): Daily Fixed-Dose Combination (FDC) of 4 drugs: Isoniazid (H, 5 mg/kg, max 300 mg) + Rifampicin (R, 10 mg/kg, max 600 mg) + Pyrazinamide (Z, 25 mg/kg, max 2000 mg) + Ethambutol (E, 15 mg/kg, max 1600 mg).\n• Continuation Phase (Next 4 Months): Daily 2 drugs: Isoniazid (H) + Rifampicin (R) for 4 months.",
-            secondLine = "Adjuncts: Pyridoxine (Vitamin B6) 20-50 mg PO daily co-administered with Isoniazid to prevent peripheral neuropathy (mandatory in pregnancy, diabetes, alcoholism, malnutrition, HIV, CKD). Meningeal or Pericardial TB: Add oral Dexamethasone (0.4 mg/kg/day tapered over 6-8 weeks) or Prednisolone (60 mg/day tapered over 6-8 weeks) to reduce mortality and constriction.",
-            inpatient = "Drug-Resistant TB (MDR-TB / RR-TB): GeneXpert MTB/RIF at baseline. WHO 6-Month BPaLM/BPaL All-Oral Regimen: Bedaquiline (400 mg OD x 2 wks, then 200 mg 3x/wk x 24 wks) + Pretomanid (200 mg OD x 26 wks) + Linezolid (600 mg OD x 16-26 wks) + Moxifloxacin (400 mg OD x 26 wks). Monitoring: Sputum smear/culture at months 2, 5, and 6; baseline & monthly LFTs (ALT/AST, bilirubin), serum creatinine, visual acuity (Ethambutol optic neuritis), and audiometry.",
-            guidelines = "WHO Consolidated Guidelines on Tuberculosis: Module 4 Treatment 2024 & National Tuberculosis Program (NTP Nepal / NTEP India)."
-        ),
-        DiseaseProtocol(
-            id = "dp17",
-            name = "Acute Pancreatitis (ACG & Atlanta Classification Guidelines)",
-            category = "Gastrointestinal & Critical Care",
-            firstLine = "Aggressive Early Goal-Directed IV Fluid Resuscitation: Lactated Ringer's solution preferred over Normal Saline (lower incidence of hyperchloremic acidosis and SIRS). Initial infusion: 200-500 mL/hr (or 5-10 mL/kg/hr for first 12-24h) unless cardiac/renal disease present. Targets: HR <120 bpm, MAP 65-85 mmHg, Urine Output >0.5-1 mL/kg/hr, hematocrit reduction towards 35-44%.",
-            secondLine = "Pain Management & Early Enteral Nutrition: Multi-modal analgesia using IV Hydromorphone, Fentanyl, or Buprenorphine (or PCA). NSAIDs and Paracetamol IV as adjuncts. Early Oral Feeding: In mild pancreatitis, start low-fat solid or liquid oral diet as soon as nausea/vomiting resolves and ileus absent. In severe pancreatitis, start enteral tube feeding (nasogastric or nasojejunal) within 48-72 hours; avoid total parenteral nutrition (TPN) unless enteral route fails.",
-            inpatient = "Severe Acute Pancreatitis (Persistent Organ Failure >48h / Infected Necrosis): Prophylactic antibiotics are NOT recommended for sterile necrosis. If infected necrotizing pancreatitis suspected/confirmed (fever, leukocytosis, gas on CT after 7-14 days): Carbapenem (Meropenem 1 g IV q8h) or Piperacillin-Tazobactam 4.5 g IV q6h or Ciprofloxacin + Metronidazole (good pancreatic parenchymal penetration). Gallstone Pancreatitis: Emergent ERCP within 24 hours if concurrent acute cholangitis present; elective index-admission cholecystectomy prior to hospital discharge to prevent recurrent biliary events.",
-            guidelines = "American College of Gastroenterology (ACG) Guidelines: Management of Acute Pancreatitis 2024 & Revised Atlanta Classification."
-        ),
-        DiseaseProtocol(
-            id = "dp18",
-            name = "Ulcerative Colitis - Induction & Maintenance (ACG Guidelines)",
-            category = "Gastrointestinal & Immunology",
-            firstLine = "Mild-to-Moderate Distal / Extensive UC:\n• Proctitis: Mesalamine 1 g rectally (suppository) once daily at bedtime.\n• Left-Sided / Extensive Colitis: Combined Oral Mesalamine (2.4 g to 4.8 g/day PO) + Topical Mesalamine enema 1-4 g/day (combined oral + topical therapy is superior to oral alone).\n• Remission Maintenance: Oral Mesalamine 2.4 g/day PO indefinite maintenance.",
-            secondLine = "Moderate-to-Severe Flare Unresponsive to 5-ASA: Oral Corticosteroids: Prednisone 40-60 mg PO daily with gradual taper over 8-12 weeks, OR Budesonide MMX 9 mg PO daily for 8 weeks (less systemic glucocorticoid toxicity). Note: Systemic steroids are for INDUCTION only, never for maintenance.",
-            inpatient = "Acute Severe Ulcerative Colitis (ASUC) / Truelove and Witts Criteria (Bloody stools ≥6/day + tachycardia, fever, anemia, or ESR >30): Hospital admission, bowel rest, VTE prophylaxis with LMWH (high risk of thromboembolism). High-Dose IV Corticosteroids: Methylprednisolone 60 mg IV OD (or Hydrocortisone 100 mg IV q6h). Assess response on Day 3 (Oxford criteria: stool frequency >8/day or CRP >45 mg/L). If failing IV steroids: Second-line Rescue Biologic / Immunomodulator therapy: Infliximab (Anti-TNF) 5 mg/kg IV (or 10 mg/kg accelerated induction) OR Cyclosporine IV 2 mg/kg/day continuous infusion. Emergent Colectomy if toxic megacolon, bowel perforation, or massive bleeding.",
-            guidelines = "ACG Clinical Guideline: Ulcerative Colitis in Adults 2019/2024 Update & ECCO Consensus Guidelines."
-        ),
-        DiseaseProtocol(
-            id = "dp19",
-            name = "Helicobacter Pylori Eradication (ACG 2024 / Maastricht VI Guidelines)",
-            category = "Gastrointestinal & Infectious",
-            firstLine = "First-Line Preferred Regimen: Bismuth Quadruple Therapy for 14 Days:\n1. Bismuth Subsalicylate 300 mg (or Bismuth Subcitrate 120-300 mg) PO QID (with meals & bedtime).\n2. Metronidazole 500 mg PO TID or QID (or 250 mg QID).\n3. Tetracycline 500 mg PO QID (do not substitute with doxycycline unless unavailable).\n4. Standard-to-Double Dose Proton Pump Inhibitor (PPI): e.g., Esomeprazole 40 mg PO BID, Rabeprazole 20 mg PO BID, or Pantoprazole 40 mg PO BID 30-60 min before breakfast and dinner.",
-            secondLine = "Alternative First-Line (Only in regions with known Clarithromycin resistance <15%): Clarithromycin Triple Therapy x 14 Days: PPI double-dose BID + Clarithromycin 500 mg PO BID + Amoxicillin 1000 mg PO BID (or Metronidazole 500 mg TID if penicillin allergic).\nNon-Bismuth Concomitant Quadruple Therapy: PPI BID + Amoxicillin 1 g BID + Clarithromycin 500 mg BID + Metronidazole 500 mg BID for 14 days.",
-            inpatient = "Refractory / Salvage Regimens (After failed 1st line): Levofloxacin Triple Therapy for 14 days: PPI BID + Amoxicillin 1000 mg BID + Levofloxacin 500 mg PO once daily. Vonoprazan-based therapies: Potassium-competitive acid blocker (P-CAB) Vonoprazan 20 mg BID + Amoxicillin 1000 mg TID x 14 days. Confirmation of Eradication: Mandatory post-treatment Urea Breath Test (13C/14C-UBT) or Stool Antigen Test performed at least 4 weeks after antibiotic completion and at least 2 weeks after stopping PPI therapy.",
-            guidelines = "ACG Clinical Guideline: Treatment of Helicobacter pylori Infection 2024 Update & Maastricht VI/Florence Consensus Report."
-        ),
-        DiseaseProtocol(
-            id = "dp20",
-            name = "Snake Envenomation (Viper, Cobra, Krait - WHO & National Protocols)",
-            category = "Emergency Toxicology & Critical Care",
-            firstLine = "Immediate First Aid & Pre-Hospital Protocol: Reassure patient (calm reduces venom dissemination). Immobilize bitten limb with splint/bandage at heart level. Do NOT apply arterial tourniquets, do NOT cut or suction bite wound, do NOT apply chemicals or electric shocks. Remove rings, watches, tight clothing before swelling develops. Rapid transport to health facility equipped with ASV.",
-            secondLine = "Clinical Assessment & Envenomation Signs:\n• Hemotoxic (Russell's Viper, Saw-scaled Viper, Green Pit Viper): Local extensive swelling/blistering, spontaneous systemic bleeding (gingival bleeding, hematuria, hemoptysis), coagulopathy identified by 20-Minute Whole Blood Clotting Test (20WBCT: unclotted blood at 20 min = systemic envenomation).\n• Neurotoxic (Common Krait, Indian Cobra, King Cobra): Bilateral ptosis, external ophthalmoplegia, facial weakness, dysphagia, dysarthria, pooling of saliva, descending flaccid paralysis, respiratory arrest.",
-            inpatient = "Antivenom Administration (Anti-Snake Venom - ASV Polyvalent):\n• Initial Dose: 10 vials (100 mL) reconstituted in 500 mL Normal Saline infused IV over 1 hour (first 10 min slow at 1-2 mL/min to monitor for anaphylactoid reaction).\n• Bedside Preparedness: Always have Epinephrine (1:1000) 0.5 mL IM, Chlorpheniramine 10 mg IV, and Hydrocortisone 100 mg IV drawn up.\n• Neurotoxic Envenomation Adjunct: Neostigmine test: Neostigmine 0.5-2.0 mg IM/IV with Atropine 0.6 mg IV (prevents muscarinic side effects). If ptosis/muscle power improves, continue Neostigmine 0.5 mg + Atropine q30min-2h.\n• Repeat ASV Dosing: In hemotoxic bites, repeat 20WBCT at 6 hours post-ASV. If blood fails to clot, administer additional 5-10 vials ASV. Support ventilation with early endotracheal intubation and mechanical ventilator if diaphragmatic failure develops.",
-            guidelines = "WHO Guidelines for the Management of Snakebites in South-East Asia (2nd Edition) & Nepal National Protocol for Snakebite Management."
-        )
-    )
+    val diseaseProtocols: List<DiseaseProtocol> = DiseaseProtocolsData.allProtocols
 
     val antidotes: List<Antidote> = listOf(
         Antidote(
@@ -1442,41 +1329,56 @@ object ClinicalRepository {
             drug1Generic = "Amoxicillin + Potassium Clavulanate",
             drug2Generic = "Warfarin",
             severity = com.example.data.model.InteractionSeverity.SERIOUS,
-            effect = "Significantly increased INR and risk of severe or fatal hemorrhage.",
-            mechanism = "Eradication of vitamin K-producing normal gut microbiota by broad-spectrum penicillin enhances the anticoagulant effect of warfarin.",
-            clinicalAction = "Monitor INR within 3-5 days of initiating antibiotic. Empirically reduce warfarin dose by 10-20% if prolonged therapy is required."
+            effect = "Significantly increased INR and elevated risk of severe or fatal hemorrhage.",
+            mechanism = "Eradication of vitamin K-producing normal intestinal flora by broad-spectrum penicillin enhances the anticoagulant sensitivity of warfarin.",
+            clinicalAction = "Monitor INR within 3-5 days of initiating antibiotic. Empirically reduce warfarin dose by 10-20% if prolonged therapy is required.",
+            sourceDatabase = "UpToDate / Lexicomp",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Hemorrhage / Coagulation"
         ),
         com.example.data.model.DrugInteraction(
             drug1Generic = "Amlodipine Besylate",
             drug2Generic = "Atorvastatin Calcium",
             severity = com.example.data.model.InteractionSeverity.MODERATE,
             effect = "Increased systemic exposure of statin; heightened risk of myopathy or rhabdomyolysis.",
-            mechanism = "Weak inhibition of CYP3A4-mediated hepatic metabolism of statins by amlodipine.",
-            clinicalAction = "Clinical monitoring for muscle pain, tenderness, or weakness. Limit concurrent simvastatin to 20 mg/day; monitor CPK if symptomatic."
+            mechanism = "Weak inhibition of CYP3A4-mediated hepatic metabolism of lipophilic statins by amlodipine.",
+            clinicalAction = "Clinical monitoring for muscle pain, tenderness, or weakness. Limit concurrent simvastatin to 20 mg/day; monitor CPK if symptomatic.",
+            sourceDatabase = "Medscape Reference",
+            documentationLevel = "Probable (Class B)",
+            riskCategory = "Myopathy / CYP3A4"
         ),
         com.example.data.model.DrugInteraction(
             drug1Generic = "Metformin Hydrochloride",
             drug2Generic = "Iodinated Radiocontrast",
             severity = com.example.data.model.InteractionSeverity.CONTRAINDICATED,
-            effect = "Acute renal impairment leading to severe lactic acidosis.",
-            mechanism = "Contrast-induced acute kidney injury (CI-AKI) impairs renal excretion of metformin, promoting toxic systemic accumulation.",
-            clinicalAction = "Discontinue metformin 48 hours prior to or at time of procedure. Re-evaluate eGFR 48 hours post-procedure before resuming."
+            effect = "Acute renal impairment precipitating fatal Metformin-Associated Lactic Acidosis (MALA).",
+            mechanism = "Contrast-induced acute kidney injury (CI-AKI) impairs renal tubular secretion of metformin, leading to toxic systemic accumulation and anaerobic glycolysis shift.",
+            clinicalAction = "Discontinue metformin 48 hours prior to or at time of procedure. Re-evaluate eGFR 48 hours post-procedure before resuming.",
+            sourceDatabase = "FDA MedWatch / ACR Guidelines",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Metabolic / Lactic Acidosis"
         ),
         com.example.data.model.DrugInteraction(
             drug1Generic = "Ciprofloxacin Hydrochloride",
             drug2Generic = "Theophylline",
             severity = com.example.data.model.InteractionSeverity.CONTRAINDICATED,
-            effect = "Theophylline toxicity, intractable cardiac arrhythmias, and life-threatening seizures.",
-            mechanism = "Potent inhibition of hepatic cytochrome CYP1A2 by ciprofloxacin increases serum theophylline concentrations by 100-300%.",
-            clinicalAction = "Avoid concurrent use. If mandatory, reduce theophylline dose by 50% and perform daily serum theophylline level monitoring."
+            effect = "Theophylline toxicity, intractable ventricular arrhythmias, and life-threatening status epilepticus.",
+            mechanism = "Potent mechanism-based inhibition of hepatic cytochrome CYP1A2 by ciprofloxacin increases serum theophylline concentrations by 100-300%.",
+            clinicalAction = "Avoid concurrent use. If mandatory, reduce theophylline dose by 50% and perform daily serum theophylline level monitoring.",
+            sourceDatabase = "UpToDate / Lexicomp",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Neurotoxicity / CYP1A2"
         ),
         com.example.data.model.DrugInteraction(
             drug1Generic = "Pantoprazole Sodium",
             drug2Generic = "Clopidogrel",
             severity = com.example.data.model.InteractionSeverity.MODERATE,
-            effect = "Possible reduction in antiplatelet efficacy of clopidogrel.",
-            mechanism = "CYP2C19 competitive inhibition. Note: Pantoprazole has the lowest CYP2C19 affinity among PPIs and is clinically preferred over Omeprazole.",
-            clinicalAction = "Pantoprazole is preferred over omeprazole in patients on dual antiplatelet therapy (DAPT). Dose spacing by 12 hours may be utilized."
+            effect = "Possible minor reduction in antiplatelet efficacy of clopidogrel.",
+            mechanism = "Mild CYP2C19 competitive inhibition. Note: Pantoprazole has the lowest CYP2C19 affinity among PPIs and is clinically preferred over Omeprazole.",
+            clinicalAction = "Pantoprazole is clinically preferred over omeprazole in patients on dual antiplatelet therapy (DAPT). Dose spacing by 12 hours may be utilized.",
+            sourceDatabase = "UpToDate / ACC-AHA",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Antiplatelet Efficacy"
         ),
         com.example.data.model.DrugInteraction(
             drug1Generic = "Paracetamol (Acetaminophen)",
@@ -1484,7 +1386,10 @@ object ClinicalRepository {
             severity = com.example.data.model.InteractionSeverity.SERIOUS,
             effect = "Accelerated hepatotoxicity at lower or therapeutic doses of paracetamol.",
             mechanism = "Induction of cytochrome CYP2E1 increases toxic NAPQI metabolite production while chronic malnutrition/alcohol depletes hepatic glutathione.",
-            clinicalAction = "Cap maximum paracetamol daily dose to 2.0 grams (2000 mg) per 24 hours in chronic alcohol use or concurrent INH therapy."
+            clinicalAction = "Cap maximum paracetamol daily dose to 2.0 grams (2000 mg) per 24 hours in chronic alcohol use or concurrent INH therapy.",
+            sourceDatabase = "British National Formulary (BNF)",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Hepatic / NAPQI"
         ),
         com.example.data.model.DrugInteraction(
             drug1Generic = "Azithromycin Dihydrate",
@@ -1492,7 +1397,10 @@ object ClinicalRepository {
             severity = com.example.data.model.InteractionSeverity.SERIOUS,
             effect = "Additive QT interval prolongation and elevated risk of Torsades de Pointes (TdP) ventricular tachycardia.",
             mechanism = "Synergistic cardiac hERG potassium channel blockade delaying myocardial repolarization.",
-            clinicalAction = "Avoid dual QT-prolonging regimen if possible. Perform baseline ECG (QTc) and correct serum potassium/magnesium before initiation."
+            clinicalAction = "Avoid dual QT-prolonging regimen if possible. Perform baseline ECG (QTc) and correct serum potassium/magnesium before initiation.",
+            sourceDatabase = "CredibleMeds / Medscape",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Cardiac / Arrhythmia (QTc)"
         ),
         com.example.data.model.DrugInteraction(
             drug1Generic = "Amlodipine Besylate",
@@ -1500,11 +1408,135 @@ object ClinicalRepository {
             severity = com.example.data.model.InteractionSeverity.MODERATE,
             effect = "Exaggerated hypotension, bradycardia, and peripheral edema.",
             mechanism = "CYP3A4 inhibition by fluoroquinolones elevates serum amlodipine bioavailability.",
-            clinicalAction = "Monitor blood pressure and heart rate closely during antibiotic course."
+            clinicalAction = "Monitor blood pressure and heart rate closely during antibiotic course.",
+            sourceDatabase = "Medscape Reference",
+            documentationLevel = "Probable (Class B)",
+            riskCategory = "Hemodynamic / Vasodilation"
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Warfarin Sodium",
+            drug2Generic = "Fluconazole",
+            severity = com.example.data.model.InteractionSeverity.CONTRAINDICATED,
+            effect = "Massive 2- to 3-fold surge in INR, catastrophic intracranial hemorrhage, and life-threatening gastrointestinal bleeding.",
+            mechanism = "Potent inhibition of hepatic CYP2C9 by fluconazole halts the metabolic clearance of the pharmacologically active S-enantiomer of warfarin.",
+            clinicalAction = "Strictly avoid concurrent use if possible. If fluconazole is essential, pre-emptively reduce warfarin maintenance dose by 50% and check INR every 48 hours.",
+            sourceDatabase = "UpToDate / Lexicomp",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Hemorrhage / CYP2C9"
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Digoxin",
+            drug2Generic = "Furosemide",
+            severity = com.example.data.model.InteractionSeverity.SERIOUS,
+            effect = "Lethal digitalis toxicity: bidirectional ventricular tachycardia, complete AV block, visual xanthopsia, and cardiac arrest.",
+            mechanism = "Loop diuretic-induced hypokalemia and hypomagnesemia sensitizes myocardial Na+/K+-ATPase to toxic digoxin binding.",
+            clinicalAction = "Maintain serum potassium ≥4.0 mEq/L and serum magnesium ≥2.0 mg/dL. Monitor baseline and weekly serum digoxin levels (target 0.5-0.9 ng/mL).",
+            sourceDatabase = "British National Formulary (BNF)",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Cardiac / Digitalis Toxicity"
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Digoxin",
+            drug2Generic = "Spironolactone",
+            severity = com.example.data.model.InteractionSeverity.SERIOUS,
+            effect = "Elevated serum digoxin concentrations by 25-40% and risk of digitalis toxicity.",
+            mechanism = "Spironolactone competitively inhibits renal tubular secretion of digoxin via P-glycoprotein efflux pump, prolonging digoxin clearance.",
+            clinicalAction = "Reduce digoxin dose by 15-30% upon initiating spironolactone. Monitor serum digoxin levels after 5-7 days.",
+            sourceDatabase = "Medscape Reference",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Cardiac / P-gp Efflux"
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Vancomycin Hydrochloride",
+            drug2Generic = "Gentamicin Sulfate",
+            severity = com.example.data.model.InteractionSeverity.CONTRAINDICATED,
+            effect = "Synergistic Acute Tubular Necrosis (ATN) with rapid renal failure, plus irreversible cochlear and vestibular ototoxicity.",
+            mechanism = "Additive proximal tubular accumulation, oxidative mitochondrial injury in renal cortical cells, and destruction of cochlear hair cells.",
+            clinicalAction = "Avoid concurrent therapy unless managing prosthetic valve enterococcal endocarditis under strict infectious disease supervision. Limit gentamicin duration to 3-5 days; monitor peak/trough levels and daily serum creatinine.",
+            sourceDatabase = "UpToDate / IDSA Guidelines",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Nephrotoxicity & Ototoxicity"
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Gentamicin Sulfate",
+            drug2Generic = "Furosemide",
+            severity = com.example.data.model.InteractionSeverity.SERIOUS,
+            effect = "Permanent bilateral sensorineural deafness and vestibular ataxia.",
+            mechanism = "Loop diuretics alter endolymph electrolyte balance in the stria vascularis, massively enhancing aminoglycoside penetration into cochlear outer hair cells.",
+            clinicalAction = "Avoid bolus high-dose IV furosemide in patients receiving aminoglycosides. Use low-dose continuous infusion or non-ototoxic diuretics; perform audiometric screening.",
+            sourceDatabase = "British National Formulary (BNF)",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Ototoxicity"
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Ramipril",
+            drug2Generic = "Telmisartan",
+            severity = com.example.data.model.InteractionSeverity.CONTRAINDICATED,
+            effect = "Severe refractory hypotension, hyperkalemic cardiac arrest, and acute kidney injury with ZERO added cardiovascular benefit.",
+            mechanism = "Dual complete renin-angiotensin-aldosterone system (RAAS) blockade collapses glomerular filtration pressure (ONTARGET clinical trial).",
+            clinicalAction = "Strictly contraindicated. Never combine an ACE inhibitor with an ARB. Discontinue one immediately.",
+            sourceDatabase = "UpToDate / ACC-AHA Guidelines",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Renal / Hemodynamic Collapse"
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Ciprofloxacin Hydrochloride",
+            drug2Generic = "Calcium Carbonate + Vitamin D3",
+            severity = com.example.data.model.InteractionSeverity.SERIOUS,
+            effect = "Severe therapeutic failure of antibiotic: up to 85-90% reduction in ciprofloxacin absorption.",
+            mechanism = "Polyvalent cation (Ca2+) forms insoluble, non-absorbable chelate complexes with the fluoroquinolone ring in the gastrointestinal lumen.",
+            clinicalAction = "Administer ciprofloxacin at least 2 hours before or 6 hours after calcium supplements or antacids.",
+            sourceDatabase = "UpToDate / Lexicomp",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Chelation / Bioavailability"
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Atorvastatin Calcium",
+            drug2Generic = "Fluconazole",
+            severity = com.example.data.model.InteractionSeverity.SERIOUS,
+            effect = "Acute Rhabdomyolysis, severe myoglobinuria, hyperkalemia, and secondary acute renal failure.",
+            mechanism = "Fluconazole inhibits CYP3A4 and CYP2C9, causing a 3- to 5-fold rise in systemic atorvastatin plasma concentrations.",
+            clinicalAction = "Temporarily suspend atorvastatin during fluconazole therapy, or reduce statin dose to lowest level (10mg) and advise patient to report muscle soreness immediately.",
+            sourceDatabase = "Medscape Reference",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Rhabdomyolysis / CYP3A4"
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Insulin Regular",
+            drug2Generic = "Metoprolol Succinate",
+            severity = com.example.data.model.InteractionSeverity.MODERATE,
+            effect = "Masking of early hypoglycemic warning signs (tremor, tachycardia, palpitations) and prolonged neuroglycopenia.",
+            mechanism = "Beta-1 and beta-2 adrenergic blockade blunts sympathoadrenal hypoglycemia response and inhibits hepatic glycogenolysis and gluconeogenesis.",
+            clinicalAction = "Educate diabetic patients that diaphoresis (sweating) remains intact as a key warning sign. Prefer cardioselective beta-1 blockers; increase self-monitoring of blood glucose (SMBG).",
+            sourceDatabase = "ADA Standards of Care / UpToDate",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Endocrine / Hypoglycemia"
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Haloperidol",
+            drug2Generic = "Domperidone",
+            severity = com.example.data.model.InteractionSeverity.SERIOUS,
+            effect = "Severe acute dystonia, oculogyric crisis, parkinsonian rigidity, and risk of Neuroleptic Malignant Syndrome (NMS).",
+            mechanism = "Additive central and peripheral D2 dopamine receptor antagonism.",
+            clinicalAction = "Avoid concurrent D2 blockers. If antiemetic is needed in patients on antipsychotics, switch to 5-HT3 antagonist (Ondansetron, with QTc check).",
+            sourceDatabase = "British National Formulary (BNF)",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Extrapyramidal / Dopamine"
+        ),
+        com.example.data.model.DrugInteraction(
+            drug1Generic = "Carbamazepine",
+            drug2Generic = "Tramadol Hydrochloride",
+            severity = com.example.data.model.InteractionSeverity.SERIOUS,
+            effect = "Drastic loss of analgesic efficacy plus elevated risk of generalized tonic-clonic seizures.",
+            mechanism = "Carbamazepine is a potent CYP3A4 inducer accelerating tramadol clearance, while both drugs independently lower seizure threshold.",
+            clinicalAction = "Avoid tramadol in patients on carbamazepine. Use alternative analgesia not cleared by CYP3A4 and without proconvulsant activity (e.g., paracetamol).",
+            sourceDatabase = "UpToDate / Lexicomp",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Neurologic / Seizure Threshold"
         )
     )
 
-    val interactions: List<com.example.data.model.DrugInteraction> = baseInteractions + AdditionalDrugsData.additionalInteractions
+    val interactions: List<com.example.data.model.DrugInteraction> = baseInteractions + AdditionalDrugsData.additionalInteractions + ExpandedDrugsData.expandedInteractions
 
     fun findInteractions(selectedDrugIds: Set<String>): List<com.example.data.model.DrugInteraction> {
         if (selectedDrugIds.size < 2) return emptyList()
@@ -1688,6 +1720,43 @@ object ClinicalRepository {
                             )
                         }
 
+                        // RAAS + NSAID (Renal Hemodynamic Failure / Triple Whammy)
+                        ((isRaas1 && isNsaid2) || (isRaas2 && isNsaid1)) -> {
+                            val raas = if (isRaas1) d1 else d2
+                            val nsaid = if (isRaas1) d2 else d1
+                            results.add(
+                                com.example.data.model.DrugInteraction(
+                                    drug1Generic = raas.genericName,
+                                    drug2Generic = nsaid.genericName,
+                                    severity = com.example.data.model.InteractionSeverity.SERIOUS,
+                                    effect = "Acute Kidney Injury (AKI) and loss of antihypertensive control ('Triple Whammy' risk).",
+                                    mechanism = "NSAID inhibits vasodilatory prostaglandins constricting afferent arterioles, while ACEI/ARB dilates efferent arterioles, collapsing intraglomerular filtration pressure.",
+                                    clinicalAction = "Avoid concurrent NSAIDs in patients on RAAS inhibitors. If analgesia is vital, limit NSAID to ≤3 days with serial creatinine monitoring, or use paracetamol.",
+                                    sourceDatabase = "British National Formulary (BNF)",
+                                    documentationLevel = "Established (Class A)",
+                                    riskCategory = "Nephrotoxicity / Hemodynamics"
+                                )
+                            )
+                        }
+
+                        // Dual Anticoagulation (Heparin / Enoxaparin + Warfarin)
+                        ((d1.genericName.contains("Warfarin", ignoreCase = true) && (d2.genericName.contains("Enoxaparin", ignoreCase = true) || d2.genericName.contains("Heparin", ignoreCase = true))) ||
+                         (d2.genericName.contains("Warfarin", ignoreCase = true) && (d1.genericName.contains("Enoxaparin", ignoreCase = true) || d1.genericName.contains("Heparin", ignoreCase = true)))) -> {
+                            results.add(
+                                com.example.data.model.DrugInteraction(
+                                    drug1Generic = "Warfarin Sodium",
+                                    drug2Generic = if (d1.genericName.contains("Warfarin", ignoreCase = true)) d2.genericName else d1.genericName,
+                                    severity = com.example.data.model.InteractionSeverity.SERIOUS,
+                                    effect = "Substantially elevated major bleeding risk during overlapping anticoagulant therapy.",
+                                    mechanism = "Additive suppression of primary coagulation cascade factors (Factor Xa / Thrombin and Vitamin K dependent factors II, VII, IX, X).",
+                                    clinicalAction = "Indicated solely as transient 'bridge therapy' until INR is therapeutic (2.0-3.0) for 2 consecutive days. Discontinue heparin/LMWH immediately once target INR is established.",
+                                    sourceDatabase = "CHEST Antithrombotic Guidelines",
+                                    documentationLevel = "Established (Class A)",
+                                    riskCategory = "Hemorrhage / Dual Anticoagulation"
+                                )
+                            )
+                        }
+
                         // Levothyroxine + Multivalent Cation / Binder
                         (d1.genericName.contains("Levothyroxine", ignoreCase = true) && (d2.genericName.contains("Calcium", ignoreCase = true) || d2.genericName.contains("Sucralfate", ignoreCase = true))) ||
                         (d2.genericName.contains("Levothyroxine", ignoreCase = true) && (d1.genericName.contains("Calcium", ignoreCase = true) || d1.genericName.contains("Sucralfate", ignoreCase = true))) -> {
@@ -1698,7 +1767,10 @@ object ClinicalRepository {
                                     severity = com.example.data.model.InteractionSeverity.MODERATE,
                                     effect = "Decreased Absorption of Levothyroxine and Loss of Thyroid Hormone Control.",
                                     mechanism = "Insoluble chelation complexes formed in acidic gastric environment impede levothyroxine mucosal absorption.",
-                                    clinicalAction = "Separate administration times by at least 4 hours. Take levothyroxine in fasting morning state with plain water."
+                                    clinicalAction = "Separate administration times by at least 4 hours. Take levothyroxine in fasting morning state with plain water.",
+                                    sourceDatabase = "UpToDate / Lexicomp",
+                                    documentationLevel = "Established (Class A)",
+                                    riskCategory = "Chelation / Thyroid Hormone"
                                 )
                             )
                         }

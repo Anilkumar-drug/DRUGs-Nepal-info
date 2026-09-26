@@ -1,5 +1,21 @@
 package com.example.data.model
 
+data class CalculatorSummary(
+    val id: String,
+    val title: String,
+    val category: String,
+    val description: String,
+    val formulaSummary: String,
+    val aliases: List<String> = emptyList()
+)
+
+enum class GlobalSearchTab(val label: String) {
+    ALL("All Results"),
+    DRUGS("Drugs"),
+    PROTOCOLS("Protocols"),
+    CALCULATORS("Calculators")
+}
+
 data class DiseaseProtocol(
     val id: String,
     val name: String,
@@ -7,7 +23,13 @@ data class DiseaseProtocol(
     val firstLine: String,
     val secondLine: String,
     val inpatient: String,
-    val guidelines: String
+    val guidelines: String,
+    val icd10: String = "",
+    val diagnosticCriteria: String = "",
+    val keyDrugs: List<String> = emptyList(),
+    val supportiveCare: String = "",
+    val redFlags: String = "",
+    val references: List<String> = emptyList()
 )
 
 data class Antidote(
@@ -55,7 +77,10 @@ data class DrugInteraction(
     val severity: InteractionSeverity,
     val effect: String,
     val mechanism: String,
-    val clinicalAction: String
+    val clinicalAction: String,
+    val sourceDatabase: String = "UpToDate / Lexicomp",
+    val documentationLevel: String = "Established (Class A)",
+    val riskCategory: String = "Pharmacodynamic / Kinetic"
 )
 
 data class CompanyDrugBrand(

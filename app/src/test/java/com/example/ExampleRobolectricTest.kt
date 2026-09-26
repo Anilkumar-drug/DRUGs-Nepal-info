@@ -57,7 +57,8 @@ class ExampleRobolectricTest {
 
     @Test
     fun `verify user name is removed by default and optional login works`() {
-        val vm = com.example.viewmodel.ClinicalViewModel()
+        val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+        val vm = com.example.viewmodel.ClinicalViewModel(app)
         val initialState = vm.uiState.value
         // Verify default is empty and logged out
         assertEquals("", initialState.doctorName)
@@ -88,7 +89,8 @@ class ExampleRobolectricTest {
 
     @Test
     fun `verify brand vs generic mode switch toggles state and updates filtered drugs`() {
-        val vm = com.example.viewmodel.ClinicalViewModel()
+        val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+        val vm = com.example.viewmodel.ClinicalViewModel(app)
         assertEquals(com.example.viewmodel.SearchMode.BRAND, vm.uiState.value.searchMode)
 
         // Switch to GENERIC
@@ -123,7 +125,8 @@ class ExampleRobolectricTest {
 
     @Test
     fun `verify sidebar drawer state transitions and navigation`() {
-        val vm = com.example.viewmodel.ClinicalViewModel()
+        val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+        val vm = com.example.viewmodel.ClinicalViewModel(app)
         assertEquals(false, vm.uiState.value.isSidebarOpen)
 
         // Open sidebar

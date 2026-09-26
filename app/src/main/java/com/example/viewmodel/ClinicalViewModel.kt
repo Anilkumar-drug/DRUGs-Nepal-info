@@ -9,9 +9,14 @@ import com.example.data.calculator.ClinicalCalculators
 import com.example.data.local.AppDatabase
 import com.example.data.local.entity.SavedItemEntity
 import com.example.data.model.AppThemeMode
+import com.example.data.model.CalculatorSummary
 import com.example.data.model.ChatMessage
+import com.example.data.model.DiseaseProtocol
 import com.example.data.model.Drug
 import com.example.data.model.FontSizeScale
+import com.example.data.model.GlobalSearchTab
+import com.example.data.model.GroundingSource
+import com.example.data.model.MedicalNewsItem
 import com.example.data.model.MessageSender
 import com.example.data.repository.ClinicalRepository
 import com.example.data.repository.SavedItemRepository
@@ -33,10 +38,11 @@ enum class NavigationScreen(val title: String) {
     SAVED("Saved Clinical Favorites"),
     INTERACTION("Drug Interaction Checker"),
     ANTIDOTE("Antidote & Toxicology"),
-    CALCULATOR("MDCalc Clinical Suite"),
+    CALCULATOR("Cal"),
     GEMINI("Gemini AI Assistant"),
     SETTINGS("App Settings"),
-    COMPANIES("Pharmaceutical Companies")
+    COMPANIES("Pharmaceutical Companies"),
+    MEDICAL_NEWS("Nepal Medical News & Alerts")
 }
 
 enum class SearchMode(val title: String) {
@@ -62,6 +68,8 @@ data class ClinicalUiState(
     val selectedSystemFilter: String? = null,
     val selectedDrug: Drug? = null,
     val isDrugModalOpen: Boolean = false,
+    val selectedProtocol: DiseaseProtocol? = null,
+    val selectedCalculatorId: String? = null,
     val recentSearches: List<String> = listOf(
         "Moxclave 625", "Dolo-650", "Pantocid 40", "Azithromycin", "Amlodipine"
     ),
@@ -75,7 +83,7 @@ data class ClinicalUiState(
     val selectedInteractionDrugIds: Set<String> = setOf("d1", "d5"),
     val patientWeightKg: Double = 60.0,
     // Theme & Settings
-    val themeMode: AppThemeMode = AppThemeMode.DARK,
+    val themeMode: AppThemeMode = AppThemeMode.PITCH_BLACK,
     val fontSizeScale: FontSizeScale = FontSizeScale.NORMAL,
     // Prescriber Profile (Default empty, optional login)
     val isLoggedIn: Boolean = false,
@@ -86,6 +94,9 @@ data class ClinicalUiState(
     val isSidebarOpen: Boolean = false,
     val isCompaniesModalOpen: Boolean = false,
     val filteredDrugs: List<Drug> = emptyList(),
+    val filteredProtocols: List<DiseaseProtocol> = emptyList(),
+    val filteredCalculators: List<CalculatorSummary> = emptyList(),
+    val globalSearchTab: GlobalSearchTab = GlobalSearchTab.ALL,
     // Gemini Chat
     val chatMessages: List<ChatMessage> = listOf(
         ChatMessage(
@@ -99,6 +110,14 @@ data class ClinicalUiState(
     ),
     val isAiThinking: Boolean = false,
     val aiInputText: String = "",
+    // Nepal Medical News & Alerts with Search Grounding
+    val medicalNewsList: List<MedicalNewsItem> = emptyList(),
+    val isNewsLoading: Boolean = false,
+    val newsCategoryFilter: String = "All",
+    val newsSearchQueries: List<String> = emptyList(),
+    val newsGroundingSources: List<GroundingSource> = emptyList(),
+    val isNewsLiveGrounding: Boolean = false,
+    val selectedNewsItem: MedicalNewsItem? = null,
     // Calculator States
     val activeCalcTab: String = "egfr", // egfr, bsa, child_pugh, rumack, pediatric
     // eGFR inputs
@@ -208,6 +227,7 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
         computeCha2Ds2Vasc()
         computeCurb65()
         computeGcs()
+        fetchMedicalNews(false)
 
         // Observe saved items from Room DB reactively
         if (savedItemRepository != null) {
@@ -320,7 +340,36 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun navigateTo(screen: NavigationScreen) {
-        _uiState.value = _uiState.value.copy(currentScreen = screen)
+        _uiState.update {
+            it.copy(
+                currentScreen = screen,
+                selectedProtocol = if (screen == NavigationScreen.DISEASE) null else it.selectedProtocol,
+                selectedCalculatorId = if (screen == NavigationScreen.CALCULATOR) null else it.selectedCalculatorId,
+                isDrugModalOpen = if (screen == NavigationScreen.SEARCH) false else it.isDrugModalOpen
+            )
+        }
+    }
+
+    fun openProtocol(protocol: DiseaseProtocol) {
+        _uiState.update { it.copy(selectedProtocol = protocol) }
+    }
+
+    fun closeProtocol() {
+        _uiState.update { it.copy(selectedProtocol = null) }
+    }
+
+    fun consultAiForIndication(indicationName: String) {
+        val prompt = "Provide clinical pharmacology and guideline-directed treatment protocol for: $indicationName. Include first-line drugs, standard dosing, alternatives, and key monitoring parameters."
+        navigateTo(NavigationScreen.GEMINI)
+        sendAiMessage(prompt)
+    }
+
+    fun openCalculator(calcId: String) {
+        _uiState.update { it.copy(selectedCalculatorId = calcId, activeCalcTab = calcId) }
+    }
+
+    fun closeCalculator() {
+        _uiState.update { it.copy(selectedCalculatorId = null) }
     }
 
     fun updateSearchQuery(query: String) {
@@ -341,8 +390,32 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
                 selectedSystemFilter = current.selectedSystemFilter,
                 bookmarkedDrugIds = current.bookmarkedDrugIds
             )
-            _uiState.update { it.copy(filteredDrugs = filtered) }
+            val protos = filterProtocols(current.searchQuery)
+            val calcs = filterCalculators(current.searchQuery)
+            _uiState.update {
+                it.copy(
+                    filteredDrugs = filtered,
+                    filteredProtocols = protos,
+                    filteredCalculators = calcs
+                )
+            }
         }
+    }
+
+    fun setGlobalSearchTab(tab: GlobalSearchTab) {
+        _uiState.update { it.copy(globalSearchTab = tab) }
+    }
+
+    fun openCalculatorFromSearch(calcId: String, calcTitle: String) {
+        addRecentSearch(calcTitle)
+        openCalculator(calcId)
+        navigateTo(NavigationScreen.CALCULATOR)
+    }
+
+    fun openProtocolFromSearch(protocol: DiseaseProtocol) {
+        addRecentSearch(protocol.name)
+        openProtocol(protocol)
+        navigateTo(NavigationScreen.DISEASE)
     }
 
     fun setFilter(filter: DrugFilterType) {
@@ -407,6 +480,19 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
 
     fun closeDrugModal() {
         _uiState.value = _uiState.value.copy(isDrugModalOpen = false)
+    }
+
+    fun openDrugByName(name: String) {
+        val trimmed = name.trim().lowercase()
+        val matched = ClinicalRepository.drugs.find { drug ->
+            drug.genericName.lowercase().contains(trimmed) ||
+            trimmed.contains(drug.genericName.lowercase()) ||
+            drug.brandsNepal.any { it.name.lowercase().contains(trimmed) } ||
+            drug.brandsIndia.any { it.name.lowercase().contains(trimmed) }
+        }
+        if (matched != null) {
+            openDrug(matched)
+        }
     }
 
     fun toggleBookmarkDrug(drugId: String) {
@@ -584,11 +670,22 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
                 }
             }
             "PROTOCOL" -> {
-                navigateTo(NavigationScreen.DISEASE)
+                val proto = ClinicalRepository.diseaseProtocols.find { it.id == item.targetId }
+                _uiState.update {
+                    it.copy(
+                        currentScreen = NavigationScreen.DISEASE,
+                        selectedProtocol = proto
+                    )
+                }
             }
             "CALCULATOR" -> {
-                setCalcTab(item.targetId)
-                navigateTo(NavigationScreen.CALCULATOR)
+                _uiState.update {
+                    it.copy(
+                        currentScreen = NavigationScreen.CALCULATOR,
+                        selectedCalculatorId = item.targetId,
+                        activeCalcTab = item.targetId
+                    )
+                }
             }
             "GUIDE" -> {
                 navigateTo(NavigationScreen.PHARMACOLOGY_GUIDE)
@@ -605,10 +702,14 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
             selectedSystemFilter = current.selectedSystemFilter,
             bookmarkedDrugIds = current.bookmarkedDrugIds
         )
+        val protos = filterProtocols(current.searchQuery)
+        val calcs = filterCalculators(current.searchQuery)
         _uiState.update {
             it.copy(
                 searchMode = mode,
-                filteredDrugs = filtered
+                filteredDrugs = filtered,
+                filteredProtocols = protos,
+                filteredCalculators = calcs
             )
         }
     }
@@ -621,6 +722,24 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
             current.add(drugId)
         }
         _uiState.value = _uiState.value.copy(selectedInteractionDrugIds = current)
+    }
+
+    fun setInteractionDrugs(drugIds: Collection<String>) {
+        _uiState.update { it.copy(selectedInteractionDrugIds = drugIds.toSet()) }
+    }
+
+    fun addMultipleInteractionDrugs(drugIds: Collection<String>) {
+        _uiState.update { it.copy(selectedInteractionDrugIds = it.selectedInteractionDrugIds + drugIds) }
+    }
+
+    fun openInteractionWithDrug(drugId: String) {
+        _uiState.update {
+            it.copy(
+                isDrugModalOpen = false,
+                currentScreen = NavigationScreen.INTERACTION,
+                selectedInteractionDrugIds = it.selectedInteractionDrugIds + drugId
+            )
+        }
     }
 
     fun clearInteractionDrugs() {
@@ -636,6 +755,15 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
     // Theme & Setting Controls
     fun setThemeMode(mode: AppThemeMode) {
         _uiState.value = _uiState.value.copy(themeMode = mode)
+    }
+
+    fun toggleNextTheme() {
+        val next = when (_uiState.value.themeMode) {
+            AppThemeMode.PITCH_BLACK -> AppThemeMode.DARK
+            AppThemeMode.DARK -> AppThemeMode.LIGHT
+            AppThemeMode.LIGHT -> AppThemeMode.PITCH_BLACK
+        }
+        setThemeMode(next)
     }
 
     fun setFontSizeScale(scale: FontSizeScale) {
@@ -736,6 +864,43 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
             aiInputText = "",
             isAiThinking = false
         )
+    }
+
+    fun startAiChatWithPrompt(prompt: String) {
+        _uiState.update { it.copy(currentScreen = NavigationScreen.GEMINI, isSidebarOpen = false) }
+        sendAiMessage(prompt)
+    }
+
+    // Medical News with Search Grounding
+    fun fetchMedicalNews(forceRefresh: Boolean = false) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isNewsLoading = true) }
+            val category = _uiState.value.newsCategoryFilter
+            val result = GeminiClinicalService.fetchLiveNepalMedicalNews(category)
+            _uiState.update {
+                it.copy(
+                    medicalNewsList = result.items,
+                    isNewsLoading = false,
+                    newsSearchQueries = result.searchQueries,
+                    newsGroundingSources = result.sources,
+                    isNewsLiveGrounding = result.isLiveGrounding
+                )
+            }
+        }
+    }
+
+    fun setNewsCategoryFilter(category: String) {
+        _uiState.update { it.copy(newsCategoryFilter = category) }
+        fetchMedicalNews(false)
+    }
+
+    fun selectNewsItem(item: MedicalNewsItem?) {
+        _uiState.update { it.copy(selectedNewsItem = item) }
+    }
+
+    fun askCopilotAboutNews(newsItem: MedicalNewsItem) {
+        val prompt = "Provide clinical advice for doctors in Nepal regarding this medical update: '${newsItem.title}'. Summary: ${newsItem.summary}. Clinical takeaway: ${newsItem.clinicalTakeaway}. What specific diagnostic and therapeutic steps should clinicians take?"
+        startAiChatWithPrompt(prompt)
     }
 
     // Calculators
@@ -900,6 +1065,33 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
         _uiState.value = _uiState.value.copy(gcsResult = res)
     }
 
+    fun filterProtocols(query: String): List<DiseaseProtocol> {
+        val q = query.trim().lowercase()
+        if (q.isBlank()) return emptyList()
+        return ClinicalRepository.diseaseProtocols.filter { proto ->
+            proto.name.lowercase().contains(q) ||
+            proto.category.lowercase().contains(q) ||
+            proto.icd10.lowercase().contains(q) ||
+            proto.keyDrugs.any { it.lowercase().contains(q) } ||
+            proto.diagnosticCriteria.lowercase().contains(q) ||
+            proto.firstLine.lowercase().contains(q) ||
+            proto.secondLine.lowercase().contains(q) ||
+            proto.guidelines.lowercase().contains(q)
+        }
+    }
+
+    fun filterCalculators(query: String): List<CalculatorSummary> {
+        val q = query.trim().lowercase()
+        if (q.isBlank()) return emptyList()
+        return ClinicalRepository.allCalculators.filter { calc ->
+            calc.title.lowercase().contains(q) ||
+            calc.category.lowercase().contains(q) ||
+            calc.description.lowercase().contains(q) ||
+            calc.formulaSummary.lowercase().contains(q) ||
+            calc.aliases.any { it.lowercase().contains(q) }
+        }
+    }
+
     fun getFilteredDrugs(): List<Drug> {
         return _uiState.value.filteredDrugs
     }
@@ -933,8 +1125,8 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
             if (q.isEmpty()) return@filter true
 
             when (searchMode) {
-                SearchMode.BRAND -> item.brandIndex.contains(q)
-                SearchMode.GENERIC -> item.genericIndex.contains(q)
+                SearchMode.BRAND -> item.brandIndex.contains(q) || item.genericIndex.contains(q)
+                SearchMode.GENERIC -> item.genericIndex.contains(q) || item.brandIndex.contains(q)
                 SearchMode.INDICATION -> item.indicationIndex.contains(q)
                 SearchMode.HERBAL -> item.allIndex.contains(q)
             }

@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Feed
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AccountTree
@@ -39,8 +40,11 @@ import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Domain
 import androidx.compose.material.icons.filled.ElectricBolt
+import androidx.compose.material.icons.filled.Feed
 import androidx.compose.material.icons.filled.Healing
 import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
@@ -62,7 +66,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.AppThemeMode
+import com.example.ui.theme.Amber400
 import com.example.ui.theme.DimsTealPrimary
+import com.example.ui.theme.Emerald400
 import com.example.ui.theme.MedicalBlue400
 import com.example.ui.theme.NavyCard
 import com.example.ui.theme.NavyCardBorder
@@ -77,6 +84,8 @@ fun AppSidebarDrawer(
     doctorName: String,
     doctorDegree: String,
     doctorCouncilNo: String,
+    themeMode: AppThemeMode = AppThemeMode.PITCH_BLACK,
+    onThemeChange: (AppThemeMode) -> Unit = {},
     onClose: () -> Unit,
     onSignInClick: () -> Unit,
     onCompaniesClick: () -> Unit,
@@ -86,6 +95,7 @@ fun AppSidebarDrawer(
     onAiAssistantClick: () -> Unit,
     onSavedClick: () -> Unit = {},
     onPharmacologyClick: () -> Unit = {},
+    onMedicalNewsClick: () -> Unit = {},
     onInteractionsClick: () -> Unit,
     onAntidotesClick: () -> Unit,
     onSettingsClick: () -> Unit
@@ -292,6 +302,114 @@ fun AppSidebarDrawer(
                             }
                         }
 
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Quick Theme Switcher
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFF0F172A).copy(alpha = 0.85f),
+                            border = BorderStroke(1.dp, Color(0xFF1E293B)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Palette,
+                                            contentDescription = null,
+                                            tint = Amber400,
+                                            modifier = Modifier.size(15.dp)
+                                        )
+                                        Text(
+                                            text = "APP THEME",
+                                            fontSize = 10.5.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = Color.White
+                                        )
+                                    }
+                                    Text(
+                                        text = when (themeMode) {
+                                            AppThemeMode.PITCH_BLACK -> "Pitch Black (OLED)"
+                                            AppThemeMode.DARK -> "Slate Dark"
+                                            AppThemeMode.LIGHT -> "Clean Light"
+                                        },
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = when (themeMode) {
+                                            AppThemeMode.PITCH_BLACK -> Emerald400
+                                            AppThemeMode.DARK -> MedicalBlue400
+                                            AppThemeMode.LIGHT -> Amber400
+                                        }
+                                    )
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    val options = listOf(
+                                        AppThemeMode.PITCH_BLACK to "Pitch Black",
+                                        AppThemeMode.DARK to "Slate Dark",
+                                        AppThemeMode.LIGHT to "Clean Light"
+                                    )
+                                    options.forEach { (mode, label) ->
+                                        val isSel = themeMode == mode
+                                        val activeBorder = when (mode) {
+                                            AppThemeMode.PITCH_BLACK -> Emerald400
+                                            AppThemeMode.DARK -> MedicalBlue400
+                                            AppThemeMode.LIGHT -> Amber400
+                                        }
+                                        val activeBg = when (mode) {
+                                            AppThemeMode.PITCH_BLACK -> Color(0xFF064E3B)
+                                            AppThemeMode.DARK -> Color(0xFF0369A1)
+                                            AppThemeMode.LIGHT -> Color(0xFFB45309)
+                                        }
+                                        Surface(
+                                            onClick = { onThemeChange(mode) },
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = if (isSel) activeBg else Color(0xFF1E293B),
+                                            border = BorderStroke(1.dp, if (isSel) activeBorder else Color(0xFF334155)),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(vertical = 7.dp),
+                                                horizontalArrangement = Arrangement.Center,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                if (isSel) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Check,
+                                                        contentDescription = null,
+                                                        tint = Color.White,
+                                                        modifier = Modifier.size(12.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(3.dp))
+                                                }
+                                                Text(
+                                                    text = label,
+                                                    fontSize = 10.sp,
+                                                    fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium,
+                                                    color = if (isSel) Color.White else Slate400
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // Sidebar Menu Items (Structured exactly as in Screenshot 1)
@@ -301,6 +419,19 @@ fun AppSidebarDrawer(
                                 .padding(horizontal = 14.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            // 0. Nepal Medical News & Clinical Updates (Live Search Grounding)
+                            SidebarItemCard(
+                                icon = Icons.Default.Feed,
+                                iconColor = Color(0xFF38BDF8),
+                                iconBg = Color(0xFF38BDF8).copy(alpha = 0.15f),
+                                title = "NEPAL MEDICAL NEWS & ALERTS",
+                                subtitle = "EDCD, DDA, WHO & सर्च ग्राउन्डिङ ताजा अपडेट",
+                                badge = "LIVE NEWS",
+                                badgeColor = Color(0xFF38BDF8),
+                                onClick = onMedicalNewsClick,
+                                testTag = "sidebar_medical_news_item"
+                            )
+
                             // 1. Pharmaceutical Companies (User explicitly requested)
                             SidebarItemCard(
                                 icon = Icons.Default.Domain,
@@ -345,9 +476,9 @@ fun AppSidebarDrawer(
                                 icon = Icons.Default.Calculate,
                                 iconColor = DimsTealPrimary,
                                 iconBg = DimsTealPrimary.copy(alpha = 0.15f),
-                                title = "CALCULATORS & SUITE",
+                                title = "CAL SUITE",
                                 subtitle = "LMP, POG, eGFR, BSA र क्लिनिकल क्याल्कुलेटर",
-                                badge = "4 Tools",
+                                badge = "12 Tools",
                                 badgeColor = DimsTealPrimary,
                                 onClick = onCalculatorsClick,
                                 testTag = "sidebar_calculators_item"

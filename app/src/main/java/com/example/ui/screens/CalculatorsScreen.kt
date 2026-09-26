@@ -1,13 +1,21 @@
 package com.example.ui.screens
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.*
@@ -15,9 +23,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.calculator.ClinicalCalculators
@@ -25,23 +35,160 @@ import com.example.ui.theme.*
 import com.example.viewmodel.ClinicalUiState
 import com.example.viewmodel.ClinicalViewModel
 
+private data class CalculatorMeta(
+    val id: String,
+    val title: String,
+    val category: String,
+    val icon: ImageVector,
+    val description: String,
+    val formulaSummary: String,
+    val iconColor: Color
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalculatorsScreen(
     state: ClinicalUiState,
     viewModel: ClinicalViewModel
 ) {
-    val tabs = remember {
+    if (state.selectedCalculatorId != null) {
+        CalculatorDetailView(state, viewModel)
+    } else {
+        CalculatorsListView(state, viewModel)
+    }
+}
+
+@Composable
+private fun CalculatorsListView(
+    state: ClinicalUiState,
+    viewModel: ClinicalViewModel
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("All") }
+
+    val categories = remember {
+        listOf("All", "Renal & Dosing", "Critical Care", "Cardiology", "Hepatology", "Toxicology", "Pediatrics", "Emergency & Nepal")
+    }
+
+    val allCalculators = remember {
         listOf(
-            "egfr" to "eGFR (Cockcroft-Gault)",
-            "bsa" to "BSA (Mosteller)",
-            "child_pugh" to "Child-Pugh Score",
-            "cha2ds2" to "CHA₂DS₂-VASc AFib",
-            "curb65" to "CURB-65 Pneumonia",
-            "gcs" to "GCS Score & Coma",
-            "rumack" to "Paracetamol Nomogram",
-            "pediatric" to "Pediatric Liquid Dose"
+            CalculatorMeta(
+                id = "egfr",
+                title = "eGFR (Cockcroft-Gault)",
+                category = "Renal & Dosing",
+                icon = Icons.Default.WaterDrop,
+                description = "Estimates Creatinine Clearance (CrCl) for kidney function evaluation and antibiotic / renal dose adjustment.",
+                formulaSummary = "CrCl = [(140 - Age) × Wt] / (72 × SCr) [× 0.85 if female]",
+                iconColor = MedicalBlue400
+            ),
+            CalculatorMeta(
+                id = "bsa",
+                title = "BSA (Mosteller Formula)",
+                category = "Renal & Dosing",
+                icon = Icons.Default.Straighten,
+                description = "Calculates Body Surface Area in m² for narrow-therapeutic-index dosing, chemotherapy & burn estimation.",
+                formulaSummary = "BSA (m²) = √[(Height in cm × Weight in kg) / 3600]",
+                iconColor = Emerald400
+            ),
+            CalculatorMeta(
+                id = "child_pugh",
+                title = "Child-Pugh Score",
+                category = "Hepatology",
+                icon = Icons.Default.LocalHospital,
+                description = "Assesses prognosis and 1- to 2-year mortality in cirrhosis / chronic liver disease. Guides hepatic drug dosing.",
+                formulaSummary = "Class A (5-6) • Class B (7-9) • Class C (10-15)",
+                iconColor = Amber400
+            ),
+            CalculatorMeta(
+                id = "cha2ds2",
+                title = "CHA₂DS₂-VASc AFib Score",
+                category = "Cardiology",
+                icon = Icons.Default.Favorite,
+                description = "Calculates 1-year thromboembolic stroke risk in non-valvular Atrial Fibrillation. Guides oral anticoagulation.",
+                formulaSummary = "Score 0 (Low) • 1 (Intermediate) • ≥2 (Anticoagulation Indicated)",
+                iconColor = Red400
+            ),
+            CalculatorMeta(
+                id = "curb65",
+                title = "CURB-65 Pneumonia Score",
+                category = "Critical Care",
+                icon = Icons.Default.Air,
+                description = "Predicts 30-day mortality in Community-Acquired Pneumonia. Directs Outpatient vs Inpatient Ward vs ICU admission.",
+                formulaSummary = "Score 0-1 Outpatient • 2 Inpatient Ward • 3-5 ICU Care",
+                iconColor = Color(0xFF38BDF8)
+            ),
+            CalculatorMeta(
+                id = "gcs",
+                title = "Glasgow Coma Scale (GCS)",
+                category = "Critical Care",
+                icon = Icons.Default.Psychology,
+                description = "Gold-standard objective neurological scoring for acute level of consciousness in trauma and critical care.",
+                formulaSummary = "Eye Response (1-4) + Verbal (1-5) + Motor (1-6)",
+                iconColor = Color(0xFFA855F7)
+            ),
+            CalculatorMeta(
+                id = "rumack",
+                title = "Paracetamol Nomogram",
+                category = "Toxicology",
+                icon = Icons.Default.Timeline,
+                description = "Rumack-Matthew Nomogram evaluating single acute acetaminophen overdose hepatotoxicity vs time.",
+                formulaSummary = "Treatment Line: 150 mcg/mL at 4h post-ingestion for NAC therapy",
+                iconColor = Amber500
+            ),
+            CalculatorMeta(
+                id = "pediatric",
+                title = "Pediatric Liquid Dose",
+                category = "Pediatrics",
+                icon = Icons.Default.ChildCare,
+                description = "Calculates precise liquid syrup/suspension volume (mL) from weight-based mg/kg to prevent 10-fold errors.",
+                formulaSummary = "Dose Volume (mL) = [Weight (kg) × Dose (mg/kg)] / Concentration",
+                iconColor = Emerald400
+            ),
+            CalculatorMeta(
+                id = "iv_infusion",
+                title = "IV Infusion & Drop Rate",
+                category = "Critical Care",
+                icon = Icons.Default.Opacity,
+                description = "Calculates pump rate (mL/hr) and gravity drip rate (gtt/min) for Noradrenaline, Dopamine, and critical infusions.",
+                formulaSummary = "Drop Rate (gtt/min) = (mL/hr × Drop Factor) / 60",
+                iconColor = Cyan500
+            ),
+            CalculatorMeta(
+                id = "snakebite",
+                title = "Nepal Snakebite & ASV",
+                category = "Emergency & Nepal",
+                icon = Icons.Default.Healing,
+                description = "National Snakebite Protocol (EDCD Nepal): ASV dosing, 20WBCT assessment, and Neostigmine challenge protocol.",
+                formulaSummary = "Initial 10 Vials Polyvalent ASV in 500 mL NS over 1h + Atropine/Neostigmine",
+                iconColor = Red500
+            ),
+            CalculatorMeta(
+                id = "rabies_pep",
+                title = "Rabies PEP & Immunoglobulin",
+                category = "Emergency & Nepal",
+                icon = Icons.Default.Shield,
+                description = "WHO / EDCD Nepal Rabies Prophylaxis: Category I-III wound care, Intradermal (2-site) vs IM vaccine, and RIG dosing.",
+                formulaSummary = "Thai Red Cross 2-site ID (0.1 mL) D0,3,7,28 + ERIG 40 IU/kg",
+                iconColor = Emerald500
+            )
         )
+    }
+
+    val filteredCalculators = remember(searchQuery, selectedCategory) {
+        val q = searchQuery.trim().lowercase()
+        allCalculators.filter { calc ->
+            val matchesCategory = when (selectedCategory) {
+                "All" -> true
+                else -> calc.category.equals(selectedCategory, ignoreCase = true)
+            }
+            val matchesQuery = if (q.isEmpty()) true else {
+                calc.title.lowercase().contains(q) ||
+                calc.category.lowercase().contains(q) ||
+                calc.description.lowercase().contains(q) ||
+                calc.formulaSummary.lowercase().contains(q)
+            }
+            matchesCategory && matchesQuery
+        }
     }
 
     Column(
@@ -50,7 +197,367 @@ fun CalculatorsScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Header
+        // Banner
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MedicalBlue900.copy(alpha = 0.35f),
+            border = BorderStroke(1.dp, MedicalBlue500.copy(alpha = 0.35f))
+        ) {
+            Row(
+                modifier = Modifier.padding(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = MedicalBlue500.copy(alpha = 0.2f),
+                    modifier = Modifier.size(42.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Calculate,
+                            contentDescription = null,
+                            tint = MedicalBlue400,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Clinical Cal Suite",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Select any clinical formula or score below to view details and calculate.",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        // Search Field
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = { Text("Search calculator (e.g. eGFR, CURB, GCS, Liver)...") },
+            leadingIcon = {
+                Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(
+                        onClick = { searchQuery = "" },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = "Clear", modifier = Modifier.size(18.dp))
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("calculator_search_input"),
+            shape = RoundedCornerShape(14.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+            ),
+            singleLine = true
+        )
+
+        // Specialty Filter Chips
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            categories.forEach { cat ->
+                val isSelected = selectedCategory == cat
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { selectedCategory = cat },
+                    label = {
+                        Text(
+                            text = cat,
+                            fontSize = 12.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                        )
+                    },
+                    shape = RoundedCornerShape(18.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = Color.White,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        labelColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+                        enabled = true,
+                        selected = isSelected
+                    )
+                )
+            }
+        }
+
+        // Calculators List (Cards)
+        if (filteredCalculators.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    modifier = Modifier.fillMaxWidth(0.85f)
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.SearchOff,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(36.dp)
+                        )
+                        Text(
+                            text = "No calculators found",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Try clearing the search or category filter above.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
+                items(filteredCalculators, key = { it.id }) { item ->
+                    val isBookmarked = state.bookmarkedCalculatorIds.contains(item.id)
+                    CalculatorSummaryCard(
+                        meta = item,
+                        isBookmarked = isBookmarked,
+                        onBookmarkToggle = { viewModel.toggleBookmarkCalculator(item.id) },
+                        onClick = { viewModel.openCalculator(item.id) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalculatorSummaryCard(
+    meta: CalculatorMeta,
+    isBookmarked: Boolean,
+    onBookmarkToggle: () -> Unit,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .testTag("calc_card_${meta.id}"),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
+        border = BorderStroke(1.dp, meta.iconColor.copy(alpha = 0.35f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Header Row: Icon, Title, Category Badge, Bookmark Button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = meta.iconColor.copy(alpha = 0.15f),
+                        border = BorderStroke(1.dp, meta.iconColor.copy(alpha = 0.4f)),
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = meta.icon,
+                                contentDescription = null,
+                                tint = meta.iconColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+
+                    Column {
+                        Text(
+                            text = meta.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = meta.iconColor.copy(alpha = 0.12f),
+                            border = BorderStroke(0.8.dp, meta.iconColor.copy(alpha = 0.3f)),
+                            modifier = Modifier.padding(top = 2.dp)
+                        ) {
+                            Text(
+                                text = meta.category,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = meta.iconColor,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+
+                IconButton(
+                    onClick = onBookmarkToggle,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .testTag("bookmark_calc_${meta.id}")
+                ) {
+                    Icon(
+                        imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Outlined.BookmarkBorder,
+                        contentDescription = if (isBookmarked) "Unbookmark" else "Bookmark",
+                        tint = if (isBookmarked) Amber400 else Slate400,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            // Description
+            Text(
+                text = meta.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 16.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            // Formula chip & Action Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+                    modifier = Modifier.weight(1f, fill = false)
+                ) {
+                    Text(
+                        text = meta.formulaSummary,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "Calculate",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalculatorDetailView(
+    state: ClinicalUiState,
+    viewModel: ClinicalViewModel
+) {
+    val tabs = remember {
+        listOf(
+            "egfr" to "eGFR",
+            "bsa" to "BSA",
+            "child_pugh" to "Child-Pugh",
+            "cha2ds2" to "CHA₂DS₂-VASc",
+            "curb65" to "CURB-65",
+            "gcs" to "GCS",
+            "rumack" to "Paracetamol",
+            "pediatric" to "Pediatric",
+            "iv_infusion" to "IV Infusion",
+            "snakebite" to "Snakebite ASV",
+            "rabies_pep" to "Rabies PEP"
+        )
+    }
+
+    val activeCalcName = remember(state.activeCalcTab) {
+        when (state.activeCalcTab) {
+            "egfr" -> "eGFR (Cockcroft-Gault)"
+            "bsa" -> "BSA (Mosteller)"
+            "child_pugh" -> "Child-Pugh Score"
+            "cha2ds2" -> "CHA₂DS₂-VASc AFib"
+            "curb65" -> "CURB-65 Pneumonia"
+            "gcs" -> "GCS Score & Coma"
+            "rumack" -> "Paracetamol Nomogram"
+            "pediatric" -> "Pediatric Liquid Dose"
+            "iv_infusion" -> "IV Infusion & Drop Rate"
+            "snakebite" -> "Nepal Snakebite ASV Protocol"
+            "rabies_pep" -> "Rabies Post-Exposure Prophylaxis"
+            else -> "Clinical Calculator"
+        }
+    }
+
+    BackHandler(enabled = true) {
+        viewModel.closeCalculator()
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Top Navigation Bar
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -58,25 +565,33 @@ fun CalculatorsScreen(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Calculate,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
+                IconButton(
+                    onClick = { viewModel.closeCalculator() },
+                    modifier = Modifier
+                        .size(38.dp)
+                        .testTag("back_to_calculators_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back to Calculators",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
                 Column {
                     Text(
-                        text = "MDCalc Clinical Suite",
-                        style = MaterialTheme.typography.titleLarge,
+                        text = activeCalcName,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = "Evidence-based clinical formulas for precision dosage adjustment",
-                        style = MaterialTheme.typography.bodySmall,
+                        text = "Interactive Clinical Calculator",
+                        fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -98,7 +613,7 @@ fun CalculatorsScreen(
             }
         }
 
-        // Tabs Row
+        // Quick Switch Tabs Row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -162,7 +677,7 @@ fun CalculatorsScreen(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
         ) {
             Column(
                 modifier = Modifier
@@ -180,6 +695,32 @@ fun CalculatorsScreen(
                     "gcs" -> GcsCalculatorView(state, viewModel)
                     "rumack" -> ParacetamolCalculatorView(state, viewModel)
                     "pediatric" -> PediatricCalculatorView(state, viewModel)
+                    "iv_infusion" -> IvInfusionCalculatorView()
+                    "snakebite" -> SnakebiteCalculatorView()
+                    "rabies_pep" -> RabiesPepCalculatorView()
+                }
+
+                // Back to list button at bottom
+                OutlinedButton(
+                    onClick = { viewModel.closeCalculator() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 40.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Back to All Calculators",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
         }

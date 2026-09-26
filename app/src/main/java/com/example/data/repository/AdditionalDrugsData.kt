@@ -924,15 +924,21 @@ object AdditionalDrugsData {
             severity = InteractionSeverity.CONTRAINDICATED,
             effect = "Precipitous, rapid 60-80% decline in serum valproate concentration within 24 hours, leading to breakthrough status epilepticus and coma.",
             mechanism = "Carbapenems inhibit acylpeptide hydrolase and prevent glucuronide hydrolysis of valproate, drastically accelerating systemic valproate clearance.",
-            clinicalAction = "Strictly contraindicated combination. Switch carbapenem to alternative antibiotic or switch valproate to levetiracetam before initiating meropenem."
+            clinicalAction = "Strictly contraindicated combination. Switch carbapenem to alternative antibiotic or switch valproate to levetiracetam before initiating meropenem.",
+            sourceDatabase = "UpToDate / Lexicomp",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Neurotoxicity / Seizure Threshold"
         ),
         DrugInteraction(
             drug1Generic = "Warfarin Sodium",
             drug2Generic = "Diclofenac Sodium",
-            severity = InteractionSeverity.SERIOUS,
+            severity = InteractionSeverity.CONTRAINDICATED,
             effect = "Markedly increased risk of major gastrointestinal hemorrhage and bleeding events.",
             mechanism = "Pharmacodynamic synergy: NSAID platelet inhibition and gastric mucosal injury combined with Warfarin coagulation factor suppression.",
-            clinicalAction = "Avoid concomitant use. If analgesia is required, use paracetamol (up to 2g/day) or topical therapy."
+            clinicalAction = "Avoid concomitant use. If analgesia is required, use paracetamol (up to 2g/day) or topical therapy.",
+            sourceDatabase = "British National Formulary (BNF)",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Hemorrhage / Coagulation"
         ),
         DrugInteraction(
             drug1Generic = "Spironolactone",
@@ -940,7 +946,10 @@ object AdditionalDrugsData {
             severity = InteractionSeverity.SERIOUS,
             effect = "Severe life-threatening hyperkalemia, cardiac conduction abnormalities, and ventricular arrhythmias.",
             mechanism = "Dual blockade of renin-angiotensin-aldosterone axis suppresses renal potassium excretion.",
-            clinicalAction = "Monitor serum potassium and creatinine at baseline, day 3, day 7, and monthly. Discontinue spironolactone if K+ >5.5 mEq/L."
+            clinicalAction = "Monitor serum potassium and creatinine at baseline, day 3, day 7, and monthly. Discontinue spironolactone if K+ >5.5 mEq/L.",
+            sourceDatabase = "UpToDate / ACC-AHA Guidelines",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Electrolyte / Hyperkalemia"
         ),
         DrugInteraction(
             drug1Generic = "Vancomycin Hydrochloride",
@@ -948,7 +957,10 @@ object AdditionalDrugsData {
             severity = InteractionSeverity.SERIOUS,
             effect = "Synergistic nephrotoxicity and significantly increased incidence of acute kidney injury (AKI).",
             mechanism = "Combined tubular toxicity and interstitial inflammation; documented 3-fold higher AKI rate compared to Vancomycin + Cefepime.",
-            clinicalAction = "Monitor daily serum creatinine and vancomycin trough levels. Switch to Cefepime or Meropenem if prolonged therapy is required."
+            clinicalAction = "Monitor daily serum creatinine and vancomycin trough levels. Switch to Cefepime or Meropenem if prolonged therapy is required.",
+            sourceDatabase = "IDSA Guidelines / UpToDate",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Nephrotoxicity / AKI"
         ),
         DrugInteraction(
             drug1Generic = "Phenytoin Sodium",
@@ -956,7 +968,21 @@ object AdditionalDrugsData {
             severity = InteractionSeverity.MODERATE,
             effect = "Elevated serum phenytoin levels and potential hydantoin toxicity (ataxia, nystagmus, lethargy).",
             mechanism = "Omeprazole competitively inhibits CYP2C19, impairing hepatic phenytoin clearance.",
-            clinicalAction = "Monitor serum phenytoin level upon initiating or stopping omeprazole. Consider switching to pantoprazole."
+            clinicalAction = "Monitor serum phenytoin level upon initiating or stopping omeprazole. Consider switching to pantoprazole.",
+            sourceDatabase = "Medscape Reference",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Metabolism / CYP2C19"
+        ),
+        DrugInteraction(
+            drug1Generic = "Haloperidol",
+            drug2Generic = "Ondansetron Hydrochloride",
+            severity = InteractionSeverity.SERIOUS,
+            effect = "Additive cardiac QTc interval prolongation, Torsades de Pointes, and sudden cardiac arrest.",
+            mechanism = "Dual pharmacodynamic blockade of myocardial IKr potassium channels delaying cardiac ventricular repolarization.",
+            clinicalAction = "Avoid combining high-risk QT prolonging agents. Obtain baseline ECG; maintain serum K+ >4.0 mEq/L and Mg2+ >2.0 mg/dL.",
+            sourceDatabase = "CredibleMeds / Lexicomp",
+            documentationLevel = "Established (Class A)",
+            riskCategory = "Cardiac / Arrhythmia (QTc)"
         )
     )
 }

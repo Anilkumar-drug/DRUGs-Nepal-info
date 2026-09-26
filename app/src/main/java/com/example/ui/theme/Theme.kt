@@ -72,13 +72,13 @@ private val PitchBlackColorScheme = darkColorScheme(
     tertiary = Indigo400,
     onTertiary = Color.Black,
     background = PitchBlackBg,
-    onBackground = Color(0xFFE5E7EB),
+    onBackground = Color(0xFFF3F4F6),
     surface = PitchBlackCard,
-    onSurface = Color(0xFFE5E7EB),
+    onSurface = Color(0xFFF3F4F6),
     surfaceVariant = PitchBlackNav,
     onSurfaceVariant = Color(0xFF9CA3AF),
     outline = PitchBlackBorder,
-    error = Red500,
+    error = Red400,
     onError = Color.Black,
     errorContainer = Red950,
     onErrorContainer = Red400
@@ -86,7 +86,7 @@ private val PitchBlackColorScheme = darkColorScheme(
 
 @Composable
 fun DrugsNepalTheme(
-    themeMode: AppThemeMode = AppThemeMode.DARK,
+    themeMode: AppThemeMode = AppThemeMode.PITCH_BLACK,
     fontSizeScale: FontSizeScale = FontSizeScale.NORMAL,
     content: @Composable () -> Unit
 ) {

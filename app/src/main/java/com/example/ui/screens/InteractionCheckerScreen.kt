@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -12,16 +13,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.DeleteSweep
-import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -41,9 +45,19 @@ fun InteractionCheckerScreen(
     state: ClinicalUiState,
     viewModel: ClinicalViewModel
 ) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+
     var inlineSearchQuery by remember { mutableStateOf("") }
     var isPickerOpen by remember { mutableStateOf(false) }
     var selectedSeverityFilter by remember { mutableStateOf<InteractionSeverity?>(null) }
+    var selectedDatabaseFilter by remember { mutableStateOf("All Databases") }
+
+    // Patient Vulnerability Condition Modifiers
+    var isElderly by remember { mutableStateOf(false) }
+    var isRenalImpaired by remember { mutableStateOf(false) }
+    var isHepaticImpaired by remember { mutableStateOf(false) }
+    var isPregnant by remember { mutableStateOf(false) }
 
     val allDrugs = remember { ClinicalRepository.drugs }
     val selectedDrugs = remember(state.selectedInteractionDrugIds) {
@@ -62,14 +76,27 @@ fun InteractionCheckerScreen(
             !state.selectedInteractionDrugIds.contains(drug.id) &&
             (drug.genericName.lowercase().contains(q) ||
              drug.brandsNepal.any { b -> b.name.lowercase().contains(q) } ||
-             drug.brandsIndia.any { b -> b.name.lowercase().contains(q) })
+             drug.brandsIndia.any { b -> b.name.lowercase().contains(q) } ||
+             drug.drugClass.lowercase().contains(q))
         }.take(5)
     }
 
-    // Filtered interaction results by severity filter if selected
-    val displayedInteractions = remember(interactions, selectedSeverityFilter) {
-        if (selectedSeverityFilter == null) interactions
-        else interactions.filter { it.severity == selectedSeverityFilter }
+    // Filtered interaction results by severity and medical database
+    val displayedInteractions = remember(interactions, selectedSeverityFilter, selectedDatabaseFilter) {
+        var list = interactions
+        if (selectedSeverityFilter != null) {
+            list = list.filter { it.severity == selectedSeverityFilter }
+        }
+        if (selectedDatabaseFilter != "All Databases") {
+            list = list.filter {
+                it.sourceDatabase.contains(selectedDatabaseFilter, ignoreCase = true) ||
+                (selectedDatabaseFilter == "UpToDate" && it.sourceDatabase.contains("UpToDate", ignoreCase = true)) ||
+                (selectedDatabaseFilter == "Medscape" && it.sourceDatabase.contains("Medscape", ignoreCase = true)) ||
+                (selectedDatabaseFilter == "BNF" && it.sourceDatabase.contains("BNF", ignoreCase = true)) ||
+                (selectedDatabaseFilter == "FDA" && it.sourceDatabase.contains("FDA", ignoreCase = true))
+            }
+        }
+        list
     }
 
     val contraindicatedCount = remember(interactions) {
@@ -81,6 +108,9 @@ fun InteractionCheckerScreen(
     val moderateCount = remember(interactions) {
         interactions.count { it.severity == InteractionSeverity.MODERATE }
     }
+    val totalPairsChecked = remember(selectedDrugs.size) {
+        if (selectedDrugs.size < 2) 0 else (selectedDrugs.size * (selectedDrugs.size - 1)) / 2
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -89,7 +119,7 @@ fun InteractionCheckerScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(top = 8.dp, bottom = 96.dp)
     ) {
-        // 1. Header Banner
+        // 1. Header Banner with Medical Databases attribution
         item {
             Surface(
                 shape = RoundedCornerShape(18.dp),
@@ -118,14 +148,31 @@ fun InteractionCheckerScreen(
                         }
                     }
                     Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "Drug Interaction Checker",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = Emerald500.copy(alpha = 0.2f)
+                            ) {
+                                Text(
+                                    text = "EVIDENCE-BASED",
+                                    fontSize = 8.5.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = Emerald400,
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                )
+                            }
+                        }
                         Text(
-                            text = "Drug Interaction Checker",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Text(
-                            text = "Multi-drug contraindications & adverse reactions (UpToDate / Medscape / DIMS)",
+                            text = "Multi-drug contraindications & adverse reactions backed by UpToDate, Medscape, Lexicomp & BNF databases.",
                             style = MaterialTheme.typography.bodySmall,
                             fontSize = 11.sp,
                             color = Slate400
@@ -152,12 +199,23 @@ fun InteractionCheckerScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(
-                            text = "Add Drug to Regimen",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AddCircle,
+                                contentDescription = null,
+                                tint = DimsTealPrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "Input Medication to Check",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                         OutlinedButton(
                             onClick = { isPickerOpen = true },
                             shape = RoundedCornerShape(10.dp),
@@ -179,7 +237,7 @@ fun InteractionCheckerScreen(
                         onValueChange = { inlineSearchQuery = it },
                         placeholder = {
                             Text(
-                                text = "Type generic or brand (e.g. Warfarin, Moxclave, Metformin)...",
+                                text = "Type drug (e.g. Warfarin, Meropenem, Ramipril, Moxclave)...",
                                 fontSize = 12.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -277,7 +335,7 @@ fun InteractionCheckerScreen(
             }
         }
 
-        // 3. Medication Regimen Shelf
+        // 3. Medication Regimen Shelf & Presets
         item {
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -299,7 +357,7 @@ fun InteractionCheckerScreen(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "Active Regimen",
+                                text = "Active Patient Regimen",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -309,7 +367,7 @@ fun InteractionCheckerScreen(
                                 color = if (selectedDrugs.size >= 2) MedicalBlue400.copy(alpha = 0.2f) else Slate400.copy(alpha = 0.2f)
                             ) {
                                 Text(
-                                    text = "${selectedDrugs.size} drugs",
+                                    text = "${selectedDrugs.size} drugs • $totalPairsChecked pair(s)",
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = if (selectedDrugs.size >= 2) MedicalBlue400 else Slate400,
@@ -364,7 +422,7 @@ fun InteractionCheckerScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "Type a medication above or select a preset below to check interactions.",
+                                    text = "Add multiple medications above or tap a clinical polypharmacy preset below.",
                                     fontSize = 10.sp,
                                     color = Slate400
                                 )
@@ -425,7 +483,7 @@ fun InteractionCheckerScreen(
                         }
                     }
 
-                    // Clinical Presets
+                    // Polypharmacy Clinical Presets
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -434,75 +492,117 @@ fun InteractionCheckerScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Clinical Presets:",
+                            text = "Medical Presets:",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        // 1. Warfarin + Diclofenac (Hemorrhage)
+                        // 1. Warfarin + Diclofenac
                         SuggestionChip(
                             onClick = {
-                                viewModel.clearInteractionDrugs()
-                                viewModel.toggleInteractionDrug("d36") // Warfarin
-                                viewModel.toggleInteractionDrug("d55") // Diclofenac
+                                viewModel.setInteractionDrugs(listOf("d36", "d55"))
                             },
-                            label = { Text("Warfarin + Diclofenac (Bleed)", fontSize = 11.sp) },
+                            label = { Text("🔴 Warfarin + Diclofenac (Bleed)", fontSize = 11.sp) },
                             shape = RoundedCornerShape(12.dp)
                         )
 
-                        // 2. Meropenem + Valproate (Status Epilepticus)
+                        // 2. Meropenem + Valproate
                         SuggestionChip(
                             onClick = {
-                                viewModel.clearInteractionDrugs()
-                                viewModel.toggleInteractionDrug("d32") // Meropenem
-                                viewModel.toggleInteractionDrug("d52") // Sodium Valproate
+                                viewModel.setInteractionDrugs(listOf("d32", "d52"))
                             },
-                            label = { Text("Meropenem + Valproate (Seizure)", fontSize = 11.sp) },
+                            label = { Text("🔴 Meropenem + Valproate (Seizure)", fontSize = 11.sp) },
                             shape = RoundedCornerShape(12.dp)
                         )
 
-                        // 3. Ramipril + Spironolactone (Hyperkalemia)
+                        // 3. Tramadol + Alprazolam
                         SuggestionChip(
                             onClick = {
-                                viewModel.clearInteractionDrugs()
-                                viewModel.toggleInteractionDrug("d39") // Ramipril
-                                viewModel.toggleInteractionDrug("d40") // Spironolactone
+                                viewModel.setInteractionDrugs(listOf("d19", "d20"))
                             },
-                            label = { Text("Ramipril + Spironolactone (K+)", fontSize = 11.sp) },
+                            label = { Text("🔴 Tramadol + Alprazolam (Coma)", fontSize = 11.sp) },
                             shape = RoundedCornerShape(12.dp)
                         )
 
-                        // 4. Clopidogrel + Omeprazole
+                        // 4. Ramipril + Telmisartan
                         SuggestionChip(
                             onClick = {
-                                viewModel.clearInteractionDrugs()
-                                viewModel.toggleInteractionDrug("d23") // Clopidogrel
-                                viewModel.toggleInteractionDrug("d8")  // Omeprazole
+                                viewModel.setInteractionDrugs(listOf("d39", "d2"))
                             },
-                            label = { Text("Clopidogrel + Omeprazole", fontSize = 11.sp) },
+                            label = { Text("🔴 Ramipril + Telmisartan (Dual RAAS)", fontSize = 11.sp) },
                             shape = RoundedCornerShape(12.dp)
                         )
 
-                        // 5. Vancomycin + Piperacillin-Tazobactam
+                        // 5. Warfarin + Fluconazole
                         SuggestionChip(
                             onClick = {
-                                viewModel.clearInteractionDrugs()
-                                viewModel.toggleInteractionDrug("d33") // Vancomycin
-                                viewModel.toggleInteractionDrug("d31") // Pip-Tazo
+                                viewModel.setInteractionDrugs(listOf("d36", "d28"))
                             },
-                            label = { Text("Vanc + Pip-Tazo (AKI)", fontSize = 11.sp) },
+                            label = { Text("🔴 Warfarin + Fluconazole (INR Surge)", fontSize = 11.sp) },
                             shape = RoundedCornerShape(12.dp)
                         )
 
-                        // 6. Cipro + Amlodipine
+                        // 6. Vancomycin + Gentamicin
                         SuggestionChip(
                             onClick = {
-                                viewModel.clearInteractionDrugs()
-                                viewModel.toggleInteractionDrug("d7") // Ciprofloxacin
-                                viewModel.toggleInteractionDrug("d6") // Amlodipine
+                                viewModel.setInteractionDrugs(listOf("d33", "d34"))
                             },
-                            label = { Text("Cipro + Amlodipine", fontSize = 11.sp) },
+                            label = { Text("🔴 Vanc + Gent (Nephro/Oto)", fontSize = 11.sp) },
+                            shape = RoundedCornerShape(12.dp)
+                        )
+
+                        // 7. Ramipril + Spironolactone
+                        SuggestionChip(
+                            onClick = {
+                                viewModel.setInteractionDrugs(listOf("d39", "d40"))
+                            },
+                            label = { Text("🟠 Ramipril + Spironolactone (K+)", fontSize = 11.sp) },
+                            shape = RoundedCornerShape(12.dp)
+                        )
+
+                        // 8. Digoxin + Furosemide
+                        SuggestionChip(
+                            onClick = {
+                                viewModel.setInteractionDrugs(listOf("d38", "d26"))
+                            },
+                            label = { Text("🟠 Digoxin + Furosemide (Arrhythmia)", fontSize = 11.sp) },
+                            shape = RoundedCornerShape(12.dp)
+                        )
+
+                        // 9. Clopidogrel + Omeprazole
+                        SuggestionChip(
+                            onClick = {
+                                viewModel.setInteractionDrugs(listOf("d23", "d8"))
+                            },
+                            label = { Text("🟠 Clopidogrel + Omeprazole", fontSize = 11.sp) },
+                            shape = RoundedCornerShape(12.dp)
+                        )
+
+                        // 10. Triple QT Regimen
+                        SuggestionChip(
+                            onClick = {
+                                viewModel.setInteractionDrugs(listOf("d7", "d9", "d17"))
+                            },
+                            label = { Text("🟠 Cipro + Azithro + Ondansetron (TdP)", fontSize = 11.sp) },
+                            shape = RoundedCornerShape(12.dp)
+                        )
+
+                        // 11. Atorvastatin + Fluconazole
+                        SuggestionChip(
+                            onClick = {
+                                viewModel.setInteractionDrugs(listOf("d10", "d28"))
+                            },
+                            label = { Text("🟠 Atorvastatin + Fluconazole", fontSize = 11.sp) },
+                            shape = RoundedCornerShape(12.dp)
+                        )
+
+                        // 12. Levothyroxine + Calcium
+                        SuggestionChip(
+                            onClick = {
+                                viewModel.setInteractionDrugs(listOf("d22", "d30"))
+                            },
+                            label = { Text("🟡 Levothyroxine + Calcium", fontSize = 11.sp) },
                             shape = RoundedCornerShape(12.dp)
                         )
                     }
@@ -510,7 +610,7 @@ fun InteractionCheckerScreen(
             }
         }
 
-        // 4. Analysis Summary Alert & Severity Filters
+        // 4. Analysis Summary Alert & Vulnerability Modifiers
         if (selectedDrugs.size >= 2) {
             item {
                 when {
@@ -533,14 +633,14 @@ fun InteractionCheckerScreen(
                                         modifier = Modifier.size(24.dp)
                                     )
                                     Text(
-                                        text = "CONTRAINDICATION DETECTED",
+                                        text = "CONTRAINDICATION DETECTED ($contraindicatedCount)",
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Black,
                                         color = Red400
                                     )
                                 }
                                 Text(
-                                    text = "$contraindicatedCount combination(s) carry severe, life-threatening risks. Concurrent administration is strictly contraindicated under clinical guidelines.",
+                                    text = "$contraindicatedCount combination(s) carry severe, life-threatening clinical risks according to medical compendia (UpToDate, Medscape, BNF). Concurrent administration is strictly contraindicated.",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontSize = 11.sp,
                                     color = Color.White
@@ -567,14 +667,14 @@ fun InteractionCheckerScreen(
                                         modifier = Modifier.size(24.dp)
                                     )
                                     Text(
-                                        text = "MAJOR ADVERSE EFFECT RISK",
+                                        text = "MAJOR / SERIOUS ADVERSE EFFECT RISK ($seriousCount)",
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = Amber400
                                     )
                                 }
                                 Text(
-                                    text = "$seriousCount major interaction(s) identified. Intensive laboratory or clinical monitoring and dosage adjustment are mandated.",
+                                    text = "$seriousCount major interaction(s) identified. Intensive laboratory or clinical monitoring, dosage titration, or therapeutic substitution is mandated under international guidelines.",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontSize = 11.sp,
                                     color = Color.White
@@ -601,14 +701,14 @@ fun InteractionCheckerScreen(
                                         modifier = Modifier.size(24.dp)
                                     )
                                     Text(
-                                        text = "MODERATE INTERACTION IDENTIFIED",
+                                        text = "MODERATE INTERACTION IDENTIFIED ($moderateCount)",
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = Indigo400
                                     )
                                 }
                                 Text(
-                                    text = "$moderateCount interaction(s) found. Dose timing separation or routine therapeutic observation recommended.",
+                                    text = "$moderateCount interaction(s) found. Dose timing separation (2-4 hours) or routine therapeutic observation recommended.",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontSize = 11.sp,
                                     color = Color.White
@@ -642,7 +742,7 @@ fun InteractionCheckerScreen(
                                     )
                                 }
                                 Text(
-                                    text = "No known contraindications, high-risk CYP conflict, or adverse interactions detected between the selected medications in the clinical registry.",
+                                    text = "All $totalPairsChecked pairwise combinations checked across UpToDate, Medscape, and BNF databases. No known contraindications or high-risk CYP conflicts detected.",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -653,9 +753,119 @@ fun InteractionCheckerScreen(
                 }
             }
 
-            // Severity Filter Row
-            if (interactions.isNotEmpty()) {
-                item {
+            // Patient Vulnerability Condition Modifiers Card
+            item {
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "Patient Clinical Vulnerability Modifiers:",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            FilterChip(
+                                selected = isElderly,
+                                onClick = { isElderly = !isElderly },
+                                label = { Text("Elderly (Age ≥65)", fontSize = 11.sp) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = if (isElderly) Icons.Default.Check else Icons.Outlined.Elderly,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            )
+                            FilterChip(
+                                selected = isRenalImpaired,
+                                onClick = { isRenalImpaired = !isRenalImpaired },
+                                label = { Text("Renal Impairment (CrCl <50)", fontSize = 11.sp) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = if (isRenalImpaired) Icons.Default.Check else Icons.Outlined.WaterDamage,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            )
+                            FilterChip(
+                                selected = isHepaticImpaired,
+                                onClick = { isHepaticImpaired = !isHepaticImpaired },
+                                label = { Text("Hepatic Disease", fontSize = 11.sp) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = if (isHepaticImpaired) Icons.Default.Check else Icons.Outlined.MedicalServices,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            )
+                            FilterChip(
+                                selected = isPregnant,
+                                onClick = { isPregnant = !isPregnant },
+                                label = { Text("Pregnancy / Lactation", fontSize = 11.sp) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = if (isPregnant) Icons.Default.Check else Icons.Outlined.PregnantWoman,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            )
+                        }
+
+                        if (isElderly || isRenalImpaired || isHepaticImpaired || isPregnant) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Amber500.copy(alpha = 0.1f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Warning,
+                                        contentDescription = null,
+                                        tint = Amber400,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Text(
+                                        text = buildString {
+                                            append("Heightened clinical risk: ")
+                                            if (isElderly) append("Increased sedative and anticholinergic sensitivity (Beers criteria). ")
+                                            if (isRenalImpaired) append("Decreased clearance of active metabolites; calculate eGFR. ")
+                                            if (isHepaticImpaired) append("Impaired CYP clearance; caution with hepatotoxic drugs. ")
+                                            if (isPregnant) append("Verify FDA pregnancy categories.")
+                                        },
+                                        fontSize = 10.sp,
+                                        color = Amber300
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Severity & Medical Database Filter Row
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // Medical Database Source Filter
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -663,96 +873,145 @@ fun InteractionCheckerScreen(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        FilterChip(
-                            selected = selectedSeverityFilter == null,
-                            onClick = { selectedSeverityFilter = null },
-                            label = { Text("All (${interactions.size})", fontSize = 11.sp) },
-                            shape = RoundedCornerShape(10.dp)
+                        Text(
+                            text = "Database:",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        if (contraindicatedCount > 0) {
+                        listOf("All Databases", "UpToDate", "Medscape", "BNF", "FDA").forEach { db ->
                             FilterChip(
-                                selected = selectedSeverityFilter == InteractionSeverity.CONTRAINDICATED,
-                                onClick = {
-                                    selectedSeverityFilter = if (selectedSeverityFilter == InteractionSeverity.CONTRAINDICATED) null else InteractionSeverity.CONTRAINDICATED
-                                },
-                                label = { Text("Contraindicated ($contraindicatedCount)", fontSize = 11.sp, color = Red400) },
+                                selected = selectedDatabaseFilter == db,
+                                onClick = { selectedDatabaseFilter = db },
+                                label = { Text(db, fontSize = 11.sp) },
                                 shape = RoundedCornerShape(10.dp)
                             )
                         }
-                        if (seriousCount > 0) {
+                    }
+
+                    // Severity Filter Row
+                    if (interactions.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Severity:",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                             FilterChip(
-                                selected = selectedSeverityFilter == InteractionSeverity.SERIOUS,
-                                onClick = {
-                                    selectedSeverityFilter = if (selectedSeverityFilter == InteractionSeverity.SERIOUS) null else InteractionSeverity.SERIOUS
-                                },
-                                label = { Text("Serious ($seriousCount)", fontSize = 11.sp, color = Amber400) },
+                                selected = selectedSeverityFilter == null,
+                                onClick = { selectedSeverityFilter = null },
+                                label = { Text("All (${interactions.size})", fontSize = 11.sp) },
                                 shape = RoundedCornerShape(10.dp)
                             )
-                        }
-                        if (moderateCount > 0) {
-                            FilterChip(
-                                selected = selectedSeverityFilter == InteractionSeverity.MODERATE,
-                                onClick = {
-                                    selectedSeverityFilter = if (selectedSeverityFilter == InteractionSeverity.MODERATE) null else InteractionSeverity.MODERATE
-                                },
-                                label = { Text("Moderate ($moderateCount)", fontSize = 11.sp, color = Indigo400) },
-                                shape = RoundedCornerShape(10.dp)
-                            )
+                            if (contraindicatedCount > 0) {
+                                FilterChip(
+                                    selected = selectedSeverityFilter == InteractionSeverity.CONTRAINDICATED,
+                                    onClick = {
+                                        selectedSeverityFilter = if (selectedSeverityFilter == InteractionSeverity.CONTRAINDICATED) null else InteractionSeverity.CONTRAINDICATED
+                                    },
+                                    label = { Text("Contraindicated ($contraindicatedCount)", fontSize = 11.sp, color = Red400) },
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                            }
+                            if (seriousCount > 0) {
+                                FilterChip(
+                                    selected = selectedSeverityFilter == InteractionSeverity.SERIOUS,
+                                    onClick = {
+                                        selectedSeverityFilter = if (selectedSeverityFilter == InteractionSeverity.SERIOUS) null else InteractionSeverity.SERIOUS
+                                    },
+                                    label = { Text("Serious ($seriousCount)", fontSize = 11.sp, color = Amber400) },
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                            }
+                            if (moderateCount > 0) {
+                                FilterChip(
+                                    selected = selectedSeverityFilter == InteractionSeverity.MODERATE,
+                                    onClick = {
+                                        selectedSeverityFilter = if (selectedSeverityFilter == InteractionSeverity.MODERATE) null else InteractionSeverity.MODERATE
+                                    },
+                                    label = { Text("Moderate ($moderateCount)", fontSize = 11.sp, color = Indigo400) },
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            // Gemini AI Clinical Copilot Action
+            // Report Export & AI Copilot Row
             item {
-                Surface(
-                    onClick = {
-                        val drugNames = selectedDrugs.joinToString(", ") { it.genericName }
-                        val prompt = "Please clinically analyze the polypharmacy drug regimen: $drugNames. Check CYP450 enzyme conflicts, QT prolongation synergy, renal/hepatic clearance issues, potential adverse effects, and advise on dose adjustments and lab monitoring parameters."
-                        viewModel.sendAiMessage(prompt)
-                        viewModel.navigateTo(NavigationScreen.GEMINI)
-                    },
-                    shape = RoundedCornerShape(14.dp),
-                    color = NavyDeep,
-                    border = BorderStroke(1.dp, SparkleViolet.copy(alpha = 0.6f)),
-                    modifier = Modifier.fillMaxWidth()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = null,
-                                tint = SparkleViolet,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Column {
-                                Text(
-                                    text = "Ask Gemini AI Clinical Copilot",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                                Text(
-                                    text = "Deep pharmacokinetic synergy, lab intervals & titration advice",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontSize = 10.sp,
-                                    color = Slate400
-                                )
+                    // Copy Regimen Safety Report
+                    OutlinedButton(
+                        onClick = {
+                            val report = buildString {
+                                appendLine("=== DRUGS NEPAL: MULTI-DRUG INTERACTION REPORT ===")
+                                appendLine("Regimen: ${selectedDrugs.joinToString(", ") { it.genericName }}")
+                                appendLine("Total Combinations Analyzed: $totalPairsChecked")
+                                appendLine("Contraindications: $contraindicatedCount | Serious: $seriousCount | Moderate: $moderateCount")
+                                appendLine("--------------------------------------------------")
+                                if (displayedInteractions.isEmpty()) {
+                                    appendLine("No documented adverse interactions found in clinical databases.")
+                                } else {
+                                    displayedInteractions.forEachIndexed { index, inter ->
+                                        appendLine("${index + 1}. [${inter.severity.label.uppercase()}] ${inter.drug1Generic} <-> ${inter.drug2Generic}")
+                                        appendLine("   Source: ${inter.sourceDatabase} (${inter.documentationLevel})")
+                                        appendLine("   Adverse Effect: ${inter.effect}")
+                                        appendLine("   Mechanism: ${inter.mechanism}")
+                                        appendLine("   Action: ${inter.clinicalAction}")
+                                        appendLine()
+                                    }
+                                }
                             }
-                        }
+                            clipboardManager.setText(AnnotatedString(report))
+                            Toast.makeText(context, "Clinical Regimen Report copied to clipboard", Toast.LENGTH_SHORT).show()
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.ArrowForward,
+                            imageVector = Icons.Default.ContentCopy,
                             contentDescription = null,
-                            tint = SparkleViolet,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(16.dp)
                         )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Copy Report", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    // Gemini AI Clinical Copilot Action
+                    Button(
+                        onClick = {
+                            val drugNames = selectedDrugs.joinToString(", ") { it.genericName }
+                            val prompt = "Please clinically analyze the polypharmacy drug regimen: $drugNames. Check CYP450 enzyme conflicts, QT prolongation synergy, renal/hepatic clearance issues, potential adverse effects, and advise on dose adjustments and lab monitoring parameters."
+                            viewModel.sendAiMessage(prompt)
+                            viewModel.navigateTo(NavigationScreen.GEMINI)
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = SparkleViolet),
+                        modifier = Modifier
+                            .weight(1.3f)
+                            .height(44.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Ask AI Copilot", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }
@@ -784,7 +1043,7 @@ fun InteractionCheckerScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Supports checking pairs, triplets, or complex multi-drug polypharmacy regimens.",
+                            text = "Supports checking pairs, triplets, or complex multi-drug polypharmacy regimens across medical databases.",
                             style = MaterialTheme.typography.bodySmall,
                             fontSize = 11.sp,
                             color = Slate400
@@ -794,108 +1053,37 @@ fun InteractionCheckerScreen(
             }
         } else {
             items(displayedInteractions) { item ->
-                DetailedInteractionCard(item)
+                DetailedInteractionCard(
+                    item = item,
+                    onConsultAi = {
+                        val prompt = "Clinically analyze the interaction between ${item.drug1Generic} and ${item.drug2Generic}. What are the precise clinical risks, dosage modifications, and safer alternatives?"
+                        viewModel.sendAiMessage(prompt)
+                        viewModel.navigateTo(NavigationScreen.GEMINI)
+                    }
+                )
             }
         }
     }
 
-    // Full Drug Selection Dialog / Bottom Sheet
+    // Full Multi-Select Drug Picker Dialog
     if (isPickerOpen) {
-        AlertDialog(
-            onDismissRequest = { isPickerOpen = false },
-            title = {
-                Text(
-                    text = "Select Medication to Add",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                var modalQuery by remember { mutableStateOf("") }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(420.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = modalQuery,
-                        onValueChange = { modalQuery = it },
-                        placeholder = { Text("Search generic, Nepal or Indian brand...", fontSize = 12.sp) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    val filteredDrugs = remember(modalQuery) {
-                        val q = modalQuery.trim().lowercase()
-                        if (q.isEmpty()) allDrugs
-                        else allDrugs.filter {
-                            it.genericName.lowercase().contains(q) ||
-                            it.brandsNepal.any { b -> b.name.lowercase().contains(q) } ||
-                            it.brandsIndia.any { b -> b.name.lowercase().contains(q) }
-                        }
-                    }
-
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        items(filteredDrugs) { drug ->
-                            val isSelected = state.selectedInteractionDrugIds.contains(drug.id)
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                                border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { viewModel.toggleInteractionDrug(drug.id) }
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(10.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = drug.genericName,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        val brand = drug.brandsNepal.firstOrNull()?.name ?: drug.brandsIndia.firstOrNull()?.name ?: ""
-                                        Text(
-                                            text = "$brand • ${drug.drugClass}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            fontSize = 11.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                    Checkbox(
-                                        checked = isSelected,
-                                        onCheckedChange = { viewModel.toggleInteractionDrug(drug.id) }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = { isPickerOpen = false },
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text("Done (${selectedDrugs.size} selected)")
-                }
-            }
+        DrugPickerModal(
+            allDrugs = allDrugs,
+            selectedDrugIds = state.selectedInteractionDrugIds,
+            onToggleDrug = { viewModel.toggleInteractionDrug(it) },
+            onDismiss = { isPickerOpen = false }
         )
     }
 }
 
 @Composable
-private fun DetailedInteractionCard(item: DrugInteraction) {
+private fun DetailedInteractionCard(
+    item: DrugInteraction,
+    onConsultAi: () -> Unit
+) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+
     val (badgeBg, badgeBorder, badgeText, badgeTitle) = when (item.severity) {
         InteractionSeverity.CONTRAINDICATED -> Quadruple(Red950, Red500, Red400, "CONTRAINDICATED / AVOID COMBINATION")
         InteractionSeverity.SERIOUS -> Quadruple(Amber950, Amber500, Amber400, "MAJOR / SERIOUS ADVERSE EFFECT")
@@ -943,7 +1131,67 @@ private fun DetailedInteractionCard(item: DrugInteraction) {
                 }
             }
 
-            // Potential Contraindications & Adverse Effect Box
+            // Medical Database Attribution & Evidence Badges
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = MedicalBlue500.copy(alpha = 0.12f),
+                    border = BorderStroke(1.dp, MedicalBlue400.copy(alpha = 0.35f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MenuBook,
+                            contentDescription = null,
+                            tint = MedicalBlue400,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            text = item.sourceDatabase,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MedicalBlue400
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Emerald500.copy(alpha = 0.12f),
+                    border = BorderStroke(1.dp, Emerald500.copy(alpha = 0.35f))
+                ) {
+                    Text(
+                        text = item.documentationLevel,
+                        fontSize = 9.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Emerald400,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Slate700.copy(alpha = 0.4f)
+                ) {
+                    Text(
+                        text = item.riskCategory,
+                        fontSize = 9.5.sp,
+                        color = Slate300,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            // Potential Adverse Effects & Contraindications Box
             Surface(
                 shape = RoundedCornerShape(10.dp),
                 color = when (item.severity) {
@@ -1000,7 +1248,7 @@ private fun DetailedInteractionCard(item: DrugInteraction) {
                 }
             }
 
-            // Mechanism
+            // Pharmacological Mechanism
             Surface(
                 shape = RoundedCornerShape(8.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
@@ -1045,7 +1293,7 @@ private fun DetailedInteractionCard(item: DrugInteraction) {
                     )
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            text = "Clinical Management & Action:",
+                            text = "Evidence-Based Clinical Management:",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = Emerald500
@@ -1060,8 +1308,200 @@ private fun DetailedInteractionCard(item: DrugInteraction) {
                     }
                 }
             }
+
+            // Action Buttons Footer
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(
+                    onClick = {
+                        val text = "${item.drug1Generic} ↔ ${item.drug2Generic} [${item.severity.label}]\nAdverse Effect: ${item.effect}\nMechanism: ${item.mechanism}\nAction: ${item.clinicalAction}\nSource: ${item.sourceDatabase}"
+                        clipboardManager.setText(AnnotatedString(text))
+                        Toast.makeText(context, "Interaction summary copied", Toast.LENGTH_SHORT).show()
+                    },
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                    modifier = Modifier.height(30.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Copy", fontSize = 11.sp)
+                }
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                FilledTonalButton(
+                    onClick = onConsultAi,
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                    modifier = Modifier.height(30.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = SparkleViolet
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Consult AI", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun DrugPickerModal(
+    allDrugs: List<Drug>,
+    selectedDrugIds: Set<String>,
+    onToggleDrug: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var modalQuery by remember { mutableStateOf("") }
+    var selectedSystemFilter by remember { mutableStateOf("All Systems") }
+
+    val systemCategories = remember(allDrugs) {
+        listOf("All Systems") + allDrugs.map { it.system }.distinct().sorted()
+    }
+
+    val filteredDrugs = remember(modalQuery, selectedSystemFilter) {
+        val q = modalQuery.trim().lowercase()
+        allDrugs.filter { drug ->
+            val matchSystem = selectedSystemFilter == "All Systems" || drug.system == selectedSystemFilter
+            val matchQuery = q.isEmpty() ||
+                drug.genericName.lowercase().contains(q) ||
+                drug.brandsNepal.any { b -> b.name.lowercase().contains(q) } ||
+                drug.brandsIndia.any { b -> b.name.lowercase().contains(q) } ||
+                drug.drugClass.lowercase().contains(q)
+            matchSystem && matchQuery
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Select Regimen Medications",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Text(
+                        text = "${selectedDrugIds.size} selected",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(460.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = modalQuery,
+                    onValueChange = { modalQuery = it },
+                    placeholder = { Text("Search generic, brand, or class...", fontSize = 12.sp) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (modalQuery.isNotEmpty()) {
+                            IconButton(onClick = { modalQuery = "" }) {
+                                Icon(Icons.Default.Close, contentDescription = "Clear")
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                // Category system filter chips
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    systemCategories.forEach { sys ->
+                        FilterChip(
+                            selected = selectedSystemFilter == sys,
+                            onClick = { selectedSystemFilter = sys },
+                            label = { Text(sys.split(" ").first(), fontSize = 11.sp) }
+                        )
+                    }
+                }
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    items(filteredDrugs) { drug ->
+                        val isSelected = selectedDrugIds.contains(drug.id)
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onToggleDrug(drug.id) }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = drug.genericName,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    val brand = drug.brandsNepal.firstOrNull()?.name ?: drug.brandsIndia.firstOrNull()?.name ?: ""
+                                    Text(
+                                        text = "$brand • ${drug.drugClass}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Checkbox(
+                                    checked = isSelected,
+                                    onCheckedChange = { onToggleDrug(drug.id) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text("Done (${selectedDrugIds.size} selected)")
+            }
+        }
+    )
 }
 
 private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)

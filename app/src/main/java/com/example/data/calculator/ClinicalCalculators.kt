@@ -283,4 +283,231 @@ object ClinicalCalculators {
         }
         return GcsResult(eye, verbal, motor, total, severity, guidance)
     }
+
+    // --- 9. Pediatric Liquid Suspension Auto-Calculator (mg/kg to mL) ---
+    data class PediatricSuspensionResult(
+        val singleDoseMg: Double,
+        val singleDoseMl: Double,
+        val totalDailyMg: Double,
+        val totalDailyMl: Double,
+        val concentrationString: String,
+        val intervalText: String,
+        val clinicalSafetyNotice: String
+    )
+
+    fun calculatePediatricDose(
+        weightKg: Double,
+        doseMgPerKg: Double,
+        concentrationMg: Double, // e.g. 125, 250
+        perMl: Double = 5.0, // usually 5 mL
+        dosesPerDay: Int = 3 // e.g. 3 for TID, 4 for QID
+    ): PediatricSuspensionResult {
+        if (weightKg <= 0 || doseMgPerKg <= 0 || concentrationMg <= 0 || perMl <= 0) {
+            return PediatricSuspensionResult(0.0, 0.0, 0.0, 0.0, "", "", "Please enter valid weight, dose, and suspension concentration.")
+        }
+        val singleDoseMg = weightKg * doseMgPerKg
+        val singleDoseMl = (singleDoseMg * perMl) / concentrationMg
+        val totalDailyMg = singleDoseMg * dosesPerDay
+        val totalDailyMl = singleDoseMl * dosesPerDay
+
+        val interval = when (dosesPerDay) {
+            1 -> "Once daily (OD)"
+            2 -> "Every 12 hours (BD)"
+            3 -> "Every 8 hours (TID)"
+            4 -> "Every 6 hours (QID)"
+            else -> "Divided into $dosesPerDay doses"
+        }
+
+        val safety = buildString {
+            append("Administer using calibrated oral syringe or measuring cup. ")
+            if (singleDoseMl > 15.0) {
+                append("⚠️ Single volume is high (>15 mL). Verify suspension concentration or consider higher-strength formulation. ")
+            }
+            append("Shake suspension thoroughly before each administration.")
+        }
+
+        return PediatricSuspensionResult(
+            singleDoseMg = singleDoseMg,
+            singleDoseMl = singleDoseMl,
+            totalDailyMg = totalDailyMg,
+            totalDailyMl = totalDailyMl,
+            concentrationString = "${concentrationMg.toInt()} mg / ${perMl.toInt()} mL",
+            intervalText = interval,
+            clinicalSafetyNotice = safety
+        )
+    }
+
+    // --- 10. IV Infusion & Drop Rate (gtt/min) Calculator ---
+    data class IvInfusionResult(
+        val concentrationMcgPerMl: Double,
+        val pumpRateMlPerHour: Double,
+        val standardDripRateGttPerMin: Int, // 20 gtt/mL macro
+        val microDripRateGttPerMin: Int,    // 60 gtt/mL pediatric micro
+        val diluentCompatibility: String,
+        val clinicalCaution: String
+    )
+
+    fun calculateIvInfusion(
+        drugName: String,
+        totalDrugMg: Double,
+        bagVolumeMl: Double,
+        patientWeightKg: Double,
+        doseRateMcgKgMin: Double
+    ): IvInfusionResult {
+        if (totalDrugMg <= 0 || bagVolumeMl <= 0 || patientWeightKg <= 0 || doseRateMcgKgMin <= 0) {
+            return IvInfusionResult(0.0, 0.0, 0, 0, "", "Enter valid drug amount, bag volume, weight, and target infusion rate.")
+        }
+        // Total drug in mcg
+        val totalDrugMcg = totalDrugMg * 1000.0
+        val concentrationMcgPerMl = totalDrugMcg / bagVolumeMl
+
+        // Dose required per minute (mcg/min)
+        val doseRequiredMcgPerMin = doseRateMcgKgMin * patientWeightKg
+
+        // Rate in mL/min and mL/hr
+        val rateMlPerMin = doseRequiredMcgPerMin / concentrationMcgPerMl
+        val pumpRateMlPerHour = rateMlPerMin * 60.0
+
+        val standardDrip = (rateMlPerMin * 20.0).toInt().coerceAtLeast(1)
+        val microDrip = (rateMlPerMin * 60.0).toInt().coerceAtLeast(1)
+
+        val (compat, caution) = when {
+            drugName.contains("Noradrenaline", ignoreCase = true) || drugName.contains("Norepinephrine", ignoreCase = true) -> Pair(
+                "Compatible with 5% Dextrose (D5W) or D5NS. (Avoid plain Normal Saline alone without dextrose; unstable at pH > 6).",
+                "Infuse strictly via central venous line. Extravasation causes ischemic tissue necrosis (Phentolamine antidote). Titrate to MAP >= 65 mmHg."
+            )
+            drugName.contains("Dopamine", ignoreCase = true) -> Pair(
+                "Compatible with 5% Dextrose, Normal Saline, or Ringer's Lactate. Incompatible with alkaline solutions (Sodium Bicarbonate).",
+                "Renal dose (1-3 mcg/kg/min), inotropic (5-10 mcg/kg/min), vasoconstrictor (>10 mcg/kg/min). Central line preferred."
+            )
+            drugName.contains("Dobutamine", ignoreCase = true) -> Pair(
+                "Compatible with D5W and Normal Saline. Avoid alkaline solutions.",
+                "Pure inotrope; increases myocardial oxygen demand. Monitor ECG for tachyarrhythmias and maintain SBP."
+            )
+            drugName.contains("Nitroglycerin", ignoreCase = true) -> Pair(
+                "Compatible with D5W or Normal Saline. Requires non-PVC glass/polyethylene infusion tubing to avoid plastic absorption.",
+                "Titrate every 5-10 min for ischemic chest pain or pulmonary edema. Contraindicated if SBP < 90 mmHg or recent PDE-5 inhibitors."
+            )
+            else -> Pair(
+                "Compatible with 5% Dextrose and 0.9% Normal Saline.",
+                "Verify line patency, infusion rate limits, and hemodynamic vitals frequently."
+            )
+        }
+
+        return IvInfusionResult(
+            concentrationMcgPerMl = concentrationMcgPerMl,
+            pumpRateMlPerHour = pumpRateMlPerHour,
+            standardDripRateGttPerMin = standardDrip,
+            microDripRateGttPerMin = microDrip,
+            diluentCompatibility = compat,
+            clinicalCaution = caution
+        )
+    }
+
+    // --- 11. Nepal National Snakebite ASV & Protocol Calculator ---
+    data class SnakebiteAsvResult(
+        val envenomationType: String,
+        val initialAsvDoseVials: Int,
+        val diluentGuidance: String,
+        val neostigmineTestProtocol: String?,
+        val wbct20Guidance: String,
+        val adrenalinePrecaution: String
+    )
+
+    fun calculateSnakebiteAsv(
+        isNeurotoxic: Boolean, // Krait / Cobra (Ptosis, respiratory paralysis)
+        isHemotoxic: Boolean,  // Russell's / Pit Viper (Bleeding, 20WBCT uncoagulated)
+        wbctUnclotted: Boolean,
+        hasSystemicSigns: Boolean
+    ): SnakebiteAsvResult {
+        val type = when {
+            isNeurotoxic && isHemotoxic -> "Mixed Envenomation (Neurotoxic + Hemotoxic)"
+            isNeurotoxic -> "Neurotoxic Envenomation (Common Krait / Cobra)"
+            isHemotoxic || wbctUnclotted -> "Hemotoxic Envenomation (Russell's Viper / Green Pit Viper)"
+            else -> "Dry Bite / Non-Venomous Bite (No systemic envenomation at present)"
+        }
+
+        val vials = if (isNeurotoxic || isHemotoxic || wbctUnclotted || hasSystemicSigns) 10 else 0
+
+        val diluent = if (vials > 0) {
+            "Reconstitute 10 vials of Polyvalent ASV (anti-snake venom) in 500 mL Normal Saline (or 10 mL/kg in children). Infuse over 1 hour. Start infusion at slow rate (2 mL/min) for first 10-15 minutes while observing for early anaphylactoid reactions."
+        } else {
+            "No ASV indicated currently. Keep under strict in-hospital observation for at least 24 hours. Repeat 20-minute Whole Blood Clotting Test (20WBCT) every 4 hours."
+        }
+
+        val neostigmine = if (isNeurotoxic) {
+            "NEOSTIGMINE 'ATROPINE-FIRST' PROTOCOL (For Neurotoxicity/Ptosis):\n" +
+            "1. Pre-medicate with Atropine 0.6 mg IV (children 0.05 mg/kg) to block muscarinic side effects.\n" +
+            "2. Follow with Neostigmine 1.5 mg IV/IM (children 0.04 mg/kg).\n" +
+            "3. Assess objective improvement (single breath count, inter-palpebral fissure height) at 30 minutes.\n" +
+            "4. If positive test: Repeat Neostigmine 0.5 mg IV with Atropine every 30 minutes PRN."
+        } else null
+
+        val wbct = "20-MINUTE WHOLE BLOOD CLOTTING TEST (20WBCT):\n" +
+                   "Place 2 mL venous blood in clean dry glass test tube. Leave undisturbed for 20 minutes. Invert gently. " +
+                   "If blood is liquid / unclotted: Evidence of consumption coagulopathy requiring ASV. Re-test 6 hours post-ASV infusion."
+
+        val adrenaline = "EMERGENCY SAFEGUARD: Always have Epinephrine (Adrenaline) 1:1000 (0.5 mL IM for adults, 0.01 mL/kg for children) drawn up and ready at bedside BEFORE starting ASV infusion to treat immediate anaphylaxis."
+
+        return SnakebiteAsvResult(
+            envenomationType = type,
+            initialAsvDoseVials = vials,
+            diluentGuidance = diluent,
+            neostigmineTestProtocol = neostigmine,
+            wbct20Guidance = wbct,
+            adrenalinePrecaution = adrenaline
+        )
+    }
+
+    // --- 12. Rabies Post-Exposure Prophylaxis (PEP) Calculator (EDCD Nepal / WHO) ---
+    data class RabiesPepResult(
+        val categoryText: String,
+        val vaccineRegimen: String,
+        val vaccineDoseText: String,
+        val rigIndication: Boolean,
+        val rigDoseIU: Double,
+        val rigVolumeMl: Double,
+        val woundManagementGuidance: String
+    )
+
+    fun calculateRabiesPep(
+        weightKg: Double,
+        category: Int, // 1: Touch/feed, 2: Scratch/minor no bleed, 3: Transdermal bite/mucosa/blood
+        isIntradermal: Boolean = true // Thai Red Cross 2-site ID vs Essen IM
+    ): RabiesPepResult {
+        val (catText, needsVax, needsRig) = when (category) {
+            1 -> Triple("Category I: Touching or feeding animals, licks on intact skin", false, false)
+            2 -> Triple("Category II: Minor scratches or abrasions without bleeding, nibbling of uncovered skin", true, false)
+            else -> Triple("Category III: Single or multiple transdermal bites or scratches, licks on broken skin, contamination of mucous membrane with saliva", true, true)
+        }
+
+        val vaxRegimen = if (!needsVax) {
+            "No vaccine or RIG required. Wash exposed site."
+        } else if (isIntradermal) {
+            "Intradermal Thai Red Cross (2-site ID) Regimen: 0.1 mL injected intradermally at 2 separate anatomical sites (left and right deltoid) on Days 0, 3, 7, and 28."
+        } else {
+            "Intramuscular Essen (IM) Regimen: 1.0 mL (or 0.5 mL depending on brand) injected IM into anterolateral thigh/deltoid on Days 0, 3, 7, 14, and 28. (NEVER in gluteal region)."
+        }
+
+        val vaxDose = if (!needsVax) "0 mL" else if (isIntradermal) "0.1 mL per site (2 sites = 0.2 mL total per visit)" else "1.0 mL IM per visit"
+
+        // RIG: Human RIG (HRIG) 20 IU/kg, Equine RIG (ERIG) 40 IU/kg. ERIG (300 IU/mL) widely used in Nepal
+        val rigDoseIU = if (needsRig && weightKg > 0) weightKg * 40.0 else 0.0 // Equine RIG 40 IU/kg
+        val rigVolumeMl = if (rigDoseIU > 0) rigDoseIU / 300.0 else 0.0
+
+        val woundCare = "IMMEDIATE WOUND CLEANSING:\n" +
+                        "1. Flush and wash all bite wounds and scratches thoroughly with running water and soap/detergent for at least 15 minutes.\n" +
+                        "2. Apply Povidone-Iodine 10% solution or 70% alcohol.\n" +
+                        "3. SUTURING SHOULD BE AVOIDED. If suture is mandatory, infiltrate RIG locally first and place loose sutures after 2 hours."
+
+        return RabiesPepResult(
+            categoryText = catText,
+            vaccineRegimen = vaxRegimen,
+            vaccineDoseText = vaxDose,
+            rigIndication = needsRig,
+            rigDoseIU = rigDoseIU,
+            rigVolumeMl = rigVolumeMl,
+            woundManagementGuidance = woundCare
+        )
+    }
 }

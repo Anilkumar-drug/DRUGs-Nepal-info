@@ -1,7 +1,9 @@
 package com.example
 
+import android.app.Application
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
+import androidx.test.core.app.ApplicationProvider
 import com.example.ui.theme.DrugsNepalTheme
 import com.example.viewmodel.ClinicalViewModel
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
@@ -22,9 +24,10 @@ class GreetingScreenshotTest {
 
     @Test
     fun greeting_screenshot() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
         composeTestRule.setContent {
             DrugsNepalTheme {
-                DrugsNepalMainApp(viewModel = ClinicalViewModel())
+                DrugsNepalMainApp(viewModel = ClinicalViewModel(app))
             }
         }
 

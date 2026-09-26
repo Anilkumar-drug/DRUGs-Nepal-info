@@ -1,11 +1,20 @@
 package com.example
 
+import android.app.Activity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
+import com.example.data.model.AppThemeMode
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,7 +28,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -36,6 +45,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
@@ -86,6 +96,39 @@ data class NavItem(
 @Composable
 fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    var lastBackPressTime by remember { mutableLongStateOf(0L) }
+
+    // Intercept back button: take to first page (SEARCH) if on another page or if modal/drawer is open,
+    // and on first page require a second back click within 2 seconds to exit the app.
+    BackHandler(enabled = true) {
+        when {
+            state.isSidebarOpen -> {
+                viewModel.closeSidebar()
+            }
+            state.isDrugModalOpen -> {
+                viewModel.closeDrugModal()
+            }
+            state.currentScreen == NavigationScreen.DISEASE && state.selectedProtocol != null -> {
+                viewModel.closeProtocol()
+            }
+            state.currentScreen == NavigationScreen.CALCULATOR && state.selectedCalculatorId != null -> {
+                viewModel.closeCalculator()
+            }
+            state.currentScreen != NavigationScreen.SEARCH -> {
+                viewModel.navigateTo(NavigationScreen.SEARCH)
+            }
+            else -> {
+                val currentTime = System.currentTimeMillis()
+                if (currentTime - lastBackPressTime < 2000L) {
+                    (context as? Activity)?.finish()
+                } else {
+                    lastBackPressTime = currentTime
+                    Toast.makeText(context, "Press back again to exit", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     val navItems = remember {
         listOf(
@@ -98,7 +141,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
             ),
             NavItem(
                 screen = NavigationScreen.DISEASE,
-                label = "Protocols",
+                label = "Indication",
                 selectedIcon = Icons.Filled.LocalHospital,
                 unselectedIcon = Icons.Outlined.LocalHospital,
                 activeColor = Emerald500
@@ -112,7 +155,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
             ),
             NavItem(
                 screen = NavigationScreen.CALCULATOR,
-                label = "Calculators",
+                label = "Cal",
                 selectedIcon = Icons.Filled.Calculate,
                 unselectedIcon = Icons.Outlined.Calculate,
                 activeColor = Amber500
@@ -135,10 +178,18 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                 .fillMaxSize()
                 .testTag("drugs_nepal_scaffold"),
             topBar = {
+                val topBarBg by animateColorAsState(
+                    targetValue = when (state.themeMode) {
+                        AppThemeMode.PITCH_BLACK -> Color.Black
+                        AppThemeMode.DARK -> NavyDeep
+                        AppThemeMode.LIGHT -> Color(0xFFF1F5F9)
+                    },
+                    label = "topBarBg"
+                )
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(NavyDeep)
+                        .background(topBarBg)
                 ) {
                     // Status Bar Inset Spacer
                     Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
@@ -147,9 +198,9 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         // Three-Dot Sidebar Button (Left) - Animated teal pulse
                         val sidebarScale by animateFloatAsState(
@@ -163,7 +214,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                             color = NavyPill,
                             border = BorderStroke(1.2.dp, DimsTealPrimary.copy(alpha = 0.8f)),
                             modifier = Modifier
-                                .size(42.dp)
+                                .size(38.dp)
                                 .scale(sidebarScale)
                                 .testTag("top_three_dots_button")
                         ) {
@@ -172,7 +223,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                     imageVector = Icons.Default.MoreVert,
                                     contentDescription = "Open Sidebar Navigation Menu",
                                     tint = DimsTealPrimary,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                         }
@@ -189,7 +240,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                             border = BorderStroke(1.2.dp, searchPillBorderColor),
                             modifier = Modifier
                                 .weight(1f)
-                                .height(42.dp)
+                                .height(38.dp)
                                 .testTag("top_search_pill")
                         ) {
                             Row(
@@ -232,7 +283,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                     decorationBox = { innerTextField ->
                                         if (state.searchQuery.isEmpty()) {
                                             Text(
-                                                text = "Search drug or protocol...",
+                                                text = "Search drugs, protocols, calculators...",
                                                 fontSize = 12.sp,
                                                 color = Slate400,
                                                 maxLines = 1,
@@ -275,22 +326,31 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
 
                         // Brand vs Generic Switch Button (With animated bounce and color transitions)
                         val isBrand = state.searchMode == SearchMode.BRAND
+                        val isGeneric = state.searchMode == SearchMode.GENERIC
                         val brandBtnScale by animateFloatAsState(
-                            targetValue = if (isBrand) 1f else 1.05f,
+                            targetValue = if (isBrand || isGeneric) 1f else 0.95f,
                             animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
                             label = "brandBtnScale"
                         )
                         val brandBtnBgColor by animateColorAsState(
-                            targetValue = if (isBrand) DimsTealPrimary.copy(alpha = 0.35f) else Amber500.copy(alpha = 0.35f),
+                            targetValue = when {
+                                isBrand -> DimsTealPrimary.copy(alpha = 0.35f)
+                                isGeneric -> Amber500.copy(alpha = 0.35f)
+                                else -> NavyPill
+                            },
                             label = "brandBtnBg"
                         )
                         val brandBtnBorderColor by animateColorAsState(
-                            targetValue = if (isBrand) DimsTealPrimary else Amber400,
+                            targetValue = when {
+                                isBrand -> DimsTealPrimary
+                                isGeneric -> Amber400
+                                else -> NavyCardBorder
+                            },
                             label = "brandBtnBorder"
                         )
                         Surface(
                             onClick = {
-                                val nextMode = if (isBrand) SearchMode.GENERIC else SearchMode.BRAND
+                                val nextMode = if (isGeneric) SearchMode.BRAND else SearchMode.GENERIC
                                 viewModel.setSearchMode(nextMode)
                                 if (state.currentScreen != NavigationScreen.SEARCH) {
                                     viewModel.navigateTo(NavigationScreen.SEARCH)
@@ -298,9 +358,9 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                             },
                             shape = CircleShape,
                             color = brandBtnBgColor,
-                            border = BorderStroke(1.4.dp, brandBtnBorderColor),
+                            border = BorderStroke(1.2.dp, brandBtnBorderColor),
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(36.dp)
                                 .scale(brandBtnScale)
                                 .testTag("top_brand_generic_switch_button")
                         ) {
@@ -311,87 +371,64 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                     modifier = Modifier.padding(1.dp)
                                 ) {
                                     Icon(
-                                        imageVector = if (isBrand) Icons.Default.Medication else Icons.Default.Science,
-                                        contentDescription = if (isBrand) "Current: Brand Mode. Tap to switch to Generic" else "Current: Generic Mode. Tap to switch to Brand",
-                                        tint = if (isBrand) Emerald400 else Amber400,
-                                        modifier = Modifier.size(17.dp)
+                                        imageVector = if (isGeneric) Icons.Default.Science else Icons.Default.Medication,
+                                        contentDescription = if (isGeneric) "Generic Mode Active. Tap to switch to Brand" else "Brand Mode Active. Tap to switch to Generic",
+                                        tint = when {
+                                            isBrand -> Emerald400
+                                            isGeneric -> Amber400
+                                            else -> Slate400
+                                        },
+                                        modifier = Modifier.size(15.dp)
                                     )
                                     Text(
-                                        text = if (isBrand) "BRAND" else "GENERIC",
-                                        fontSize = 7.sp,
+                                        text = if (isGeneric) "GENERIC" else "BRAND",
+                                        fontSize = 6.sp,
                                         fontWeight = FontWeight.ExtraBold,
-                                        color = if (isBrand) Emerald400 else Amber400,
-                                        letterSpacing = 0.2.sp,
+                                        color = when {
+                                            isBrand -> Emerald400
+                                            isGeneric -> Amber400
+                                            else -> Slate400
+                                        },
+                                        letterSpacing = 0.1.sp,
                                         maxLines = 1
                                     )
                                 }
                             }
                         }
 
-                        // Sparkle Gemini AI Button (Right 1) - Glowing violet animation
-                        val isGeminiActive = state.currentScreen == NavigationScreen.GEMINI
-                        val geminiScale by animateFloatAsState(
-                            targetValue = if (isGeminiActive) 1.12f else 1f,
+                        // Medical News & Grounding Live Updates Button
+                        val isNewsActive = state.currentScreen == NavigationScreen.MEDICAL_NEWS
+                        val newsScale by animateFloatAsState(
+                            targetValue = if (isNewsActive) 1.08f else 1f,
                             animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                            label = "geminiScale"
+                            label = "newsScale"
                         )
-                        val geminiBgColor by animateColorAsState(
-                            targetValue = if (isGeminiActive) SparkleViolet.copy(alpha = 0.35f) else NavyPill,
-                            label = "geminiBg"
-                        )
-                        Surface(
-                            onClick = { viewModel.navigateTo(NavigationScreen.GEMINI) },
-                            shape = CircleShape,
-                            color = geminiBgColor,
-                            border = BorderStroke(1.4.dp, if (isGeminiActive) SparkleViolet else SparkleViolet.copy(alpha = 0.6f)),
-                            modifier = Modifier
-                                .size(38.dp)
-                                .scale(geminiScale)
-                                .testTag("top_sparkle_gemini_button")
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.AutoAwesome,
-                                    contentDescription = "Gemini AI Copilot",
-                                    tint = SparkleViolet,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-
-                        // Bookmarks / Saved Button (Right 2) - Animated golden bookmark
-                        val isSavedActive = state.currentScreen == NavigationScreen.SAVED
-                        val bookmarkScale by animateFloatAsState(
-                            targetValue = if (isSavedActive) 1.12f else 1f,
-                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                            label = "bookmarkScale"
-                        )
-                        val bookmarkBgColor by animateColorAsState(
-                            targetValue = if (isSavedActive) Amber500 else NavyPill,
-                            label = "bookmarkBg"
+                        val newsBgColor by animateColorAsState(
+                            targetValue = if (isNewsActive) Color(0xFF0369A1).copy(alpha = 0.35f) else NavyPill,
+                            label = "newsBg"
                         )
                         Surface(
                             onClick = {
-                                if (isSavedActive) {
+                                if (isNewsActive) {
                                     viewModel.navigateTo(NavigationScreen.SEARCH)
                                 } else {
-                                    viewModel.navigateTo(NavigationScreen.SAVED)
+                                    viewModel.navigateTo(NavigationScreen.MEDICAL_NEWS)
                                 }
                             },
                             shape = CircleShape,
-                            color = bookmarkBgColor,
-                            border = BorderStroke(1.4.dp, if (isSavedActive) Amber400 else NavyCardBorder),
+                            color = newsBgColor,
+                            border = BorderStroke(1.2.dp, if (isNewsActive) Color(0xFF38BDF8) else Color(0xFF38BDF8).copy(alpha = 0.5f)),
                             modifier = Modifier
-                                .size(38.dp)
-                                .scale(bookmarkScale)
-                                .testTag("top_bookmarks_button")
+                                .size(36.dp)
+                                .scale(newsScale)
+                                .testTag("top_medical_news_button")
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
-                                    imageVector = if (isSavedActive) Icons.Default.Bookmark else Icons.Outlined.BookmarkBorder,
-                                    contentDescription = "Saved Favorites",
-                                    tint = if (isSavedActive) Color.Black else Amber400,
-                                    modifier = Modifier.size(20.dp)
+                                    imageVector = Icons.AutoMirrored.Filled.Feed,
+                                    contentDescription = "Nepal Medical News",
+                                    tint = if (isNewsActive) Color(0xFF38BDF8) else Color(0xFF7DD3FC),
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                         }
@@ -399,11 +436,23 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                 }
             },
             bottomBar = {
+                val navBarBg by animateColorAsState(
+                    targetValue = when (state.themeMode) {
+                        AppThemeMode.PITCH_BLACK -> Color.Black
+                        AppThemeMode.DARK -> Slate900
+                        AppThemeMode.LIGHT -> Color.White
+                    },
+                    label = "navBarBg"
+                )
                 Surface(
-                    color = MaterialTheme.colorScheme.surface,
+                    color = navBarBg,
                     tonalElevation = 8.dp,
                     shadowElevation = 8.dp,
-                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                    border = BorderStroke(
+                        0.8.dp,
+                        if (state.themeMode == AppThemeMode.PITCH_BLACK) PitchBlackBorder
+                        else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+                    )
                 ) {
                     NavigationBar(
                         containerColor = Color.Transparent,
@@ -471,79 +520,119 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            when (state.currentScreen) {
-                NavigationScreen.SEARCH -> DrugSearchScreen(
-                    searchQuery = state.searchQuery,
-                    searchMode = state.searchMode,
-                    activeFilter = state.activeFilter,
-                    selectedSystemFilter = state.selectedSystemFilter,
-                    filteredDrugs = state.filteredDrugs,
-                    bookmarkedDrugIds = state.bookmarkedDrugIds,
-                    recentSearches = state.recentSearches,
-                    onSearchChange = { viewModel.updateSearchQuery(it) },
-                    onSearchSubmit = { viewModel.addRecentSearch(it) },
-                    onSearchModeChange = { viewModel.setSearchMode(it) },
-                    onFilterChange = { viewModel.setFilter(it) },
-                    onClearSystemFilter = { viewModel.filterBySystem("All Systems") },
-                    onDrugClick = { viewModel.openDrug(it) },
-                    onBookmarkToggle = { viewModel.toggleBookmark(it) },
-                    onOpenPharmacologyReview = { viewModel.navigateTo(NavigationScreen.PHARMACOLOGY_GUIDE) }
-                )
+            AnimatedContent(
+                targetState = state.currentScreen,
+                transitionSpec = {
+                    (fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) +
+                     scaleIn(initialScale = 0.98f, animationSpec = tween(220, easing = FastOutSlowInEasing)))
+                        .togetherWith(
+                            fadeOut(animationSpec = tween(150, easing = FastOutLinearInEasing))
+                        )
+                },
+                label = "ScreenSwitchTransition"
+            ) { currentScreen ->
+                when (currentScreen) {
+                    NavigationScreen.SEARCH -> DrugSearchScreen(
+                        searchQuery = state.searchQuery,
+                        searchMode = state.searchMode,
+                        activeFilter = state.activeFilter,
+                        selectedSystemFilter = state.selectedSystemFilter,
+                        filteredDrugs = state.filteredDrugs,
+                        filteredProtocols = state.filteredProtocols,
+                        filteredCalculators = state.filteredCalculators,
+                        globalSearchTab = state.globalSearchTab,
+                        bookmarkedDrugIds = state.bookmarkedDrugIds,
+                        recentSearches = state.recentSearches,
+                        onSearchChange = { viewModel.updateSearchQuery(it) },
+                        onSearchSubmit = { viewModel.addRecentSearch(it) },
+                        onSearchModeChange = { viewModel.setSearchMode(it) },
+                        onGlobalSearchTabChange = { viewModel.setGlobalSearchTab(it) },
+                        onFilterChange = { viewModel.setFilter(it) },
+                        onClearSystemFilter = { viewModel.filterBySystem("All Systems") },
+                        onDrugClick = { viewModel.openDrug(it) },
+                        onProtocolClick = { viewModel.openProtocolFromSearch(it) },
+                        onCalculatorClick = { viewModel.openCalculatorFromSearch(it.id, it.title) },
+                        onBookmarkToggle = { viewModel.toggleBookmark(it) },
+                        onOpenPharmacologyReview = { viewModel.navigateTo(NavigationScreen.PHARMACOLOGY_GUIDE) },
+                        onOpenIndicationDirectory = {
+                            viewModel.closeProtocol()
+                            viewModel.navigateTo(NavigationScreen.DISEASE)
+                        },
+                        onOpenInteractionChecker = {
+                            viewModel.navigateTo(NavigationScreen.INTERACTION)
+                        },
+                        onOpenMedicalNews = {
+                            viewModel.navigateTo(NavigationScreen.MEDICAL_NEWS)
+                        }
+                    )
 
-                NavigationScreen.INTERACTION -> InteractionCheckerScreen(
-                    state = state,
-                    viewModel = viewModel
-                )
+                    NavigationScreen.INTERACTION -> InteractionCheckerScreen(
+                        state = state,
+                        viewModel = viewModel
+                    )
 
-                NavigationScreen.SYSTEM -> SystemBrowseScreen(
-                    onSystemSelected = { systemName ->
-                        viewModel.filterBySystem(systemName)
-                    }
-                )
+                    NavigationScreen.SYSTEM -> SystemBrowseScreen(
+                        onSystemSelected = { systemName ->
+                            viewModel.filterBySystem(systemName)
+                        }
+                    )
 
-                NavigationScreen.SAVED -> SavedScreen(
-                    state = state,
-                    viewModel = viewModel
-                )
+                    NavigationScreen.SAVED -> SavedScreen(
+                        state = state,
+                        viewModel = viewModel
+                    )
 
-                NavigationScreen.PHARMACOLOGY_GUIDE -> PharmacologyReviewScreen(
-                    bookmarkedGuideIds = state.bookmarkedGuideIds,
-                    onBookmarkToggle = { viewModel.toggleBookmarkGuide(it) }
-                )
+                    NavigationScreen.PHARMACOLOGY_GUIDE -> PharmacologyReviewScreen(
+                        bookmarkedGuideIds = state.bookmarkedGuideIds,
+                        onBookmarkToggle = { viewModel.toggleBookmarkGuide(it) }
+                    )
 
-                NavigationScreen.DISEASE -> DiseaseProtocolsScreen(
-                    bookmarkedProtocolIds = state.bookmarkedProtocolIds,
-                    onBookmarkToggle = { viewModel.toggleBookmarkProtocol(it) },
-                    onProtocolClick = { protocol ->
-                        viewModel.addRecentSearch(protocol.name)
-                    }
-                )
+                    NavigationScreen.DISEASE -> DiseaseProtocolsScreen(
+                        selectedProtocol = state.selectedProtocol,
+                        bookmarkedProtocolIds = state.bookmarkedProtocolIds,
+                        onBookmarkToggle = { viewModel.toggleBookmarkProtocol(it) },
+                        onProtocolClick = { protocol ->
+                            viewModel.openProtocol(protocol)
+                            viewModel.addRecentSearch(protocol.name)
+                        },
+                        onBackToList = { viewModel.closeProtocol() },
+                        onDrugClickByName = { viewModel.openDrugByName(it) },
+                        onConsultAiForIndication = { viewModel.consultAiForIndication(it) },
+                        onBackToSearch = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                    )
 
-                NavigationScreen.ANTIDOTE -> AntidoteToxicologyScreen(
-                    onAntidoteClick = { antidote ->
-                        viewModel.addRecentSearch(antidote.poison)
-                    }
-                )
+                    NavigationScreen.ANTIDOTE -> AntidoteToxicologyScreen(
+                        onAntidoteClick = { antidote ->
+                            viewModel.addRecentSearch(antidote.poison)
+                        }
+                    )
 
-                NavigationScreen.CALCULATOR -> CalculatorsScreen(
-                    state = state,
-                    viewModel = viewModel
-                )
+                    NavigationScreen.CALCULATOR -> CalculatorsScreen(
+                        state = state,
+                        viewModel = viewModel
+                    )
 
-                NavigationScreen.GEMINI -> GeminiChatScreen(
-                    state = state,
-                    viewModel = viewModel
-                )
+                    NavigationScreen.GEMINI -> GeminiChatScreen(
+                        state = state,
+                        viewModel = viewModel
+                    )
 
-                NavigationScreen.SETTINGS -> SettingsScreen(
-                    state = state,
-                    viewModel = viewModel
-                )
+                    NavigationScreen.SETTINGS -> SettingsScreen(
+                        state = state,
+                        viewModel = viewModel
+                    )
 
-                NavigationScreen.COMPANIES -> CompaniesScreen(
-                    onDrugClick = { viewModel.openDrug(it) },
-                    onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
-                )
+                    NavigationScreen.COMPANIES -> CompaniesScreen(
+                        onDrugClick = { viewModel.openDrug(it) },
+                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                    )
+
+                    NavigationScreen.MEDICAL_NEWS -> MedicalNewsScreen(
+                        state = state,
+                        viewModel = viewModel,
+                        onBackToHome = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                    )
+                }
             }
 
             // Drug Detail Modal
@@ -555,6 +644,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                     isBookmarked = state.bookmarkedDrugIds.contains(drug.id),
                     onBookmarkToggle = { viewModel.toggleBookmark(drug.id) },
                     onWeightChanged = { viewModel.updatePatientWeight(it) },
+                    onCheckInteractions = { selected -> viewModel.openInteractionWithDrug(selected.id) },
                     onDismiss = { viewModel.closeDrugModal() }
                 )
             }
@@ -585,6 +675,8 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
         doctorName = state.doctorName,
         doctorDegree = state.doctorDegree,
         doctorCouncilNo = state.doctorCouncilNo,
+        themeMode = state.themeMode,
+        onThemeChange = { viewModel.setThemeMode(it) },
         onClose = { viewModel.closeSidebar() },
         onSignInClick = {
             viewModel.closeSidebar()
@@ -594,10 +686,14 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
             viewModel.closeSidebar()
             viewModel.navigateTo(NavigationScreen.COMPANIES)
         },
+        onMedicalNewsClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.MEDICAL_NEWS)
+        },
         onDrugsByIndicationClick = {
             viewModel.closeSidebar()
-            viewModel.setSearchMode(SearchMode.INDICATION)
-            viewModel.navigateTo(NavigationScreen.SEARCH)
+            viewModel.closeProtocol()
+            viewModel.navigateTo(NavigationScreen.DISEASE)
         },
         onDrugsBySystemClick = {
             viewModel.closeSidebar()

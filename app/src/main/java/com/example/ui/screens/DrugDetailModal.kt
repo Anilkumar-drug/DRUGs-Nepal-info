@@ -55,6 +55,7 @@ fun DrugDetailModal(
     isBookmarked: Boolean,
     onBookmarkToggle: () -> Unit,
     onWeightChanged: (Double) -> Unit,
+    onCheckInteractions: ((Drug) -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -354,6 +355,29 @@ fun DrugDetailModal(
                                         Text("Other Brand", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                     }
 
+                                    // Check Interactions Button
+                                    if (onCheckInteractions != null) {
+                                        Button(
+                                            onClick = { onCheckInteractions(drug) },
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0xFFDC2626),
+                                                contentColor = Color.White
+                                            ),
+                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                            modifier = Modifier.height(36.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.ElectricBolt,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(15.dp),
+                                                tint = Color.White
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text("Interactions", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+
                                     // WEB Button
                                     OutlinedButton(
                                         onClick = {
@@ -517,6 +541,58 @@ fun DrugDetailModal(
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
+
+                                        // Liquid Suspension Volume Calculator (Auto-mL)
+                                        var selectedSuspensionStrength by remember { mutableIntStateOf(125) }
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "Liquid Suspension Dispense Volume (Auto-mL):",
+                                            fontSize = 11.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = DimsTealPrimary
+                                        )
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            listOf(125, 250).forEach { str ->
+                                                val isSel = selectedSuspensionStrength == str
+                                                FilterChip(
+                                                    selected = isSel,
+                                                    onClick = { selectedSuspensionStrength = str },
+                                                    label = { Text("$str mg / 5 mL", fontSize = 11.sp) },
+                                                    shape = RoundedCornerShape(12.dp)
+                                                )
+                                            }
+                                        }
+
+                                        val perDoseMg = calculatedDoseMg / 3.0 // TID standard
+                                        val perDoseMl = (perDoseMg * 5.0) / selectedSuspensionStrength
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = DimsTealLight,
+                                            border = BorderStroke(0.8.dp, DimsTealBorder)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = "Give: ${String.format("%.1f", perDoseMl)} mL per dose (TID)",
+                                                    fontSize = 13.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = DimsTealDark
+                                                )
+                                                Text(
+                                                    text = "(${perDoseMg.toInt()} mg)",
+                                                    fontSize = 12.sp,
+                                                    color = DimsTealPrimary
+                                                )
+                                            }
+                                        }
                                     } else {
                                         Text(
                                             text = "Standard Adult Regimen: ${drug.resolvedAdultDose.lines().firstOrNull() ?: drug.resolvedAdultDose}",
@@ -527,6 +603,171 @@ fun DrugDetailModal(
                                     }
                                 }
                             }
+                        }
+                    }
+
+                    // Nepal National Regulatory & Essential Medicines (NEML / DDA)
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 4.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFF0F2A3F),
+                        border = BorderStroke(1.dp, Color(0xFF0284C7).copy(alpha = 0.35f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(16.dp))
+                                Text("Nepal Regulatory & DDA Classification", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF38BDF8))
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = Color(0xFF102544),
+                                    border = BorderStroke(0.8.dp, Color(0xFF1E3A66)),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Column(modifier = Modifier.padding(8.dp)) {
+                                        Text("DDA Schedule", fontSize = 10.sp, color = Slate400)
+                                        Text(drug.resolvedDdaSchedule, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                                    }
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = Color(0xFF102544),
+                                    border = BorderStroke(0.8.dp, Color(0xFF1E3A66)),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Column(modifier = Modifier.padding(8.dp)) {
+                                        Text("NEML Status", fontSize = 10.sp, color = Slate400)
+                                        Text(drug.resolvedNeml, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, color = Emerald400)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Beers Criteria 2023 Geriatric Safety Warning (If Applicable)
+                    if (drug.resolvedBeersRisk != null) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 4.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            color = Red950.copy(alpha = 0.4f),
+                            border = BorderStroke(1.2.dp, Red500)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Icon(Icons.Default.Warning, contentDescription = null, tint = Red400, modifier = Modifier.size(20.dp))
+                                Column {
+                                    Text("Beers Criteria 2023: Geriatric Drug Warning", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Red400)
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(drug.resolvedBeersRisk!!, fontSize = 11.sp, color = Color.White, lineHeight = 16.sp)
+                                }
+                            }
+                        }
+                    }
+
+                    // Trimester-Specific Pregnancy Safety Visualizer
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 4.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text("Obstetric Safety by Trimester", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                listOf(
+                                    Triple("1st Trimester", "Weeks 1-12", drug.resolvedT1Safety),
+                                    Triple("2nd Trimester", "Weeks 13-27", drug.resolvedT2Safety),
+                                    Triple("3rd Trimester", "Weeks 28-40", drug.resolvedT3Safety)
+                                ).forEach { (title, subtitle, status) ->
+                                    val (bgColor, textColor) = when {
+                                        status.contains("Contraindicated", ignoreCase = true) || status.contains("High", ignoreCase = true) -> Pair(Red500.copy(alpha = 0.15f), Red500)
+                                        status.contains("Safe", ignoreCase = true) -> Pair(Emerald500.copy(alpha = 0.15f), Emerald500)
+                                        else -> Pair(Amber500.copy(alpha = 0.15f), Amber500)
+                                    }
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = bgColor,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(6.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(title, fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                                            Text(subtitle, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(status, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = textColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Bilingual Patient Counseling Box (खुराक निर्देशन - English & Nepali)
+                    val clipboardManager = LocalClipboardManager.current
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 6.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = DimsTealLight,
+                        border = BorderStroke(1.dp, DimsTealBorder)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(Icons.Default.RecordVoiceOver, contentDescription = null, tint = DimsTealPrimary, modifier = Modifier.size(18.dp))
+                                    Text("बिरामीलाई दिइने खुराक निर्देशन (Patient Instructions)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = DimsTealDark)
+                                }
+                                IconButton(
+                                    onClick = {
+                                        val text = "【${drug.genericName} - खुराक निर्देशन】\n• ${drug.resolvedNepaliCounseling}\n• ${drug.resolvedEnglishCounseling}"
+                                        clipboardManager.setText(AnnotatedString(text))
+                                        Toast.makeText(context, "Copied instructions to clipboard!", Toast.LENGTH_SHORT).show()
+                                    },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Icon(Icons.Default.ContentCopy, contentDescription = "Copy Instructions", tint = DimsTealPrimary, modifier = Modifier.size(16.dp))
+                                }
+                            }
+                            Text("🇳🇵 नेपाली: ${drug.resolvedNepaliCounseling}", fontSize = 12.sp, color = DimsTealDark, lineHeight = 17.sp, fontWeight = FontWeight.Medium)
+                            Text("🇬🇧 English: ${drug.resolvedEnglishCounseling}", fontSize = 11.5.sp, color = DimsTealPrimary, lineHeight = 16.sp)
                         }
                     }
 
