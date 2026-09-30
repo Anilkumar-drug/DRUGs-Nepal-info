@@ -112,6 +112,26 @@ fun InteractionCheckerScreen(
         if (selectedDrugs.size < 2) 0 else (selectedDrugs.size * (selectedDrugs.size - 1)) / 2
     }
 
+    // Therapeutic Duplication Analyzer
+    val duplications = remember(selectedDrugs) {
+        val map = mutableMapOf<String, MutableList<Drug>>()
+        selectedDrugs.forEach { drug ->
+            val group = when {
+                drug.drugClass.contains("NSAID", ignoreCase = true) || drug.genericName.contains("Ibuprofen", ignoreCase = true) || drug.genericName.contains("Diclofenac", ignoreCase = true) || drug.genericName.contains("Ketorolac", ignoreCase = true) -> "NSAIDs (Nonsteroidal Anti-inflammatory Drugs)"
+                drug.drugClass.contains("ACE", ignoreCase = true) || drug.drugClass.contains("ARB", ignoreCase = true) || drug.genericName.contains("Ramipril", ignoreCase = true) || drug.genericName.contains("Telmisartan", ignoreCase = true) || drug.genericName.contains("Losartan", ignoreCase = true) -> "RAAS Inhibitors (Dual ACE-I / ARB)"
+                drug.drugClass.contains("Benzodiazepine", ignoreCase = true) || drug.genericName.contains("Diazepam", ignoreCase = true) || drug.genericName.contains("Alprazolam", ignoreCase = true) || drug.genericName.contains("Clonazepam", ignoreCase = true) -> "Sedatives & Benzodiazepines"
+                drug.drugClass.contains("Proton Pump", ignoreCase = true) || drug.genericName.contains("Pantoprazole", ignoreCase = true) || drug.genericName.contains("Omeprazole", ignoreCase = true) -> "Proton Pump Inhibitors (PPIs)"
+                drug.drugClass.contains("Statin", ignoreCase = true) || drug.genericName.contains("Atorvastatin", ignoreCase = true) || drug.genericName.contains("Rosuvastatin", ignoreCase = true) -> "Lipid-Lowering Statins"
+                drug.drugClass.contains("Beta-blocker", ignoreCase = true) || drug.genericName.contains("Metoprolol", ignoreCase = true) || drug.genericName.contains("Atenolol", ignoreCase = true) || drug.genericName.contains("Bisoprolol", ignoreCase = true) -> "Beta-Adrenergic Blockers"
+                else -> ""
+            }
+            if (group.isNotBlank()) {
+                map.getOrPut(group) { mutableListOf() }.add(drug)
+            }
+        }
+        map.filter { it.value.size >= 2 }
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -612,6 +632,47 @@ fun InteractionCheckerScreen(
 
         // 4. Analysis Summary Alert & Vulnerability Modifiers
         if (selectedDrugs.size >= 2) {
+            if (duplications.isNotEmpty()) {
+                item {
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xFF78350F).copy(alpha = 0.25f),
+                        border = BorderStroke(1.2.dp, Color(0xFFF59E0B)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFF59E0B), modifier = Modifier.size(22.dp))
+                                Text(
+                                    text = "THERAPEUTIC DUPLICATION DETECTED",
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 13.sp,
+                                    color = Color(0xFFF59E0B)
+                                )
+                            }
+                            Text(
+                                text = "Multiple medications belonging to the same pharmacological class are present in this prescription regimen. Class duplication dramatically escalates adverse drug reactions and organ toxicity with negligible added therapeutic benefit:",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                lineHeight = 16.sp
+                            )
+                            duplications.forEach { (groupName, drugsList) ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = Color(0xFF1E293B),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        Text("• $groupName:", fontWeight = FontWeight.Bold, fontSize = 11.5.sp, color = Amber400)
+                                        Text(drugsList.joinToString(" + ") { it.genericName }, fontSize = 11.sp, color = Color.White)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             item {
                 when {
                     contraindicatedCount > 0 -> {
@@ -1453,7 +1514,7 @@ private fun DrugPickerModal(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    items(filteredDrugs) { drug ->
+                    items(filteredDrugs.distinctBy { it.id }, key = { it.id }) { drug ->
                         val isSelected = selectedDrugIds.contains(drug.id)
                         Surface(
                             shape = RoundedCornerShape(10.dp),

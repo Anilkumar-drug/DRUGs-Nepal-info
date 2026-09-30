@@ -33,7 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Feed
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.AccountTree
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Calculate
@@ -96,6 +96,13 @@ fun AppSidebarDrawer(
     onSavedClick: () -> Unit = {},
     onPharmacologyClick: () -> Unit = {},
     onMedicalNewsClick: () -> Unit = {},
+    onCodeBlueClick: () -> Unit = {},
+    onAntimicrobialClick: () -> Unit = {},
+    onIvCompatibilityClick: () -> Unit = {},
+    onRenalAdjusterClick: () -> Unit = {},
+    onAbgSolverClick: () -> Unit = {},
+    onHepatologyClick: () -> Unit = {},
+    onAnesthesiologyClick: () -> Unit = {},
     onInteractionsClick: () -> Unit,
     onAntidotesClick: () -> Unit,
     onSettingsClick: () -> Unit
@@ -180,7 +187,7 @@ fun AppSidebarDrawer(
                                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
                                         Text(
-                                            text = "DIMS Nepal",
+                                            text = "DRUGs Nepal",
                                             fontSize = 15.sp,
                                             fontWeight = FontWeight.ExtraBold,
                                             color = Color.White
@@ -302,114 +309,6 @@ fun AppSidebarDrawer(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        // Quick Theme Switcher
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = Color(0xFF0F172A).copy(alpha = 0.85f),
-                            border = BorderStroke(1.dp, Color(0xFF1E293B)),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 14.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Palette,
-                                            contentDescription = null,
-                                            tint = Amber400,
-                                            modifier = Modifier.size(15.dp)
-                                        )
-                                        Text(
-                                            text = "APP THEME",
-                                            fontSize = 10.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = Color.White
-                                        )
-                                    }
-                                    Text(
-                                        text = when (themeMode) {
-                                            AppThemeMode.PITCH_BLACK -> "Pitch Black (OLED)"
-                                            AppThemeMode.DARK -> "Slate Dark"
-                                            AppThemeMode.LIGHT -> "Clean Light"
-                                        },
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = when (themeMode) {
-                                            AppThemeMode.PITCH_BLACK -> Emerald400
-                                            AppThemeMode.DARK -> MedicalBlue400
-                                            AppThemeMode.LIGHT -> Amber400
-                                        }
-                                    )
-                                }
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    val options = listOf(
-                                        AppThemeMode.PITCH_BLACK to "Pitch Black",
-                                        AppThemeMode.DARK to "Slate Dark",
-                                        AppThemeMode.LIGHT to "Clean Light"
-                                    )
-                                    options.forEach { (mode, label) ->
-                                        val isSel = themeMode == mode
-                                        val activeBorder = when (mode) {
-                                            AppThemeMode.PITCH_BLACK -> Emerald400
-                                            AppThemeMode.DARK -> MedicalBlue400
-                                            AppThemeMode.LIGHT -> Amber400
-                                        }
-                                        val activeBg = when (mode) {
-                                            AppThemeMode.PITCH_BLACK -> Color(0xFF064E3B)
-                                            AppThemeMode.DARK -> Color(0xFF0369A1)
-                                            AppThemeMode.LIGHT -> Color(0xFFB45309)
-                                        }
-                                        Surface(
-                                            onClick = { onThemeChange(mode) },
-                                            shape = RoundedCornerShape(8.dp),
-                                            color = if (isSel) activeBg else Color(0xFF1E293B),
-                                            border = BorderStroke(1.dp, if (isSel) activeBorder else Color(0xFF334155)),
-                                            modifier = Modifier.weight(1f)
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.padding(vertical = 7.dp),
-                                                horizontalArrangement = Arrangement.Center,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                if (isSel) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Check,
-                                                        contentDescription = null,
-                                                        tint = Color.White,
-                                                        modifier = Modifier.size(12.dp)
-                                                    )
-                                                    Spacer(modifier = Modifier.width(3.dp))
-                                                }
-                                                Text(
-                                                    text = label,
-                                                    fontSize = 10.sp,
-                                                    fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium,
-                                                    color = if (isSel) Color.White else Slate400
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // Sidebar Menu Items (Structured exactly as in Screenshot 1)
@@ -419,6 +318,97 @@ fun AppSidebarDrawer(
                                 .padding(horizontal = 14.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            // 0. Emergency Code Blue & Resuscitation Fast Mode (Top priority)
+                            SidebarItemCard(
+                                icon = Icons.Default.ElectricBolt,
+                                iconColor = Color(0xFFEF4444),
+                                iconBg = Color(0xFFEF4444).copy(alpha = 0.2f),
+                                title = "CODE BLUE & EMERGENCY RESUS",
+                                subtitle = "ACLS cycle timer, Anaphylaxis, Broselow tape",
+                                badge = "FAST MODE",
+                                badgeColor = Color(0xFFEF4444),
+                                onClick = onCodeBlueClick,
+                                testTag = "sidebar_code_blue_item"
+                            )
+
+                            // 0b. Antimicrobial Stewardship & WHO AWaRe
+                            SidebarItemCard(
+                                icon = Icons.Default.Healing,
+                                iconColor = Color(0xFF10B981),
+                                iconBg = Color(0xFF10B981).copy(alpha = 0.15f),
+                                title = "ANTIMICROBIAL & WHO AWARE",
+                                subtitle = "Empiric syndromic guide & Nepal resistance",
+                                badge = "STEWARDSHIP",
+                                badgeColor = Color(0xFF10B981),
+                                onClick = onAntimicrobialClick,
+                                testTag = "sidebar_antimicrobial_item"
+                            )
+
+                            // 0c. IV Dilution & Y-Site Compatibility
+                            SidebarItemCard(
+                                icon = Icons.Default.AccountTree,
+                                iconColor = Color(0xFF0284C7),
+                                iconBg = Color(0xFF0284C7).copy(alpha = 0.15f),
+                                title = "IV DILUTION & COMPATIBILITY",
+                                subtitle = "ICU fluids (D5W vs NS), rates & Y-site alerts",
+                                badge = "ICU GUIDE",
+                                badgeColor = Color(0xFF0284C7),
+                                onClick = onIvCompatibilityClick,
+                                testTag = "sidebar_iv_compat_item"
+                            )
+
+                            // 0d. Renal Dose Auto-Calculator
+                            SidebarItemCard(
+                                icon = Icons.Default.Calculate,
+                                iconColor = Amber400,
+                                iconBg = Amber400.copy(alpha = 0.15f),
+                                title = "RENAL DOSE AUTO-CALCULATOR",
+                                subtitle = "Dynamic Cockcroft-Gault & eGFR drug adjustments",
+                                badge = "CrCl / eGFR",
+                                badgeColor = Amber400,
+                                onClick = onRenalAdjusterClick,
+                                testTag = "sidebar_renal_adjuster_item"
+                            )
+
+                            // 0e. ABG & Electrolyte Disturbance Solver
+                            SidebarItemCard(
+                                icon = Icons.Default.Science,
+                                iconColor = Color(0xFF38BDF8),
+                                iconBg = Color(0xFF38BDF8).copy(alpha = 0.15f),
+                                title = "ABG & ELECTROLYTE SOLVER",
+                                subtitle = "Stepwise Acid-Base, Anion Gap, Na/K/Ca deficits & 3% Saline",
+                                badge = "ICU SUITE",
+                                badgeColor = Color(0xFF38BDF8),
+                                onClick = onAbgSolverClick,
+                                testTag = "sidebar_abg_solver_item"
+                            )
+
+                            // 0f. Hepatology & Pancreas Guidelines (AASLD / EASL / APASL / WHO)
+                            SidebarItemCard(
+                                icon = Icons.Default.LocalHospital,
+                                iconColor = Color(0xFFF59E0B),
+                                iconBg = Color(0xFFF59E0B).copy(alpha = 0.15f),
+                                title = "HEPATOLOGY & PANCREAS GUIDELINES",
+                                subtitle = "AASLD, EASL, APASL & WHO: CHB, CHC, SBP, EV bleed, Pancreatitis",
+                                badge = "17 PROTOCOLS",
+                                badgeColor = Color(0xFFF59E0B),
+                                onClick = onHepatologyClick,
+                                testTag = "sidebar_hepatology_guidelines_item"
+                            )
+
+                            // 0g. Anesthesiology & Perioperative Suite
+                            SidebarItemCard(
+                                icon = Icons.Default.MedicalServices,
+                                iconColor = Color(0xFFA855F7),
+                                iconBg = Color(0xFFA855F7).copy(alpha = 0.15f),
+                                title = "ANESTHESIOLOGY & PERIOPERATIVE",
+                                subtitle = "24 Agents, Dosing Calc, RSI, LAST, MH & Difficult Airway",
+                                badge = "OR SUITE",
+                                badgeColor = Color(0xFFA855F7),
+                                onClick = onAnesthesiologyClick,
+                                testTag = "sidebar_anesthesiology_item"
+                            )
+
                             // 0. Nepal Medical News & Clinical Updates (Live Search Grounding)
                             SidebarItemCard(
                                 icon = Icons.Default.Feed,

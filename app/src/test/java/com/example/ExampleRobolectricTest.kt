@@ -149,4 +149,94 @@ class ExampleRobolectricTest {
         vm.setSearchMode(com.example.viewmodel.SearchMode.INDICATION)
         assertEquals(com.example.viewmodel.SearchMode.INDICATION, vm.uiState.value.searchMode)
     }
+
+    @Test
+    fun `verify clinical calculator suite registry and interactive calculations`() {
+        val allCalcs = com.example.data.calculator.ClinicalCalculatorRegistry.allCalculators
+        assertTrue("Clinical Cal Suite must have at least 50 calculators", allCalcs.size >= 50)
+
+        // Verify key MDCalc cornerstone calculators are present
+        val meld = allCalcs.find { it.id == "meld_na" || it.id == "meld_score" }
+        assertNotNull("MELD-Na calculator must be present", meld)
+
+        val oakland = allCalcs.find { it.id == "oakland" }
+        assertNotNull("Oakland Score must be present", oakland)
+
+        val ganzoni = allCalcs.find { it.id == "ganzoni" }
+        assertNotNull("Ganzoni Equation must be present", ganzoni)
+
+        val wellsDvt = allCalcs.find { it.id == "wells_dvt" }
+        assertNotNull("Wells DVT must be present", wellsDvt)
+
+        val wellsPe = allCalcs.find { it.id == "wells_pe" }
+        assertNotNull("Wells PE must be present", wellsPe)
+
+        val snakebite = allCalcs.find { it.id == "snakebite" }
+        assertNotNull("Nepal Snakebite ASV must be present", snakebite)
+
+        // Verify Snakebite calculation
+        val snakeRes = ClinicalCalculators.calculateSnakebiteDosing("Krait")
+        assertEquals(10, snakeRes.initialAsvDoseVials)
+        assertTrue(snakeRes.envenomationType.contains("Neurotoxic"))
+
+        // Verify CKD-EPI 2021 calculation
+        val ckdRes = com.example.data.calculator.ExtendedCalculators.calculateCkdEpi(
+            age = 50,
+            serumCr = 1.0,
+            isFemale = false
+        )
+        assertTrue("CKD-EPI should return valid eGFR", ckdRes.egfr > 60.0)
+
+        // Verify FENa calculation (Prerenal: < 1.0%)
+        val fenaRes = com.example.data.calculator.ExtendedCalculators.calculateFena(
+            urineNa = 15.0,
+            serumNa = 140.0,
+            urineCr = 80.0,
+            serumCr = 2.0
+        )
+        // (15 * 2) / (140 * 80) * 100 = 30 / 11200 * 100 = 0.267%
+        assertTrue("FENa should indicate prerenal azotemia", fenaRes.fenaPercent < 1.0)
+        assertTrue(fenaRes.etiology.contains("Prerenal"))
+    }
+
+    @Test
+    fun `verify calculator bookmarking and navigation in viewmodel`() {
+        val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+        val vm = com.example.viewmodel.ClinicalViewModel(app)
+
+        // Open calculator
+        vm.openCalculator("oakland")
+        assertEquals("oakland", vm.uiState.value.selectedCalculatorId)
+
+        // Close calculator
+        vm.closeCalculator()
+        assertEquals(null, vm.uiState.value.selectedCalculatorId)
+
+        // Toggle bookmark
+        val initiallyBookmarked = vm.uiState.value.bookmarkedCalculatorIds.contains("oakland")
+        vm.toggleBookmarkCalculator("oakland")
+        assertEquals(!initiallyBookmarked, vm.uiState.value.bookmarkedCalculatorIds.contains("oakland"))
+    }
+
+    @Test
+    fun `verify ai copilot model selection and chat features`() {
+        val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+        val vm = com.example.viewmodel.ClinicalViewModel(app)
+
+        assertEquals("gemini-3.5-flash", vm.uiState.value.aiSelectedModel)
+        assertTrue(vm.uiState.value.isAiSearchGrounded)
+
+        // Switch to Gemini 3.1 Pro
+        vm.setAiModel("gemini-3.1-pro-preview")
+        assertEquals("gemini-3.1-pro-preview", vm.uiState.value.aiSelectedModel)
+
+        // Toggle grounding
+        vm.toggleAiSearchGrounded()
+        assertEquals(false, vm.uiState.value.isAiSearchGrounded)
+
+        // Send AI message
+        vm.sendAiMessage("Anaphylaxis Epinephrine Dosing")
+        val messages = vm.uiState.value.chatMessages
+        assertTrue("Messages should contain user query", messages.any { it.text.contains("Anaphylaxis") })
+    }
 }

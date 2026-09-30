@@ -255,7 +255,7 @@ fun CompaniesScreen(
             contentPadding = PaddingValues(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            items(filteredCompanies, key = { it.name }) { company ->
+            items(filteredCompanies.distinctBy { it.name }, key = { it.name }) { company ->
                 CompanyCard(
                     company = company,
                     isExpanded = expandedCompanyName == company.name,

@@ -1,7 +1,14 @@
 package com.example.ui.screens
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -22,10 +30,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.ChatMessage
@@ -33,15 +43,14 @@ import com.example.data.model.MessageSender
 import com.example.ui.theme.*
 import com.example.viewmodel.ClinicalUiState
 import com.example.viewmodel.ClinicalViewModel
-import kotlinx.coroutines.launch
 
 @Composable
 fun GeminiChatScreen(
     state: ClinicalUiState,
     viewModel: ClinicalViewModel
 ) {
+    val context = LocalContext.current
     val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
     var selectedCategory by remember { mutableStateOf("⚡ Emergency") }
 
     LaunchedEffect(state.chatMessages.size, state.isAiThinking) {
@@ -51,7 +60,7 @@ fun GeminiChatScreen(
     }
 
     val categories = remember {
-        listOf("⚡ Emergency", "🐍 Toxicology", "📋 Guidelines", "🔍 Interactions", "⚖️ Renal/Dosing")
+        listOf("⚡ Emergency", "🐍 Toxicology", "📋 Guidelines", "🔍 Interactions", "⚖️ Renal/Dosing", "🧬 MOA Guide")
     }
 
     val categoryPrompts = remember {
@@ -60,7 +69,8 @@ fun GeminiChatScreen(
                 "Anaphylaxis Epinephrine Dosing (WAO/EAACI)",
                 "ACLS Pulseless VT/VF Algorithm & Amiodarone",
                 "PSVT Adenosine Protocol & Modified Valsalva",
-                "Status Epilepticus AES Protocol (Lorazepam + Levetiracetam)"
+                "Status Epilepticus AES Protocol (Lorazepam + Levetiracetam)",
+                "Severe Hypertensive Emergency Labetalol & Nicardipine"
             ),
             "🐍 Toxicology" to listOf(
                 "Snakebite Polyvalent ASV Protocol (WHO & Nepal)",
@@ -81,12 +91,22 @@ fun GeminiChatScreen(
             "🔍 Interactions" to listOf(
                 "Check interaction: Telmisartan + Spironolactone",
                 "Aspirin + Ticagrelor safety limits in ACS",
-                "Amiodarone + Digoxin / Warfarin interaction"
+                "Amiodarone + Digoxin / Warfarin interaction",
+                "Metformin + Iodinated Radiocontrast timing",
+                "Clopidogrel + Omeprazole CYP2C19 interaction"
             ),
             "⚖️ Renal/Dosing" to listOf(
                 "Metformin renal dosing & contrast guidelines",
                 "Levetiracetam renal clearance adjustment",
-                "Amox-Clav pediatric otitis media dose"
+                "Amox-Clav pediatric otitis media dose",
+                "Enoxaparin renal dose for CrCl < 30 mL/min",
+                "Vancomycin trough target & AUC/MIC ratio"
+            ),
+            "🧬 MOA Guide" to listOf(
+                "SGLT2 Inhibitors cardiovascular & renal mechanism",
+                "GLP-1 Receptor Agonists vs DPP-4 Inhibitors",
+                "Direct Oral Anticoagulants (DOACs) mechanism",
+                "JAK Inhibitors (Tofacitinib) mechanism in RA"
             )
         )
     }
@@ -99,77 +119,168 @@ fun GeminiChatScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // AI Banner with Controls
+        // AI Banner with Controls & Google Search Launcher
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = Indigo950.copy(alpha = 0.5f),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Indigo500.copy(alpha = 0.4f)),
+            border = BorderStroke(1.dp, Indigo500.copy(alpha = 0.4f)),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                modifier = Modifier.padding(12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = Indigo600,
-                        modifier = Modifier.size(36.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(
-                                text = "Gemini Clinical AI",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = Indigo400
-                            )
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = Emerald600.copy(alpha = 0.2f),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, Emerald400.copy(alpha = 0.3f))
-                            ) {
-                                Text(
-                                    text = "3.5 Flash",
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Emerald400,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        Surface(
+                            shape = CircleShape,
+                            color = Indigo600,
+                            modifier = Modifier.size(38.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                         }
-                        Text(
-                            text = "AHA, GINA, ASA, ACG, AES, WHO & Nepal Protocols",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(
+                                    text = "Gemini Clinical AI",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Indigo400
+                                )
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (state.aiSelectedModel.contains("pro")) Color(0xFFA855F7).copy(alpha = 0.25f) else Emerald600.copy(alpha = 0.2f),
+                                    border = BorderStroke(1.dp, if (state.aiSelectedModel.contains("pro")) Color(0xFFA855F7).copy(alpha = 0.5f) else Emerald400.copy(alpha = 0.4f)),
+                                    modifier = Modifier.clickable {
+                                        val next = if (state.aiSelectedModel.contains("pro")) "gemini-3.5-flash" else "gemini-3.1-pro-preview"
+                                        viewModel.setAiModel(next)
+                                    }
+                                ) {
+                                    Text(
+                                        text = if (state.aiSelectedModel.contains("pro")) "3.1 Pro Reasoner ▾" else "3.5 Flash ▾",
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (state.aiSelectedModel.contains("pro")) Color(0xFFC084FC) else Emerald400,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Text(
+                                text = "AHA, GINA, ACG, WHO & Nepal EDCD Clinical Protocols",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontSize = 10.5.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        // Quick Chrome Google Search Button
+                        IconButton(
+                            onClick = {
+                                val query = if (state.aiInputText.isNotBlank()) state.aiInputText else "Nepal clinical pharmacology treatment guidelines"
+                                launchGoogleSearch(context, query)
+                            },
+                            modifier = Modifier
+                                .size(32.dp)
+                                .testTag("header_google_search_chrome")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.TravelExplore,
+                                contentDescription = "Search Google in Chrome",
+                                tint = Color(0xFF38BDF8),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        // Reset Chat
+                        IconButton(
+                            onClick = { viewModel.clearChat() },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Reset Chat",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
 
-                IconButton(
-                    onClick = { viewModel.clearChat() },
-                    modifier = Modifier.size(32.dp)
+                // AI Capabilities Strip: Grounding Toggle + Google Chrome Search Pill
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Reset Chat",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    // Google Search Grounding status pill
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (state.isAiSearchGrounded) Color(0xFF0284C7).copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                        border = BorderStroke(0.8.dp, if (state.isAiSearchGrounded) Color(0xFF38BDF8).copy(alpha = 0.6f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+                        modifier = Modifier.clickable { viewModel.toggleAiSearchGrounded() }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Public,
+                                contentDescription = null,
+                                tint = if (state.isAiSearchGrounded) Color(0xFF38BDF8) else Slate400,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Text(
+                                text = if (state.isAiSearchGrounded) "Google Grounded: ON" else "Google Grounded: OFF",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (state.isAiSearchGrounded) Color(0xFF7DD3FC) else Slate400
+                            )
+                        }
+                    }
+
+                    // Direct Chrome Google Search Pill Button
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFF0F766E).copy(alpha = 0.25f),
+                        border = BorderStroke(0.8.dp, Color(0xFF14B8A6)),
+                        modifier = Modifier.clickable {
+                            val q = if (state.aiInputText.isNotBlank()) state.aiInputText else "UpToDate pharmacology clinical search"
+                            launchGoogleSearch(context, q)
+                        }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                                contentDescription = null,
+                                tint = Color(0xFF2DD4BF),
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Text(
+                                text = "Search in Chrome ↗",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF5EEAD4)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -236,7 +347,7 @@ fun GeminiChatScreen(
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             items(state.chatMessages, key = { it.id }) { msg ->
-                ChatBubble(msg)
+                ChatBubble(msg, onGoogleSearch = { query -> launchGoogleSearch(context, query) }, onPubMedSearch = { query -> launchPubMedSearch(context, query) })
             }
 
             if (state.isAiThinking) {
@@ -259,7 +370,7 @@ fun GeminiChatScreen(
                         Surface(
                             shape = RoundedCornerShape(16.dp),
                             color = Indigo950.copy(alpha = 0.4f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Indigo500.copy(alpha = 0.3f))
+                            border = BorderStroke(1.dp, Indigo500.copy(alpha = 0.3f))
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
@@ -272,7 +383,7 @@ fun GeminiChatScreen(
                                     color = Indigo400
                                 )
                                 Text(
-                                    text = "Analyzing clinical pharmacology database...",
+                                    text = if (state.aiSelectedModel.contains("pro")) "Reasoning through clinical pharmacology guidelines..." else "Consulting clinical database & Google...",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontSize = 12.sp,
                                     color = Indigo400
@@ -284,12 +395,12 @@ fun GeminiChatScreen(
             }
         }
 
-        // Input Bar
+        // Input Bar with Direct "Search Google in Chrome" Button
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 80.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
@@ -315,11 +426,33 @@ fun GeminiChatScreen(
                 })
             )
 
+            // Direct "Search on Google in Chrome" Action Button
+            IconButton(
+                onClick = {
+                    val query = if (state.aiInputText.isNotBlank()) state.aiInputText else "pharmacology drug interaction guidelines"
+                    launchGoogleSearch(context, query)
+                },
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF0F766E).copy(alpha = 0.35f))
+                    .border(1.2.dp, Color(0xFF14B8A6), CircleShape)
+                    .testTag("google_search_chrome_button")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.TravelExplore,
+                    contentDescription = "Search Google in Chrome",
+                    tint = Color(0xFF2DD4BF),
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+
+            // Gemini Send Button
             IconButton(
                 onClick = { viewModel.sendAiMessage() },
                 enabled = state.aiInputText.isNotBlank() && !state.isAiThinking,
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(46.dp)
                     .clip(CircleShape)
                     .background(if (state.aiInputText.isNotBlank()) Indigo600 else MaterialTheme.colorScheme.surfaceVariant)
                     .testTag("gemini_send_button")
@@ -335,10 +468,23 @@ fun GeminiChatScreen(
 }
 
 @Composable
-private fun ChatBubble(message: ChatMessage) {
+private fun ChatBubble(
+    message: ChatMessage,
+    onGoogleSearch: (String) -> Unit,
+    onPubMedSearch: (String) -> Unit
+) {
     val isUser = message.sender == MessageSender.USER
     val clipboardManager = LocalClipboardManager.current
     var copied by remember { mutableStateOf(false) }
+
+    val searchQueryForGoogle = remember(message.text, message.searchQuerySuggestion) {
+        if (!message.searchQuerySuggestion.isNullOrBlank()) {
+            message.searchQuerySuggestion
+        } else {
+            // Extract the first clean line or topic
+            message.text.lines().firstOrNull { it.isNotBlank() }?.replace("#", "")?.replace("*", "")?.trim()?.take(80) ?: "pharmacology"
+        }
+    }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -366,8 +512,8 @@ private fun ChatBubble(message: ChatMessage) {
                 bottomEnd = if (isUser) 4.dp else 16.dp
             ),
             color = if (isUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-            border = if (!isUser) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)) else null,
-            modifier = Modifier.widthIn(max = 320.dp)
+            border = if (!isUser) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)) else null,
+            modifier = Modifier.widthIn(max = 330.dp)
         ) {
             Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
                 Text(
@@ -379,25 +525,77 @@ private fun ChatBubble(message: ChatMessage) {
                 )
 
                 if (!isUser) {
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Action Toolbar: Google Search in Chrome + PubMed + Copy
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(
-                            onClick = {
-                                clipboardManager.setText(AnnotatedString(message.text))
-                                copied = true
-                            },
-                            modifier = Modifier.size(24.dp)
+                        // Direct Chrome Google Search button
+                        FilledTonalButton(
+                            onClick = { onGoogleSearch(searchQueryForGoogle) },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = Color(0xFF0284C7).copy(alpha = 0.25f),
+                                contentColor = Color(0xFF38BDF8)
+                            ),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                            modifier = Modifier
+                                .height(28.dp)
+                                .testTag("bubble_google_search_button")
                         ) {
                             Icon(
-                                imageVector = if (copied) Icons.Default.Check else Icons.Default.ContentCopy,
-                                contentDescription = "Copy Response",
-                                tint = if (copied) Emerald400 else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                modifier = Modifier.size(14.dp)
+                                imageVector = Icons.Default.TravelExplore,
+                                contentDescription = null,
+                                modifier = Modifier.size(13.dp)
                             )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Google (Chrome) ↗",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // PubMed Quick Link
+                            FilledTonalButton(
+                                onClick = { onPubMedSearch(searchQueryForGoogle) },
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.filledTonalButtonColors(
+                                    containerColor = Color(0xFF6366F1).copy(alpha = 0.2f),
+                                    contentColor = Color(0xFFA5B4FC)
+                                ),
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
+                                modifier = Modifier.height(28.dp)
+                            ) {
+                                Text(
+                                    text = "PubMed",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            // Copy response button
+                            IconButton(
+                                onClick = {
+                                    clipboardManager.setText(AnnotatedString(message.text))
+                                    copied = true
+                                },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (copied) Icons.Default.Check else Icons.Default.ContentCopy,
+                                    contentDescription = "Copy Response",
+                                    tint = if (copied) Emerald400 else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -420,6 +618,44 @@ private fun ChatBubble(message: ChatMessage) {
                     )
                 }
             }
+        }
+    }
+}
+
+private fun launchGoogleSearch(context: Context, query: String) {
+    val clean = query.trim().ifEmpty { "clinical pharmacology Nepal guidelines" }
+    val encoded = Uri.encode(clean)
+    val url = "https://www.google.com/search?q=$encoded"
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+        setPackage("com.android.chrome")
+    }
+    try {
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        val fallback = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        try {
+            context.startActivity(fallback)
+        } catch (e2: Exception) {
+            Toast.makeText(context, "Could not open web browser", Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+
+private fun launchPubMedSearch(context: Context, query: String) {
+    val clean = query.trim().ifEmpty { "pharmacology" }
+    val encoded = Uri.encode(clean)
+    val url = "https://pubmed.ncbi.nlm.nih.gov/?term=$encoded"
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+        setPackage("com.android.chrome")
+    }
+    try {
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        val fallback = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        try {
+            context.startActivity(fallback)
+        } catch (e2: Exception) {
+            Toast.makeText(context, "Could not open web browser", Toast.LENGTH_SHORT).show()
         }
     }
 }

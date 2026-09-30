@@ -28,7 +28,11 @@ object GeminiClinicalService {
         "Address drug interactions, organ dosage adjustments, mechanism of action, black box warnings, and local Nepal/India brand equivalents. " +
         "Format with clear headings, bullet points, and high clinical precision."
 
-    suspend fun queryClinicalAi(userQuery: String): String = withContext(Dispatchers.IO) {
+    suspend fun queryClinicalAi(
+        userQuery: String,
+        model: String = "gemini-3.5-flash",
+        enableSearchGrounding: Boolean = true
+    ): String = withContext(Dispatchers.IO) {
         val apiKey = try {
             BuildConfig.GEMINI_API_KEY
         } catch (e: Exception) {
@@ -56,12 +60,21 @@ object GeminiClinicalService {
                         put("parts", partsArr)
                     }
                     put("systemInstruction", sysContent)
+
+                    if (enableSearchGrounding) {
+                        val toolsArr = JSONArray().apply {
+                            put(JSONObject().apply {
+                                put("google_search", JSONObject())
+                            })
+                        }
+                        put("tools", toolsArr)
+                    }
                 }
 
                 val mediaType = "application/json; charset=utf-8".toMediaType()
                 val requestBody = jsonBody.toString().toRequestBody(mediaType)
-                // Use standard gemini-3.5-flash as per gemini-api skill
-                val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$apiKey"
+                val targetModel = if (model.isNotBlank()) model else "gemini-3.5-flash"
+                val url = "https://generativelanguage.googleapis.com/v1beta/models/$targetModel:generateContent?key=$apiKey"
 
                 val request = Request.Builder()
                     .url(url)

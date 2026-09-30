@@ -459,6 +459,18 @@ object ClinicalCalculators {
         )
     }
 
+    fun calculateSnakebiteDosing(biteType: String): SnakebiteAsvResult {
+        val isNeuro = biteType.contains("Krait", ignoreCase = true) || biteType.contains("Cobra", ignoreCase = true)
+        val isHemo = biteType.contains("Viper", ignoreCase = true)
+        val isDry = biteType.contains("Dry", ignoreCase = true)
+        return calculateSnakebiteAsv(
+            isNeurotoxic = isNeuro,
+            isHemotoxic = isHemo,
+            wbctUnclotted = isHemo,
+            hasSystemicSigns = !isDry
+        )
+    }
+
     // --- 12. Rabies Post-Exposure Prophylaxis (PEP) Calculator (EDCD Nepal / WHO) ---
     data class RabiesPepResult(
         val categoryText: String,

@@ -92,7 +92,7 @@ data class NavItem(
     val activeColor: Color
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -140,18 +140,18 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                 activeColor = MedicalBlue500
             ),
             NavItem(
-                screen = NavigationScreen.DISEASE,
-                label = "Indication",
-                selectedIcon = Icons.Filled.LocalHospital,
-                unselectedIcon = Icons.Outlined.LocalHospital,
-                activeColor = Emerald500
+                screen = NavigationScreen.INTERACTION,
+                label = "Interact",
+                selectedIcon = Icons.AutoMirrored.Filled.CompareArrows,
+                unselectedIcon = Icons.AutoMirrored.Filled.CompareArrows,
+                activeColor = Red500
             ),
             NavItem(
-                screen = NavigationScreen.SAVED,
-                label = "Saved",
-                selectedIcon = Icons.Filled.Bookmark,
-                unselectedIcon = Icons.Outlined.BookmarkBorder,
-                activeColor = Amber500
+                screen = NavigationScreen.MEDICAL_NEWS,
+                label = "News",
+                selectedIcon = Icons.AutoMirrored.Filled.Feed,
+                unselectedIcon = Icons.AutoMirrored.Filled.Feed,
+                activeColor = Color(0xFF0284C7)
             ),
             NavItem(
                 screen = NavigationScreen.CALCULATOR,
@@ -159,6 +159,13 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                 selectedIcon = Icons.Filled.Calculate,
                 unselectedIcon = Icons.Outlined.Calculate,
                 activeColor = Amber500
+            ),
+            NavItem(
+                screen = NavigationScreen.SAVED,
+                label = "Saved",
+                selectedIcon = Icons.Filled.Bookmark,
+                unselectedIcon = Icons.Outlined.BookmarkBorder,
+                activeColor = Color(0xFFF59E0B)
             ),
             NavItem(
                 screen = NavigationScreen.GEMINI,
@@ -177,338 +184,382 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .testTag("drugs_nepal_scaffold"),
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
-                val topBarBg by animateColorAsState(
-                    targetValue = when (state.themeMode) {
-                        AppThemeMode.PITCH_BLACK -> Color.Black
-                        AppThemeMode.DARK -> NavyDeep
-                        AppThemeMode.LIGHT -> Color(0xFFF1F5F9)
-                    },
-                    label = "topBarBg"
+                val isDedicatedScreen = state.currentScreen in listOf(
+                    NavigationScreen.CODE_BLUE,
+                    NavigationScreen.ANESTHESIOLOGY,
+                    NavigationScreen.ABG_ELECTROLYTE_SOLVER,
+                    NavigationScreen.IV_COMPATIBILITY,
+                    NavigationScreen.RENAL_ADJUSTER,
+                    NavigationScreen.ANTIMICROBIAL_STEWARDSHIP,
+                    NavigationScreen.COMPANIES,
+                    NavigationScreen.MEDICAL_NEWS
                 )
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(topBarBg)
-                ) {
-                    // Status Bar Inset Spacer
-                    Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
 
-                    // Top Navy Bar formatted with animated colored icons
-                    Row(
+                if (!isDedicatedScreen) {
+                    val topBarBg by animateColorAsState(
+                        targetValue = when (state.themeMode) {
+                            AppThemeMode.PITCH_BLACK -> Color.Black
+                            AppThemeMode.DARK -> NavyDeep
+                            AppThemeMode.LIGHT -> Color(0xFFF1F5F9)
+                        },
+                        label = "topBarBg"
+                    )
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            .background(topBarBg)
                     ) {
-                        // Three-Dot Sidebar Button (Left) - Animated teal pulse
-                        val sidebarScale by animateFloatAsState(
-                            targetValue = if (state.isSidebarOpen) 0.88f else 1f,
-                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                            label = "sidebarScale"
-                        )
-                        Surface(
-                            onClick = { viewModel.openSidebar() },
-                            shape = RoundedCornerShape(12.dp),
-                            color = NavyPill,
-                            border = BorderStroke(1.2.dp, DimsTealPrimary.copy(alpha = 0.8f)),
-                            modifier = Modifier
-                                .size(38.dp)
-                                .scale(sidebarScale)
-                                .testTag("top_three_dots_button")
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "Open Sidebar Navigation Menu",
-                                    tint = DimsTealPrimary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
+                        // Status Bar Inset Spacer
+                        Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
 
-                        // Rounded Search Pill (Center) with Voice-to-Text Microphone
-                        val isSearchActive = state.currentScreen == NavigationScreen.SEARCH
-                        val searchPillBorderColor by animateColorAsState(
-                            targetValue = if (isSearchActive) MedicalBlue400 else NavyCardBorder,
-                            label = "searchPillBorder"
-                        )
-                        Surface(
-                            shape = RoundedCornerShape(22.dp),
-                            color = NavyPill,
-                            border = BorderStroke(1.2.dp, searchPillBorderColor),
+                        // Top Navy Bar formatted with animated colored icons
+                        Row(
                             modifier = Modifier
-                                .weight(1f)
-                                .height(38.dp)
-                                .testTag("top_search_pill")
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
-                            Row(
+                            // Three-Dot Sidebar Button (Left) - Animated teal pulse
+                            val sidebarScale by animateFloatAsState(
+                                targetValue = if (state.isSidebarOpen) 0.88f else 1f,
+                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                label = "sidebarScale"
+                            )
+                            Surface(
+                                onClick = { viewModel.openSidebar() },
+                                shape = RoundedCornerShape(12.dp),
+                                color = NavyPill,
+                                border = BorderStroke(1.2.dp, DimsTealPrimary.copy(alpha = 0.8f)),
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(start = 12.dp, end = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    .size(38.dp)
+                                    .scale(sidebarScale)
+                                    .testTag("top_three_dots_button")
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = "Search",
-                                    tint = if (isSearchActive) MedicalBlue400 else Slate400,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.MoreVert,
+                                        contentDescription = "Open Sidebar Navigation Menu",
+                                        tint = DimsTealPrimary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
 
-                                BasicTextField(
-                                    value = state.searchQuery,
-                                    onValueChange = { query ->
-                                        viewModel.updateSearchQuery(query)
-                                        if (state.currentScreen != NavigationScreen.SEARCH) {
+                            // Rounded Search Pill (Center) with Voice-to-Text Microphone
+                            val isSearchActive = state.currentScreen == NavigationScreen.SEARCH
+                            val searchPillBorderColor by animateColorAsState(
+                                targetValue = if (isSearchActive) MedicalBlue400 else NavyCardBorder,
+                                label = "searchPillBorder"
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(22.dp),
+                                color = NavyPill,
+                                border = BorderStroke(1.2.dp, searchPillBorderColor),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(38.dp)
+                                    .testTag("top_search_pill")
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(start = 12.dp, end = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Search",
+                                        tint = if (isSearchActive) MedicalBlue400 else Slate400,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+
+                                    BasicTextField(
+                                        value = state.searchQuery,
+                                        onValueChange = { query ->
+                                            viewModel.updateSearchQuery(query)
+                                            if (state.currentScreen != NavigationScreen.SEARCH) {
+                                                viewModel.navigateTo(NavigationScreen.SEARCH)
+                                            }
+                                        },
+                                        singleLine = true,
+                                        textStyle = TextStyle(
+                                            color = Color.White,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Medium
+                                        ),
+                                        cursorBrush = SolidColor(MedicalBlue400),
+                                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                        keyboardActions = KeyboardActions(onSearch = {
+                                            keyboardController?.hide()
+                                            if (state.searchQuery.isNotBlank()) {
+                                                viewModel.addRecentSearch(state.searchQuery)
+                                            }
                                             viewModel.navigateTo(NavigationScreen.SEARCH)
-                                        }
-                                    },
-                                    singleLine = true,
-                                    textStyle = TextStyle(
-                                        color = Color.White,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Medium
-                                    ),
-                                    cursorBrush = SolidColor(MedicalBlue400),
-                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                    keyboardActions = KeyboardActions(onSearch = {
-                                        keyboardController?.hide()
-                                        if (state.searchQuery.isNotBlank()) {
-                                            viewModel.addRecentSearch(state.searchQuery)
-                                        }
-                                        viewModel.navigateTo(NavigationScreen.SEARCH)
-                                    }),
-                                    decorationBox = { innerTextField ->
-                                        if (state.searchQuery.isEmpty()) {
-                                            Text(
-                                                text = "Search drugs, protocols, calculators...",
-                                                fontSize = 12.sp,
-                                                color = Slate400,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
+                                        }),
+                                        decorationBox = { innerTextField ->
+                                            if (state.searchQuery.isEmpty()) {
+                                                Text(
+                                                    text = "Search drugs, protocols, calculators...",
+                                                    fontSize = 12.sp,
+                                                    color = Slate400,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                            innerTextField()
+                                        },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .testTag("top_search_text_input")
+                                    )
+
+                                    if (state.searchQuery.isNotBlank()) {
+                                        IconButton(
+                                            onClick = { viewModel.updateSearchQuery("") },
+                                            modifier = Modifier.size(26.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Clear Search",
+                                                tint = Slate400,
+                                                modifier = Modifier.size(15.dp)
                                             )
                                         }
-                                        innerTextField()
-                                    },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .testTag("top_search_text_input")
-                                )
-
-                                if (state.searchQuery.isNotBlank()) {
-                                    IconButton(
-                                        onClick = { viewModel.updateSearchQuery("") },
-                                        modifier = Modifier.size(26.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Close,
-                                            contentDescription = "Clear Search",
-                                            tint = Slate400,
-                                            modifier = Modifier.size(15.dp)
-                                        )
                                     }
-                                }
 
-                                VoiceSearchButton(
-                                    onSpokenText = { spoken ->
-                                        viewModel.updateSearchQuery(spoken)
-                                        viewModel.navigateTo(NavigationScreen.SEARCH)
-                                    },
-                                    size = 32.dp,
-                                    idleColor = MedicalBlue400,
-                                    activeColor = Red500,
-                                    testTag = "top_bar_voice_search_button"
-                                )
+                                    VoiceSearchButton(
+                                        onSpokenText = { spoken ->
+                                            viewModel.updateSearchQuery(spoken)
+                                            viewModel.navigateTo(NavigationScreen.SEARCH)
+                                        },
+                                        size = 32.dp,
+                                        idleColor = MedicalBlue400,
+                                        activeColor = Red500,
+                                        testTag = "top_bar_voice_search_button"
+                                    )
+                                }
                             }
-                        }
 
-                        // Brand vs Generic Switch Button (With animated bounce and color transitions)
-                        val isBrand = state.searchMode == SearchMode.BRAND
-                        val isGeneric = state.searchMode == SearchMode.GENERIC
-                        val brandBtnScale by animateFloatAsState(
-                            targetValue = if (isBrand || isGeneric) 1f else 0.95f,
-                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                            label = "brandBtnScale"
-                        )
-                        val brandBtnBgColor by animateColorAsState(
-                            targetValue = when {
-                                isBrand -> DimsTealPrimary.copy(alpha = 0.35f)
-                                isGeneric -> Amber500.copy(alpha = 0.35f)
-                                else -> NavyPill
-                            },
-                            label = "brandBtnBg"
-                        )
-                        val brandBtnBorderColor by animateColorAsState(
-                            targetValue = when {
-                                isBrand -> DimsTealPrimary
-                                isGeneric -> Amber400
-                                else -> NavyCardBorder
-                            },
-                            label = "brandBtnBorder"
-                        )
-                        Surface(
-                            onClick = {
-                                val nextMode = if (isGeneric) SearchMode.BRAND else SearchMode.GENERIC
-                                viewModel.setSearchMode(nextMode)
-                                if (state.currentScreen != NavigationScreen.SEARCH) {
-                                    viewModel.navigateTo(NavigationScreen.SEARCH)
-                                }
-                            },
-                            shape = CircleShape,
-                            color = brandBtnBgColor,
-                            border = BorderStroke(1.2.dp, brandBtnBorderColor),
-                            modifier = Modifier
-                                .size(36.dp)
-                                .scale(brandBtnScale)
-                                .testTag("top_brand_generic_switch_button")
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center,
-                                    modifier = Modifier.padding(1.dp)
+                            // Brand vs Generic Switch Button (With animated bounce and color transitions)
+                            val isBrand = state.searchMode == SearchMode.BRAND
+                            val isGeneric = state.searchMode == SearchMode.GENERIC
+                            val brandBtnScale by animateFloatAsState(
+                                targetValue = if (isBrand || isGeneric) 1f else 0.95f,
+                                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                                label = "brandBtnScale"
+                            )
+                            val brandBtnBgColor by animateColorAsState(
+                                targetValue = when {
+                                    isBrand -> DimsTealPrimary.copy(alpha = 0.25f)
+                                    isGeneric -> Amber500.copy(alpha = 0.25f)
+                                    else -> NavyPill
+                                },
+                                label = "brandBtnBg"
+                            )
+                            val brandBtnBorderColor by animateColorAsState(
+                                targetValue = when {
+                                    isBrand -> DimsTealPrimary
+                                    isGeneric -> Amber400
+                                    else -> NavyCardBorder
+                                },
+                                label = "brandBtnBorder"
+                            )
+                            Surface(
+                                onClick = {
+                                    val nextMode = if (isGeneric) SearchMode.BRAND else SearchMode.GENERIC
+                                    viewModel.setSearchMode(nextMode)
+                                    if (state.currentScreen != NavigationScreen.SEARCH) {
+                                        viewModel.navigateTo(NavigationScreen.SEARCH)
+                                    }
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                color = brandBtnBgColor,
+                                border = BorderStroke(1.2.dp, brandBtnBorderColor),
+                                modifier = Modifier
+                                    .height(38.dp)
+                                    .scale(brandBtnScale)
+                                    .testTag("top_brand_generic_switch_button")
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.padding(horizontal = 8.dp)
                                 ) {
                                     Icon(
                                         imageVector = if (isGeneric) Icons.Default.Science else Icons.Default.Medication,
-                                        contentDescription = if (isGeneric) "Generic Mode Active. Tap to switch to Brand" else "Brand Mode Active. Tap to switch to Generic",
-                                        tint = when {
-                                            isBrand -> Emerald400
-                                            isGeneric -> Amber400
-                                            else -> Slate400
-                                        },
-                                        modifier = Modifier.size(15.dp)
+                                        contentDescription = null,
+                                        tint = if (isGeneric) Amber400 else Emerald400,
+                                        modifier = Modifier.size(16.dp)
                                     )
                                     Text(
-                                        text = if (isGeneric) "GENERIC" else "BRAND",
-                                        fontSize = 6.sp,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = when {
-                                            isBrand -> Emerald400
-                                            isGeneric -> Amber400
-                                            else -> Slate400
-                                        },
-                                        letterSpacing = 0.1.sp,
-                                        maxLines = 1
+                                        text = if (isGeneric) "Generic" else "Brand",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isGeneric) Amber400 else Emerald400
                                     )
                                 }
                             }
-                        }
 
-                        // Medical News & Grounding Live Updates Button
-                        val isNewsActive = state.currentScreen == NavigationScreen.MEDICAL_NEWS
-                        val newsScale by animateFloatAsState(
-                            targetValue = if (isNewsActive) 1.08f else 1f,
-                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                            label = "newsScale"
-                        )
-                        val newsBgColor by animateColorAsState(
-                            targetValue = if (isNewsActive) Color(0xFF0369A1).copy(alpha = 0.35f) else NavyPill,
-                            label = "newsBg"
-                        )
-                        Surface(
-                            onClick = {
-                                if (isNewsActive) {
-                                    viewModel.navigateTo(NavigationScreen.SEARCH)
-                                } else {
-                                    viewModel.navigateTo(NavigationScreen.MEDICAL_NEWS)
+                            // Interactions Checker Button
+                            val isInteractActive = state.currentScreen == NavigationScreen.INTERACTION
+                            val interactScale by animateFloatAsState(
+                                targetValue = if (isInteractActive) 1.08f else 1f,
+                                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                                label = "interactScale"
+                            )
+                            val interactBgColor by animateColorAsState(
+                                targetValue = if (isInteractActive) Color(0xFFDC2626).copy(alpha = 0.35f) else NavyPill,
+                                label = "interactBg"
+                            )
+                            Surface(
+                                onClick = {
+                                    if (isInteractActive) {
+                                        viewModel.navigateTo(NavigationScreen.SEARCH)
+                                    } else {
+                                        viewModel.navigateTo(NavigationScreen.INTERACTION)
+                                    }
+                                },
+                                shape = CircleShape,
+                                color = interactBgColor,
+                                border = BorderStroke(1.2.dp, if (isInteractActive) Color(0xFFEF4444) else Color(0xFFEF4444).copy(alpha = 0.5f)),
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .scale(interactScale)
+                                    .testTag("top_interaction_button")
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.CompareArrows,
+                                        contentDescription = "Drug Interaction Checker",
+                                        tint = if (isInteractActive) Color(0xFFEF4444) else Color(0xFFFCA5A5),
+                                        modifier = Modifier.size(18.dp)
+                                    )
                                 }
-                            },
-                            shape = CircleShape,
-                            color = newsBgColor,
-                            border = BorderStroke(1.2.dp, if (isNewsActive) Color(0xFF38BDF8) else Color(0xFF38BDF8).copy(alpha = 0.5f)),
-                            modifier = Modifier
-                                .size(36.dp)
-                                .scale(newsScale)
-                                .testTag("top_medical_news_button")
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.Feed,
-                                    contentDescription = "Nepal Medical News",
-                                    tint = if (isNewsActive) Color(0xFF38BDF8) else Color(0xFF7DD3FC),
-                                    modifier = Modifier.size(18.dp)
-                                )
+                            }
+
+                            // Medical News & Grounding Live Updates Button
+                            val isNewsActive = state.currentScreen == NavigationScreen.MEDICAL_NEWS
+                            val newsScale by animateFloatAsState(
+                                targetValue = if (isNewsActive) 1.08f else 1f,
+                                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                                label = "newsScale"
+                            )
+                            val newsBgColor by animateColorAsState(
+                                targetValue = if (isNewsActive) Color(0xFF0369A1).copy(alpha = 0.35f) else NavyPill,
+                                label = "newsBg"
+                            )
+                            Surface(
+                                onClick = {
+                                    if (isNewsActive) {
+                                        viewModel.navigateTo(NavigationScreen.SEARCH)
+                                    } else {
+                                        viewModel.navigateTo(NavigationScreen.MEDICAL_NEWS)
+                                    }
+                                },
+                                shape = CircleShape,
+                                color = newsBgColor,
+                                border = BorderStroke(1.2.dp, if (isNewsActive) Color(0xFF38BDF8) else Color(0xFF38BDF8).copy(alpha = 0.5f)),
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .scale(newsScale)
+                                    .testTag("top_medical_news_button")
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.Feed,
+                                        contentDescription = "Nepal Medical News",
+                                        tint = if (isNewsActive) Color(0xFF38BDF8) else Color(0xFF7DD3FC),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                         }
                     }
                 }
             },
             bottomBar = {
-                val navBarBg by animateColorAsState(
-                    targetValue = when (state.themeMode) {
-                        AppThemeMode.PITCH_BLACK -> Color.Black
-                        AppThemeMode.DARK -> Slate900
-                        AppThemeMode.LIGHT -> Color.White
-                    },
-                    label = "navBarBg"
-                )
-                Surface(
-                    color = navBarBg,
-                    tonalElevation = 8.dp,
-                    shadowElevation = 8.dp,
-                    border = BorderStroke(
-                        0.8.dp,
-                        if (state.themeMode == AppThemeMode.PITCH_BLACK) PitchBlackBorder
-                        else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+                val isImeVisible = WindowInsets.isImeVisible
+                if (state.currentScreen != NavigationScreen.CODE_BLUE && !isImeVisible) {
+                    val navBarBg by animateColorAsState(
+                        targetValue = when (state.themeMode) {
+                            AppThemeMode.PITCH_BLACK -> Color.Black
+                            AppThemeMode.DARK -> Slate900
+                            AppThemeMode.LIGHT -> Color.White
+                        },
+                        label = "navBarBg"
                     )
-                ) {
-                    NavigationBar(
-                        containerColor = Color.Transparent,
-                        tonalElevation = 0.dp,
-                        windowInsets = WindowInsets.navigationBars,
-                        modifier = Modifier.testTag("bottom_navigation_bar")
+                    Surface(
+                        color = navBarBg,
+                        tonalElevation = 8.dp,
+                        shadowElevation = 8.dp,
+                        border = BorderStroke(
+                            0.8.dp,
+                            if (state.themeMode == AppThemeMode.PITCH_BLACK) PitchBlackBorder
+                            else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+                        )
                     ) {
-                        navItems.forEach { item ->
-                            val isSelected = state.currentScreen == item.screen
-                            val iconScale by animateFloatAsState(
-                                targetValue = if (isSelected) 1.18f else 1f,
-                                animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                                    stiffness = Spring.StiffnessMediumLow
-                                ),
-                                label = "navIconScale"
-                            )
-                            val iconColor by animateColorAsState(
-                                targetValue = if (isSelected) item.activeColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
-                                animationSpec = tween(durationMillis = 200),
-                                label = "navIconColor"
-                            )
+                        NavigationBar(
+                            containerColor = Color.Transparent,
+                            tonalElevation = 0.dp,
+                            windowInsets = WindowInsets.navigationBars,
+                            modifier = Modifier.testTag("bottom_navigation_bar")
+                        ) {
+                            navItems.forEach { item ->
+                                val isSelected = state.currentScreen == item.screen
+                                val iconScale by animateFloatAsState(
+                                    targetValue = if (isSelected) 1.18f else 1f,
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessMediumLow
+                                    ),
+                                    label = "navIconScale"
+                                )
+                                val iconColor by animateColorAsState(
+                                    targetValue = if (isSelected) item.activeColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+                                    animationSpec = tween(durationMillis = 200),
+                                    label = "navIconColor"
+                                )
 
-                            NavigationBarItem(
-                                selected = isSelected,
-                                onClick = { viewModel.navigateTo(item.screen) },
-                                icon = {
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier.scale(iconScale)
-                                    ) {
-                                        Icon(
-                                            imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                                            contentDescription = item.label,
-                                            tint = iconColor,
-                                            modifier = Modifier.size(23.dp)
+                                NavigationBarItem(
+                                    selected = isSelected,
+                                    onClick = { viewModel.navigateTo(item.screen) },
+                                    icon = {
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier.scale(iconScale)
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                                                contentDescription = item.label,
+                                                tint = iconColor,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                        }
+                                    },
+                                    label = {
+                                        Text(
+                                            text = item.label,
+                                            fontSize = 10.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isSelected) item.activeColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
-                                    }
-                                },
-                                label = {
-                                    Text(
-                                        text = item.label,
-                                        fontSize = 11.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) item.activeColor else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = item.activeColor,
-                                    selectedTextColor = item.activeColor,
-                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    indicatorColor = item.activeColor.copy(alpha = 0.16f)
-                                ),
-                                modifier = Modifier.testTag("nav_${item.screen.name.lowercase()}")
-                            )
+                                    },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = item.activeColor,
+                                        selectedTextColor = item.activeColor,
+                                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        indicatorColor = item.activeColor.copy(alpha = 0.16f)
+                                    ),
+                                    modifier = Modifier.testTag("nav_${item.screen.name.lowercase()}")
+                                )
+                            }
                         }
                     }
                 }
@@ -518,6 +569,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .imePadding()
                 .background(MaterialTheme.colorScheme.background)
         ) {
             AnimatedContent(
@@ -563,6 +615,18 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                         },
                         onOpenMedicalNews = {
                             viewModel.navigateTo(NavigationScreen.MEDICAL_NEWS)
+                        },
+                        onOpenCodeBlue = {
+                            viewModel.navigateTo(NavigationScreen.CODE_BLUE)
+                        },
+                        onOpenAnesthesiology = {
+                            viewModel.navigateTo(NavigationScreen.ANESTHESIOLOGY)
+                        },
+                        onOpenAntimicrobial = {
+                            viewModel.navigateTo(NavigationScreen.ANTIMICROBIAL_STEWARDSHIP)
+                        },
+                        onOpenAbgSolver = {
+                            viewModel.navigateTo(NavigationScreen.ABG_ELECTROLYTE_SOLVER)
                         }
                     )
 
@@ -632,6 +696,33 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                         viewModel = viewModel,
                         onBackToHome = { viewModel.navigateTo(NavigationScreen.SEARCH) }
                     )
+
+                    NavigationScreen.CODE_BLUE -> EmergencyCodeBlueScreen(
+                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                    )
+
+                    NavigationScreen.ANTIMICROBIAL_STEWARDSHIP -> AntimicrobialStewardshipScreen(
+                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) },
+                        onConsultAi = { viewModel.startAiChatWithPrompt(it) }
+                    )
+
+                    NavigationScreen.IV_COMPATIBILITY -> IvCompatibilityScreen(
+                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                    )
+
+                    NavigationScreen.RENAL_ADJUSTER -> RenalDoseCalculatorScreen(
+                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                    )
+
+                    NavigationScreen.ABG_ELECTROLYTE_SOLVER -> AbgElectrolyteSolverScreen(
+                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                    )
+
+                    NavigationScreen.ANESTHESIOLOGY -> AnesthesiologyScreen(
+                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) },
+                        onDrugClick = { viewModel.openDrug(it) },
+                        onProtocolClick = { viewModel.openProtocolFromSearch(it) }
+                    )
                 }
             }
 
@@ -645,6 +736,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                     onBookmarkToggle = { viewModel.toggleBookmark(drug.id) },
                     onWeightChanged = { viewModel.updatePatientWeight(it) },
                     onCheckInteractions = { selected -> viewModel.openInteractionWithDrug(selected.id) },
+                    onConsultAi = { drugItem, q -> viewModel.consultAiForDrug(drugItem.genericName, q) },
                     onDismiss = { viewModel.closeDrugModal() }
                 )
             }
@@ -714,6 +806,34 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
         onPharmacologyClick = {
             viewModel.closeSidebar()
             viewModel.navigateTo(NavigationScreen.PHARMACOLOGY_GUIDE)
+        },
+        onCodeBlueClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.CODE_BLUE)
+        },
+        onAntimicrobialClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.ANTIMICROBIAL_STEWARDSHIP)
+        },
+        onIvCompatibilityClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.IV_COMPATIBILITY)
+        },
+        onRenalAdjusterClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.RENAL_ADJUSTER)
+        },
+        onAbgSolverClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.ABG_ELECTROLYTE_SOLVER)
+        },
+        onHepatologyClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.DISEASE)
+        },
+        onAnesthesiologyClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.ANESTHESIOLOGY)
         },
         onInteractionsClick = {
             viewModel.closeSidebar()

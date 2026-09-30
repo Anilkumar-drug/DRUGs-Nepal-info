@@ -1,5 +1,7 @@
 package com.example.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -56,6 +58,7 @@ fun DrugDetailModal(
     onBookmarkToggle: () -> Unit,
     onWeightChanged: (Double) -> Unit,
     onCheckInteractions: ((Drug) -> Unit)? = null,
+    onConsultAi: ((Drug, String) -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -103,7 +106,7 @@ fun DrugDetailModal(
 
     // 13 standard clinical sections in exact order from DIMS screenshot
     val sections = remember(drug) {
-        listOf(
+        val list = mutableListOf(
             "Indications" to drug.indications,
             "Adult dose" to drug.resolvedAdultDose,
             "Child dose" to drug.resolvedChildDose,
@@ -121,11 +124,24 @@ fun DrugDetailModal(
             "Side effects" to drug.sideEffects,
             "Precautions & warnings" to drug.resolvedPrecautions,
             "Pregnancy & Lactation" to drug.resolvedPregnancyLactation,
-            "Therapeutic Class" to "${drug.drugClass}\n\nOrgan System: ${drug.system}",
+            "Therapeutic Class" to buildString {
+                append(drug.drugClass)
+                append("\n\nOrgan System: ${drug.system}")
+                if (drug.era.isNotBlank()) {
+                    append("\nClinical Era / Generation: ${drug.era}")
+                }
+                if (drug.therapeuticClassTag.isNotBlank()) {
+                    append("\nSpecialty Category: ${drug.therapeuticClassTag}")
+                }
+            },
             "Mode of Action" to drug.resolvedModeOfAction,
             "Interaction" to drug.resolvedInteractions,
             "Pack size & Price" to drug.resolvedPackSizePrice
         )
+        if (drug.researchNotes.isNotBlank()) {
+            list.add("Clinical Trials & Research Pipeline" to drug.researchNotes)
+        }
+        list
     }
 
     Dialog(
@@ -264,6 +280,56 @@ fun DrugDetailModal(
                                 fontWeight = FontWeight.Normal
                             )
 
+                            // Therapeutic Class & Era Badges
+                            if (drug.era.isNotBlank() || drug.therapeuticClassTag.isNotBlank()) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    if (drug.therapeuticClassTag.isNotBlank()) {
+                                        Surface(
+                                            shape = RoundedCornerShape(10.dp),
+                                            color = Color.White.copy(alpha = 0.25f),
+                                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                                        ) {
+                                            Text(
+                                                text = drug.therapeuticClassTag,
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                    if (drug.era.isNotBlank()) {
+                                        val eraBg = when {
+                                            drug.isUnderResearch -> Color(0xFFD97706)
+                                            drug.isNewerMedication -> Color(0xFF0284C7)
+                                            else -> Color(0xFF475569)
+                                        }
+                                        val eraIcon = when {
+                                            drug.isUnderResearch -> "🧪 "
+                                            drug.isNewerMedication -> "⚡ "
+                                            else -> "🏛️ "
+                                        }
+                                        Surface(
+                                            shape = RoundedCornerShape(10.dp),
+                                            color = eraBg,
+                                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.6f))
+                                        ) {
+                                            Text(
+                                                text = "$eraIcon${drug.era}",
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
                             // Manufacturer / Company
                             Text(
                                 text = selectedBrand.company.ifBlank { "Pharmaceutical Ltd." },
@@ -378,11 +444,22 @@ fun DrugDetailModal(
                                         }
                                     }
 
-                                    // WEB Button
+                                    // WEB Button (Direct Google Search in Browser)
                                     OutlinedButton(
                                         onClick = {
-                                            clipboardManager.setText(AnnotatedString("${drug.genericName} dosing monograph clinical guidelines"))
-                                            Toast.makeText(context, "Search term copied for ${drug.genericName}", Toast.LENGTH_SHORT).show()
+                                            val query = "${drug.genericName} dosing monograph clinical guidelines"
+                                            try {
+                                                val intent = Intent(
+                                                    Intent.ACTION_VIEW,
+                                                    Uri.parse("https://www.google.com/search?q=${Uri.encode(query)}")
+                                                ).apply {
+                                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                }
+                                                context.startActivity(intent)
+                                            } catch (e: Exception) {
+                                                clipboardManager.setText(AnnotatedString(query))
+                                                Toast.makeText(context, "Search term copied: $query", Toast.LENGTH_SHORT).show()
+                                            }
                                         },
                                         shape = RoundedCornerShape(8.dp),
                                         border = BorderStroke(1.dp, Color.White.copy(alpha = 0.8f)),
@@ -396,12 +473,144 @@ fun DrugDetailModal(
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Icon(
                                             imageVector = Icons.Default.Language,
-                                            contentDescription = "Web",
+                                            contentDescription = "Search Google in Browser",
                                             modifier = Modifier.size(16.dp),
                                             tint = Color.White
                                         )
                                     }
+
+                                    // Direct AI Copilot Button
+                                    if (onConsultAi != null) {
+                                        Button(
+                                            onClick = {
+                                                onConsultAi(drug, "Provide clinical dosing pearls, renal adjustment, high-alert precautions, and monitoring guidance for ${drug.genericName}.")
+                                            },
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0xFF6366F1),
+                                                contentColor = Color.White
+                                            ),
+                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                            modifier = Modifier.height(36.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.AutoAwesome,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(15.dp),
+                                                tint = Color.White
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text("Copilot", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
                                 }
+                            }
+                        }
+                    }
+
+                    // High-Alert Medication Warning Banner
+                    if (drug.highAlertNotice != null) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 4.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFF7F1D1D).copy(alpha = 0.15f),
+                            border = BorderStroke(1.2.dp, Color(0xFFEF4444).copy(alpha = 0.6f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(20.dp))
+                                Column {
+                                    Text("HIGH-ALERT MEDICATION SAFETY WARNING", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color(0xFFDC2626))
+                                    Text(drug.highAlertNotice!!, fontSize = 11.5.sp, color = MaterialTheme.colorScheme.onSurface, lineHeight = 16.sp, modifier = Modifier.padding(top = 2.dp))
+                                }
+                            }
+                        }
+                    }
+
+                    // LASA Alert Banner
+                    if (drug.lasaNotice != null) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 2.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color(0xFFD97706).copy(alpha = 0.12f),
+                            border = BorderStroke(1.dp, Color(0xFFF59E0B).copy(alpha = 0.5f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(Icons.Default.Info, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(16.dp))
+                                Text(drug.lasaNotice!!, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
+                            }
+                        }
+                    }
+
+                    // WHO AWaRe Classification Banner
+                    if (drug.whoAwareCategory != null) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 2.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color(0xFF047857).copy(alpha = 0.12f),
+                            border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.5f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(Icons.Default.Security, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(16.dp))
+                                Text(drug.whoAwareCategory!!, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF065F46))
+                            }
+                        }
+                    }
+
+                    // Dedicated Clinical Research & Innovation Card
+                    if (drug.researchNotes.isNotBlank()) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            color = Color(0xFFFEF3C7),
+                            border = BorderStroke(1.5.dp, Color(0xFFF59E0B))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Science,
+                                        contentDescription = null,
+                                        tint = Color(0xFFB45309),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Text(
+                                        text = "Research & Clinical Pipeline Status",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = Color(0xFFB45309)
+                                    )
+                                }
+                                Text(
+                                    text = drug.researchNotes,
+                                    fontSize = 12.5.sp,
+                                    lineHeight = 18.sp,
+                                    color = Color(0xFF78350F)
+                                )
                             }
                         }
                     }

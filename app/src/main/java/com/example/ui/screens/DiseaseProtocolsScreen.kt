@@ -160,9 +160,11 @@ private fun ProtocolListScreen(
     val categories = remember {
         listOf(
             "All Indications",
+            "Anesthesiology & Perioperative",
             "Respiratory",
             "Infectious Diseases",
             "Cardiovascular",
+            "Hepatology & Pancreas",
             "Gastrointestinal",
             "Endocrine & Metabolic",
             "Neurology",
@@ -178,9 +180,11 @@ private fun ProtocolListScreen(
         ClinicalRepository.diseaseProtocols.filter { protocol ->
             val matchesCategory = when (selectedCategory) {
                 "All Indications" -> true
+                "Anesthesiology & Perioperative" -> protocol.category.contains("Anesthesiology", ignoreCase = true) || protocol.category.contains("Perioperative", ignoreCase = true) || protocol.category.contains("Anesthesia", ignoreCase = true)
                 "Respiratory" -> protocol.category.contains("Respiratory", ignoreCase = true) || protocol.category.contains("Pulmonary", ignoreCase = true)
                 "Infectious Diseases" -> protocol.category.contains("Infectious", ignoreCase = true) || protocol.category.contains("Tuberculosis", ignoreCase = true)
                 "Cardiovascular" -> protocol.category.contains("Cardio", ignoreCase = true) || protocol.category.contains("CVS", ignoreCase = true)
+                "Hepatology & Pancreas" -> protocol.category.contains("Hepatology", ignoreCase = true) || protocol.category.contains("Pancreas", ignoreCase = true) || protocol.category.contains("Liver", ignoreCase = true) || protocol.category.contains("Biliary", ignoreCase = true)
                 "Gastrointestinal" -> protocol.category.contains("Gastro", ignoreCase = true) || protocol.category.contains("GI", ignoreCase = true)
                 "Endocrine & Metabolic" -> protocol.category.contains("Endocrine", ignoreCase = true) || protocol.category.contains("Diabetes", ignoreCase = true)
                 "Neurology" -> protocol.category.contains("Neurology", ignoreCase = true) || protocol.category.contains("Nervous", ignoreCase = true)
@@ -414,7 +418,7 @@ private fun ProtocolListScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
-                items(protocols, key = { it.id }) { item ->
+                items(protocols.distinctBy { it.id }, key = { it.id }) { item ->
                     val isBookmarked = bookmarkedProtocolIds.contains(item.id)
                     ProtocolSummaryCard(
                         protocol = item,

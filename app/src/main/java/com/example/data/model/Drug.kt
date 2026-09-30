@@ -45,8 +45,82 @@ data class Drug(
     val pregTrimester3: String = "",
     val counselingNepali: String = "",
     val counselingEnglish: String = "",
-    val suspensionOptions: List<String> = emptyList()
+    val suspensionOptions: List<String> = emptyList(),
+    val era: String = "", // "Older / Classical", "Newer / Modern", "Under Research / Pipeline"
+    val therapeuticClassTag: String = "", // e.g. "Anti-HTN", "OHA", "Thyroid disorders", "Antiepileptic", "Anti-coagulant", "Antiplatelets", "Anti-helminthes", "Anti-parasitic", "Statins", "Anti-cancer", "Immuno-suppressor", "Rheumatoid Arthritis (RA)"
+    val researchNotes: String = "" // Phase status, trial names, breakthrough innovations
 ) {
+    val isUnderResearch: Boolean
+        get() = era.contains("Research", ignoreCase = true) || researchNotes.isNotBlank()
+
+    val isNewerMedication: Boolean
+        get() = era.contains("Newer", ignoreCase = true)
+
+    val isOlderMedication: Boolean
+        get() = era.contains("Older", ignoreCase = true)
+
+    val isHighAlert: Boolean
+        get() = genericName.contains("Insulin", ignoreCase = true) ||
+                genericName.contains("Potassium", ignoreCase = true) ||
+                genericName.contains("Heparin", ignoreCase = true) ||
+                genericName.contains("Warfarin", ignoreCase = true) ||
+                genericName.contains("Methotrexate", ignoreCase = true) ||
+                genericName.contains("Digoxin", ignoreCase = true) ||
+                genericName.contains("Cisplatin", ignoreCase = true) ||
+                genericName.contains("5-Fluorouracil", ignoreCase = true) ||
+                genericName.contains("Doxorubicin", ignoreCase = true)
+
+    val highAlertNotice: String?
+        get() = when {
+            genericName.contains("Methotrexate", ignoreCase = true) ->
+                "⚠️ FATAL DOSE WARNING: Methotrexate is dosed ONCE WEEKLY for Rheumatoid Arthritis & Psoriasis (NOT daily). Daily administration causes fatal myelosuppression and mucositis."
+            genericName.contains("Insulin", ignoreCase = true) ->
+                "⚠️ HIGH-ALERT MEDICATION: Double-check units vs mL. Confirm basal vs bolus. High risk of fatal hypoglycemic coma."
+            genericName.contains("Potassium", ignoreCase = true) ->
+                "⚠️ DEADLY INJECTION WARNING: Potassium Chloride must NEVER be given IV push. Immediate fatal cardiac arrest."
+            genericName.contains("Warfarin", ignoreCase = true) ->
+                "⚠️ NARROW THERAPEUTIC INDEX: Target INR 2.0-3.0. High risk of catastrophic hemorrhage or stroke. Frequent monitoring required."
+            genericName.contains("Digoxin", ignoreCase = true) ->
+                "⚠️ DIGITALIS TOXICITY RISK: Narrow therapeutic range (0.5-0.9 ng/mL). Toxicity exacerbated by hypokalemia and renal impairment."
+            genericName.contains("Heparin", ignoreCase = true) || genericName.contains("Enoxaparin", ignoreCase = true) ->
+                "⚠️ ANTICOAGULANT ALERT: High risk of hemorrhage; monitor CBC/platelets for Heparin-Induced Thrombocytopenia (HIT)."
+            isHighAlert -> "⚠️ HIGH-ALERT MEDICATION: Heightened risk of causing significant patient harm when used in error."
+            else -> null
+        }
+
+    val lasaNotice: String?
+        get() = when {
+            genericName.contains("Metformin", ignoreCase = true) -> "LASA Alert: Commonly confused with Metronidazole."
+            genericName.contains("Metronidazole", ignoreCase = true) -> "LASA Alert: Commonly confused with Metformin."
+            genericName.contains("Amlodipine", ignoreCase = true) -> "LASA Alert: Commonly confused with Amiloride or Amitriptyline."
+            genericName.contains("Prednisolone", ignoreCase = true) -> "LASA Alert: Commonly confused with Prednisone."
+            genericName.contains("Ephedrine", ignoreCase = true) -> "LASA Alert: Do NOT confuse with Epinephrine."
+            else -> null
+        }
+
+    val whoAwareCategory: String?
+        get() = when {
+            genericName.contains("Amoxicillin", ignoreCase = true) ||
+            genericName.contains("Doxycycline", ignoreCase = true) ||
+            genericName.contains("Cloxacillin", ignoreCase = true) ||
+            genericName.contains("Gentamicin", ignoreCase = true) ||
+            genericName.contains("Metronidazole", ignoreCase = true) ||
+            genericName.contains("Cotrimoxazole", ignoreCase = true) -> "WHO AWaRe: 🟢 ACCESS (First-line / Low Resistance Risk)"
+
+            genericName.contains("Ceftriaxone", ignoreCase = true) ||
+            genericName.contains("Ciprofloxacin", ignoreCase = true) ||
+            genericName.contains("Levofloxacin", ignoreCase = true) ||
+            genericName.contains("Azithromycin", ignoreCase = true) ||
+            genericName.contains("Piperacillin", ignoreCase = true) ||
+            genericName.contains("Meropenem", ignoreCase = true) ||
+            genericName.contains("Cefixime", ignoreCase = true) -> "WHO AWaRe: 🟡 WATCH (High Resistance Potential - Restrict Use)"
+
+            genericName.contains("Colistin", ignoreCase = true) ||
+            genericName.contains("Linezolid", ignoreCase = true) ||
+            genericName.contains("Tigecycline", ignoreCase = true) -> "WHO AWaRe: 🔴 RESERVE (Last-Resort Antibiotic)"
+
+            else -> null
+        }
     val resolvedNeml: String
         get() = if (nemlCategory.isNotBlank()) nemlCategory
         else if (isFreeHealthPostDrug) "NEML: Free Essential Drug (Health Post & PHC Level)"

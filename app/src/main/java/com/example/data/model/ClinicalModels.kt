@@ -6,7 +6,9 @@ data class CalculatorSummary(
     val category: String,
     val description: String,
     val formulaSummary: String,
-    val aliases: List<String> = emptyList()
+    val aliases: List<String> = emptyList(),
+    val isPopular: Boolean = false,
+    val isNew: Boolean = false
 )
 
 enum class GlobalSearchTab(val label: String) {
@@ -45,7 +47,8 @@ data class ChatMessage(
     val id: String,
     val sender: MessageSender,
     val text: String,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val searchQuerySuggestion: String? = null
 )
 
 enum class MessageSender {

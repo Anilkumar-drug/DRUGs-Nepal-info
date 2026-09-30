@@ -10,6 +10,7 @@ object ClinicalRepository {
 
     val organSystems = listOf(
         "All Systems",
+        "Anesthesiology & Perioperative",
         "Anti-Infectives & Antimicrobials",
         "Cardiovascular System (CVS)",
         "Endocrine & Metabolic System",
@@ -22,72 +23,7 @@ object ClinicalRepository {
         "Emergency & Critical Care"
     )
 
-    val allCalculators: List<CalculatorSummary> = listOf(
-        CalculatorSummary(
-            id = "egfr",
-            title = "eGFR (Cockcroft-Gault)",
-            category = "Renal & Dosing",
-            description = "Estimates Creatinine Clearance (CrCl) for kidney function evaluation and antibiotic / renal dose adjustment.",
-            formulaSummary = "CrCl = [(140 - Age) × Wt] / (72 × SCr) [× 0.85 if female]",
-            aliases = listOf("eGFR", "GFR", "Cockcroft-Gault", "Creatinine Clearance", "CrCl", "Kidney Function", "Renal Dose", "Amox-Clav Dosing")
-        ),
-        CalculatorSummary(
-            id = "bsa",
-            title = "BSA (Mosteller Formula)",
-            category = "Renal & Dosing",
-            description = "Calculates Body Surface Area in m² for narrow-therapeutic-index dosing, chemotherapy & burn estimation.",
-            formulaSummary = "BSA (m²) = √[(Height in cm × Weight in kg) / 3600]",
-            aliases = listOf("BSA", "Body Surface Area", "Mosteller", "Chemotherapy Dose", "Burn Surface", "DuBois")
-        ),
-        CalculatorSummary(
-            id = "child_pugh",
-            title = "Child-Pugh Score",
-            category = "Hepatology",
-            description = "Assesses prognosis and 1- to 2-year mortality in cirrhosis / chronic liver disease. Guides hepatic drug dosing.",
-            formulaSummary = "Class A (5-6) • Class B (7-9) • Class C (10-15)",
-            aliases = listOf("Child-Pugh", "Cirrhosis Score", "Liver Function", "Child Turcotte Pugh", "Hepatic Impairment", "Ascites", "Encephalopathy")
-        ),
-        CalculatorSummary(
-            id = "cha2ds2",
-            title = "CHA₂DS₂-VASc AFib Score",
-            category = "Cardiology",
-            description = "Calculates 1-year thromboembolic stroke risk in non-valvular Atrial Fibrillation. Guides oral anticoagulation.",
-            formulaSummary = "Score 0 (Low) • 1 (Intermediate) • ≥2 (Anticoagulation Indicated)",
-            aliases = listOf("CHA2DS2-VASc", "CHADS", "Atrial Fibrillation", "AFib", "Stroke Risk", "Anticoagulation", "DOAC", "Warfarin")
-        ),
-        CalculatorSummary(
-            id = "curb65",
-            title = "CURB-65 Pneumonia Score",
-            category = "Critical Care",
-            description = "Predicts 30-day mortality in Community-Acquired Pneumonia. Directs Outpatient vs Inpatient Ward vs ICU admission.",
-            formulaSummary = "Score 0-1 Outpatient • 2 Inpatient Ward • 3-5 ICU Care",
-            aliases = listOf("CURB-65", "CURB65", "Pneumonia Severity", "CAP Risk Score", "Pneumonia Admission", "BUN Score")
-        ),
-        CalculatorSummary(
-            id = "gcs",
-            title = "Glasgow Coma Scale (GCS)",
-            category = "Critical Care",
-            description = "Gold-standard objective neurological scoring for acute level of consciousness in trauma and critical care.",
-            formulaSummary = "Eye Response (1-4) + Verbal (1-5) + Motor (1-6)",
-            aliases = listOf("GCS", "Glasgow Coma Scale", "Coma Score", "Consciousness Score", "Neurological Scale", "Trauma Score", "Intubation GCS")
-        ),
-        CalculatorSummary(
-            id = "rumack",
-            title = "Paracetamol Nomogram",
-            category = "Toxicology",
-            description = "Rumack-Matthew Nomogram evaluating single acute acetaminophen overdose hepatotoxicity vs time.",
-            formulaSummary = "Treatment Line: 150 mcg/mL at 4h post-ingestion for NAC therapy",
-            aliases = listOf("Rumack-Matthew", "Paracetamol Nomogram", "Acetaminophen Overdose", "NAC Dosing", "Tylenol Toxicity", "N-Acetylcysteine")
-        ),
-        CalculatorSummary(
-            id = "pediatric",
-            title = "Pediatric Liquid Dose",
-            category = "Pediatrics",
-            description = "Calculates precise liquid syrup/suspension volume (mL) from weight-based mg/kg to prevent 10-fold errors.",
-            formulaSummary = "Dose Volume (mL) = [Weight (kg) × Dose (mg/kg)] / Concentration",
-            aliases = listOf("Pediatric Dose", "Liquid Dose Calculator", "Syrup Volume", "mg/kg Calculator", "Child Dosing", "Suspension mL")
-        )
-    )
+    val allCalculators: List<CalculatorSummary> = com.example.data.calculator.ClinicalCalculatorRegistry.allCalculators
 
     private val baseDrugs: List<Drug> = listOf(
         Drug(
@@ -1173,9 +1109,9 @@ object ClinicalRepository {
         )
     )
 
-    val drugs: List<Drug> = baseDrugs + AdditionalDrugsData.additionalDrugs + ExpandedDrugsData.expandedDrugs
+    val drugs: List<Drug> = (baseDrugs + AdditionalDrugsData.additionalDrugs + ExpandedDrugsData.expandedDrugs + ComprehensiveSpecialtyDrugsData.specialtyDrugs + HepatologyDrugsData.hepatologyDrugs + AnesthesiologyDrugsData.anesthesiaDrugs + OutpatientAllergyAndEssentialDrugsData.outpatientDrugs + ExpandedSpecialtyFormularyData.expandedSpecialtyDrugs).distinctBy { it.id }
 
-    val diseaseProtocols: List<DiseaseProtocol> = DiseaseProtocolsData.allProtocols
+    val diseaseProtocols: List<DiseaseProtocol> = (DiseaseProtocolsData.allProtocols + HepatologyPancreasProtocolsData.protocols + AnesthesiologyProtocolsData.protocols + NepalNationalGuidelinesData.nationalProtocols).distinctBy { it.id }
 
     val antidotes: List<Antidote> = listOf(
         Antidote(

@@ -313,7 +313,7 @@ fun SavedScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
-                items(filteredItems, key = { it.id }) { item ->
+                items(filteredItems.distinctBy { it.id }, key = { it.id }) { item ->
                     SavedItemCard(
                         item = item,
                         onClick = { viewModel.openSavedItem(item) },

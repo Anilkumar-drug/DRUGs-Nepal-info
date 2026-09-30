@@ -42,7 +42,13 @@ enum class NavigationScreen(val title: String) {
     GEMINI("Gemini AI Assistant"),
     SETTINGS("App Settings"),
     COMPANIES("Pharmaceutical Companies"),
-    MEDICAL_NEWS("Nepal Medical News & Alerts")
+    MEDICAL_NEWS("Nepal Medical News & Alerts"),
+    CODE_BLUE("Emergency Resuscitation & Code Blue"),
+    ANTIMICROBIAL_STEWARDSHIP("Antimicrobial & Stewardship Guide"),
+    IV_COMPATIBILITY("IV Dilution & Y-Site Compatibility"),
+    RENAL_ADJUSTER("Renal Dose Auto-Calculator"),
+    ABG_ELECTROLYTE_SOLVER("ABG & Electrolyte Disturbance Solver"),
+    ANESTHESIOLOGY("Anesthesiology & Perioperative")
 }
 
 enum class SearchMode(val title: String) {
@@ -56,6 +62,10 @@ enum class DrugFilterType(val label: String) {
     ALL("All"),
     NEPAL("Nepal Brands"),
     INDIA("India Brands"),
+    DDA_SCHEDULE_KA("🇳🇵 DDA Sch 'Ka' (क)"),
+    FREE_HEALTH_POST("🏥 Free Govt Drugs (नि:शुल्क)"),
+    EMPTY_STOMACH("🟡 Empty Stomach (खाली पेट)"),
+    WITH_MEALS("🟢 With Meals (खानासँगै)"),
     BLACK_BOX("FDA Black Box"),
     BOOKMARKS("Bookmarks")
 }
@@ -110,6 +120,8 @@ data class ClinicalUiState(
     ),
     val isAiThinking: Boolean = false,
     val aiInputText: String = "",
+    val aiSelectedModel: String = "gemini-3.5-flash",
+    val isAiSearchGrounded: Boolean = true,
     // Nepal Medical News & Alerts with Search Grounding
     val medicalNewsList: List<MedicalNewsItem> = emptyList(),
     val isNewsLoading: Boolean = false,
@@ -365,6 +377,14 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun openCalculator(calcId: String) {
+        if (calcId == "abg_solver") {
+            navigateTo(NavigationScreen.ABG_ELECTROLYTE_SOLVER)
+            return
+        }
+        if (calcId == "renal_adjuster") {
+            navigateTo(NavigationScreen.RENAL_ADJUSTER)
+            return
+        }
         _uiState.update { it.copy(selectedCalculatorId = calcId, activeCalcTab = calcId) }
     }
 
@@ -408,6 +428,14 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
 
     fun openCalculatorFromSearch(calcId: String, calcTitle: String) {
         addRecentSearch(calcTitle)
+        if (calcId == "abg_solver") {
+            navigateTo(NavigationScreen.ABG_ELECTROLYTE_SOLVER)
+            return
+        }
+        if (calcId == "renal_adjuster") {
+            navigateTo(NavigationScreen.RENAL_ADJUSTER)
+            return
+        }
         openCalculator(calcId)
         navigateTo(NavigationScreen.CALCULATOR)
     }
@@ -564,17 +592,19 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun toggleBookmarkCalculator(calcKey: String) {
-        val (title, sub, cat) = when (calcKey) {
-            "egfr" -> Triple("eGFR (Cockcroft-Gault CrCl)", "Renal clearance & organ dose titration formula", "Nephrology / Dosing")
-            "bsa" -> Triple("Body Surface Area (BSA - Mosteller)", "Chemotherapy & fluid dosing standard", "Oncology / ICU")
-            "child_pugh" -> Triple("Child-Pugh Score for Cirrhosis", "Severity of chronic liver disease & hepatic dosing", "Hepatology")
-            "cha2ds2" -> Triple("CHA₂DS₂-VASc AFib Stroke Risk", "Atrial fibrillation thromboembolic risk score", "Cardiology")
-            "curb65" -> Triple("CURB-65 Pneumonia Severity", "Mortality risk & inpatient/ICU stratification", "Pulmonology")
-            "gcs" -> Triple("Glasgow Coma Scale (GCS)", "Acute neurological assessment & coma scale", "Neurology / Trauma")
-            "rumack" -> Triple("Paracetamol Rumack-Matthew Nomogram", "Acute acetaminophen toxicity 4h-24h risk", "Toxicology")
-            "pediatric" -> Triple("Pediatric Liquid Dose Calculator", "Weight-based suspension & drop dosing", "Pediatrics")
-            else -> Triple("Clinical Calculator ($calcKey)", "Evidence-based formula", "Clinical Tools")
+        val found = com.example.data.calculator.ClinicalCalculatorRegistry.allCalculators.find { it.id == calcKey }
+        val title = found?.title ?: "Clinical Calculator ($calcKey)"
+        val sub = found?.description ?: "Evidence-based formula"
+        val cat = found?.category ?: "Clinical Tools"
+
+        val current = _uiState.value.bookmarkedCalculatorIds.toMutableSet()
+        if (current.contains(calcKey)) {
+            current.remove(calcKey)
+        } else {
+            current.add(calcKey)
         }
+        _uiState.update { it.copy(bookmarkedCalculatorIds = current) }
+
         val repo = savedItemRepository
         if (repo != null) {
             viewModelScope.launch(Dispatchers.IO) {
@@ -587,14 +617,6 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
                     category = cat
                 )
             }
-        } else {
-            val current = _uiState.value.bookmarkedCalculatorIds.toMutableSet()
-            if (current.contains(calcKey)) {
-                current.remove(calcKey)
-            } else {
-                current.add(calcKey)
-            }
-            _uiState.update { it.copy(bookmarkedCalculatorIds = current) }
         }
     }
 
@@ -829,12 +851,23 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
         _uiState.value = _uiState.value.copy(aiInputText = text)
     }
 
+    fun setAiModel(model: String) {
+        _uiState.update { it.copy(aiSelectedModel = model) }
+    }
+
+    fun toggleAiSearchGrounded() {
+        _uiState.update { it.copy(isAiSearchGrounded = !it.isAiSearchGrounded) }
+    }
+
     fun sendAiMessage(promptText: String? = null) {
         val text = (promptText ?: _uiState.value.aiInputText).trim()
         if (text.isBlank() || _uiState.value.isAiThinking) return
 
         val userMsg = ChatMessage(id = UUID.randomUUID().toString(), sender = MessageSender.USER, text = text)
         val updatedMsgs = _uiState.value.chatMessages + userMsg
+
+        val model = _uiState.value.aiSelectedModel
+        val grounded = _uiState.value.isAiSearchGrounded
 
         _uiState.value = _uiState.value.copy(
             chatMessages = updatedMsgs,
@@ -843,8 +876,17 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
         )
 
         viewModelScope.launch {
-            val responseText = GeminiClinicalService.queryClinicalAi(text)
-            val aiMsg = ChatMessage(id = UUID.randomUUID().toString(), sender = MessageSender.AI, text = responseText)
+            val responseText = GeminiClinicalService.queryClinicalAi(
+                userQuery = text,
+                model = model,
+                enableSearchGrounding = grounded
+            )
+            val aiMsg = ChatMessage(
+                id = UUID.randomUUID().toString(),
+                sender = MessageSender.AI,
+                text = responseText,
+                searchQuerySuggestion = text
+            )
             _uiState.value = _uiState.value.copy(
                 chatMessages = _uiState.value.chatMessages + aiMsg,
                 isAiThinking = false
@@ -868,6 +910,16 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
 
     fun startAiChatWithPrompt(prompt: String) {
         _uiState.update { it.copy(currentScreen = NavigationScreen.GEMINI, isSidebarOpen = false) }
+        sendAiMessage(prompt)
+    }
+
+    fun consultAiForDrug(drugName: String, specificQuestion: String? = null) {
+        val prompt = if (!specificQuestion.isNullOrBlank()) {
+            "Regarding $drugName: $specificQuestion. Please provide exact dosing, clinical precautions, and monitoring guidance."
+        } else {
+            "Please provide a comprehensive clinical guidance summary for $drugName: standard adult/pediatric dosing, renal & hepatic adjustments, high-alert precautions, significant drug interactions, and patient counseling pearls."
+        }
+        _uiState.update { it.copy(currentScreen = NavigationScreen.GEMINI, isDrugModalOpen = false, isSidebarOpen = false) }
         sendAiMessage(prompt)
     }
 
@@ -1112,6 +1164,43 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
                 DrugFilterType.ALL -> true
                 DrugFilterType.NEPAL -> drug.brandsNepal.isNotEmpty()
                 DrugFilterType.INDIA -> drug.brandsIndia.isNotEmpty()
+                DrugFilterType.DDA_SCHEDULE_KA -> drug.resolvedDdaSchedule.contains("Ka", ignoreCase = true) ||
+                        drug.resolvedDdaSchedule.contains("Controlled", ignoreCase = true) ||
+                        drug.resolvedDdaSchedule.contains("Narcotic", ignoreCase = true) ||
+                        drug.system.contains("CNS", ignoreCase = true) && (
+                            drug.genericName.contains("Alprazolam", ignoreCase = true) ||
+                            drug.genericName.contains("Tramadol", ignoreCase = true) ||
+                            drug.genericName.contains("Clonazepam", ignoreCase = true) ||
+                            drug.genericName.contains("Diazepam", ignoreCase = true) ||
+                            drug.genericName.contains("Morphine", ignoreCase = true) ||
+                            drug.genericName.contains("Fentanyl", ignoreCase = true) ||
+                            drug.genericName.contains("Lorazepam", ignoreCase = true)
+                        )
+                DrugFilterType.FREE_HEALTH_POST -> drug.isFreeHealthPostDrug ||
+                        drug.resolvedNeml.contains("Free", ignoreCase = true)
+                DrugFilterType.EMPTY_STOMACH -> drug.timing.contains("Empty", ignoreCase = true) ||
+                        drug.timing.contains("Before", ignoreCase = true) ||
+                        drug.timing.contains("खाली", ignoreCase = true) ||
+                        drug.administration.contains("Empty", ignoreCase = true) ||
+                        drug.specialInstructions.contains("Empty", ignoreCase = true) ||
+                        drug.genericName.contains("Pantoprazole", ignoreCase = true) ||
+                        drug.genericName.contains("Omeprazole", ignoreCase = true) ||
+                        drug.genericName.contains("Levothyroxine", ignoreCase = true) ||
+                        drug.genericName.contains("Entecavir", ignoreCase = true) ||
+                        drug.genericName.contains("Penicillamine", ignoreCase = true) ||
+                        drug.genericName.contains("Alendronate", ignoreCase = true)
+                DrugFilterType.WITH_MEALS -> drug.timing.contains("Meal", ignoreCase = true) ||
+                        drug.timing.contains("Food", ignoreCase = true) ||
+                        drug.timing.contains("After", ignoreCase = true) ||
+                        drug.timing.contains("खानासँगै", ignoreCase = true) ||
+                        drug.administration.contains("Meal", ignoreCase = true) ||
+                        drug.genericName.contains("Metformin", ignoreCase = true) ||
+                        drug.genericName.contains("Diclofenac", ignoreCase = true) ||
+                        drug.genericName.contains("Ibuprofen", ignoreCase = true) ||
+                        drug.genericName.contains("Aceclofenac", ignoreCase = true) ||
+                        drug.genericName.contains("Tenofovir", ignoreCase = true) ||
+                        drug.genericName.contains("Pancreatin", ignoreCase = true) ||
+                        drug.genericName.contains("Ursodeoxycholic", ignoreCase = true)
                 DrugFilterType.BLACK_BOX -> drug.blackBoxWarning != null
                 DrugFilterType.BOOKMARKS -> bookmarkedDrugIds.contains(drug.id)
             }

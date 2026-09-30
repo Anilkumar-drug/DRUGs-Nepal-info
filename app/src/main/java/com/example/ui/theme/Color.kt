@@ -81,10 +81,17 @@ val NavyPill = Color(0xFF162E54)
 val SparkleViolet = Color(0xFFE879F9)
 val SparklePink = Color(0xFFF43F5E)
 
-// DIMS Teal Palette
-val DimsTealPrimary = Color(0xFF005B52)
-val DimsTealDark = Color(0xFF003832)
-val DimsTealLight = Color(0xFFE6F4F1)
-val DimsTealBorder = Color(0xFFB2DFDB)
-val DimsYellowMascot = Color(0xFFFFDE59)
-val DimsCyanMascot = Color(0xFF7DD3FC)
+// DRUGs Nepal Teal Palette
+val DrugsTealPrimary = Color(0xFF005B52)
+val DrugsTealDark = Color(0xFF003832)
+val DrugsTealLight = Color(0xFFE6F4F1)
+val DrugsTealBorder = Color(0xFFB2DFDB)
+val DrugsYellowMascot = Color(0xFFFFDE59)
+val DrugsCyanMascot = Color(0xFF7DD3FC)
+
+val DimsTealPrimary = DrugsTealPrimary
+val DimsTealDark = DrugsTealDark
+val DimsTealLight = DrugsTealLight
+val DimsTealBorder = DrugsTealBorder
+val DimsYellowMascot = DrugsYellowMascot
+val DimsCyanMascot = DrugsCyanMascot
