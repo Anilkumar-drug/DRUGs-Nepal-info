@@ -2,6 +2,7 @@ package com.example.data.calculator
 
 import kotlin.math.exp
 import kotlin.math.ln
+import kotlin.math.log10
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
@@ -1230,6 +1231,755 @@ object MedicalScoringEngine {
             else -> Triple("Low", "SOFA Score $score (< 2): Low Risk of Organ Failure.", "Close observation on acute medical ward.")
         }
         return ScoreOutput("SOFA Score (Sequential Organ Failure)", "Critical Care", "$score / 24", score.toDouble(), tier, interp, rec)
+    }
+
+    // =========================================================================
+    // 28. MILAN CRITERIA FOR HCC LIVER TRANSPLANTATION
+    // =========================================================================
+
+    fun evaluateMilanCriteria(
+        singleTumorSizeCm: Double,
+        tumorCount: Int,
+        maxTumorSizeCm: Double,
+        macrovascularInvasion: Boolean,
+        extrahepaticMetastasis: Boolean
+    ): ScoreOutput {
+        val count = max(1, tumorCount)
+        val withinSize = if (count == 1) {
+            singleTumorSizeCm in 0.1..5.0
+        } else {
+            count in 2..3 && maxTumorSizeCm in 0.1..3.0
+        }
+        val withinMilan = withinSize && !macrovascularInvasion && !extrahepaticMetastasis
+
+        val (tier, interp, rec) = if (withinMilan) {
+            Triple(
+                "Low",
+                "WITHIN MILAN CRITERIA: Patient meets standard oncologic criteria for Liver Transplantation.",
+                "Eligible for deceased donor liver transplant (DDLT) organ allocation / MELD exception points or living donor liver transplantation (LDLT). Expected 5-year post-transplant survival is >70% with low tumor recurrence risk (<10-15%). Maintain bridging locoregional therapy (TACE, RFA) if wait time > 6 months."
+            )
+        } else {
+            val reasons = mutableListOf<String>()
+            if (macrovascularInvasion) reasons.add("macrovascular invasion")
+            if (extrahepaticMetastasis) reasons.add("extrahepatic metastasis")
+            if (!withinSize) {
+                if (count > 3) reasons.add("multiple tumors ($count > 3)")
+                else if (count == 1 && singleTumorSizeCm > 5.0) reasons.add("single tumor > 5.0 cm (${singleTumorSizeCm}cm)")
+                else if (count in 2..3 && maxTumorSizeCm > 3.0) reasons.add("max tumor size > 3.0 cm (${maxTumorSizeCm}cm)")
+            }
+            Triple(
+                "Severe / High",
+                "EXCEEDS MILAN CRITERIA due to ${reasons.joinToString(", ")}.",
+                "Ineligible for standard liver transplant organ allocation. Consider locoregional downstaging (TACE, TARE/Y-90, stereotactic body radiation therapy) to bring tumor burden within Milan or UCSF criteria. If vascular invasion or metastasis is present, initiate first-line systemic immunotherapy (Atezolizumab + Bevacizumab or Durvalumab + Tremelimumab)."
+            )
+        }
+
+        return ScoreOutput(
+            scoreName = "Milan Criteria for HCC",
+            category = "Hepatology",
+            calculatedValue = if (withinMilan) "Within Milan Criteria" else "Exceeds Milan Criteria",
+            numericScore = if (withinMilan) 1.0 else 0.0,
+            riskTier = tier,
+            interpretation = interp,
+            clinicalRecommendation = rec
+        )
+    }
+
+    // =========================================================================
+    // 29. ROME III CRITERIA FOR IRRITABLE BOWEL SYNDROME (IBS)
+    // =========================================================================
+
+    fun evaluateRomeIII(
+        recurrentPain3DaysPerMonth: Boolean,
+        relatedToDefecation: Boolean,
+        changeInFrequency: Boolean,
+        changeInForm: Boolean,
+        symptomDurationMonths: Int
+    ): ScoreOutput {
+        var subCriteriaMet = 0
+        if (relatedToDefecation) subCriteriaMet++
+        if (changeInFrequency) subCriteriaMet++
+        if (changeInForm) subCriteriaMet++
+
+        val chronicityMet = symptomDurationMonths >= 6
+        val criteriaMet = recurrentPain3DaysPerMonth && chronicityMet && (subCriteriaMet >= 2)
+
+        val (tier, interp, rec) = if (criteriaMet) {
+            Triple(
+                "Moderate",
+                "ROME III CRITERIA POSITIVE: Diagnostic of Irritable Bowel Syndrome (IBS). ($subCriteriaMet / 3 defecation criteria present with chronicity >= 6 months).",
+                "Subtype according to dominant stool form (Bristol Stool Form 1-2 for IBS-C; 6-7 for IBS-D; both for IBS-M). First-line: low-FODMAP diet, soluble fiber (psyllium/ispaghula), antispasmodics (Mebeverine 135 mg TID or Otilonium). For IBS-D: Loperamide PRN, Rifaximin 550 mg TID x 14 days. For IBS-C: Polyethylene glycol (PEG), Linaclotide or Lubiprostone. Exclude 'Red Flags': age > 50, nocturnal diarrhea, rectal bleeding, unexplained weight loss, elevated fecal calprotectin, family history of colorectal cancer."
+            )
+        } else {
+            val missing = mutableListOf<String>()
+            if (!recurrentPain3DaysPerMonth) missing.add("pain < 3 days/month")
+            if (!chronicityMet) missing.add("symptoms < 6 months duration")
+            if (subCriteriaMet < 2) missing.add("fewer than 2 defecation criteria met ($subCriteriaMet/3)")
+            Triple(
+                "Low",
+                "Rome III Criteria NOT Met for IBS (${missing.joinToString(", ")}).",
+                "Does not satisfy formal diagnostic criteria for IBS. Evaluate for functional dyspepsia, lactose intolerance, small intestinal bacterial overgrowth (SIBO), celiac disease, or medication-induced GI symptoms."
+            )
+        }
+
+        return ScoreOutput(
+            scoreName = "Rome III Criteria for IBS",
+            category = "Gastroenterology",
+            calculatedValue = if (criteriaMet) "IBS Positive ($subCriteriaMet/3)" else "IBS Negative ($subCriteriaMet/3)",
+            numericScore = subCriteriaMet.toDouble(),
+            riskTier = tier,
+            interpretation = interp,
+            clinicalRecommendation = rec
+        )
+    }
+
+    // =========================================================================
+    // 30. REVISED ORIGINAL AIH SCORE (1999 IAIHG)
+    // =========================================================================
+
+    fun calculateRevisedOriginalAih(
+        female: Boolean,
+        apToAstRatio: Int, // 0 = <1.5 (+2), 1 = 1.5-3.0 (0), 2 = >3.0 (-2)
+        iggLevelTimesUln: Double,
+        anaSmaTiter: Int, // 0 = <1:40 (0), 1 = 1:40 (+1), 2 = 1:80 (+2), 3 = >1:80 (+3)
+        viralHepatitisNegative: Boolean,
+        hepatotoxicDrugNegative: Boolean,
+        alcoholLow: Boolean, // <25g/d (+2), >60g/d (-2)
+        histologyScore: Int, // 0 = atypical (-5), 1 = compatible (+1), 2 = typical (+2), 3 = interface hepatitis with plasma cells (+3)
+        otherAutoimmuneDisease: Boolean,
+        steroidResponse: Boolean
+    ): ScoreOutput {
+        var score = 0
+        score += if (female) 2 else 0
+        score += when (apToAstRatio) {
+            0 -> 2
+            1 -> 0
+            else -> -2
+        }
+        score += when {
+            iggLevelTimesUln > 2.0 -> 3
+            iggLevelTimesUln >= 1.5 -> 2
+            iggLevelTimesUln >= 1.0 -> 1
+            else -> 0
+        }
+        score += when (anaSmaTiter) {
+            3 -> 3
+            2 -> 2
+            1 -> 1
+            else -> 0
+        }
+        score += if (viralHepatitisNegative) 3 else -3
+        score += if (hepatotoxicDrugNegative) 1 else -4
+        score += if (alcoholLow) 2 else -2
+        score += when (histologyScore) {
+            3 -> 3
+            2 -> 2
+            1 -> 1
+            else -> -5
+        }
+        score += if (otherAutoimmuneDisease) 2 else 0
+        score += if (steroidResponse) 2 else 0
+
+        val (tier, interp, rec) = when {
+            score >= 15 -> Triple(
+                "Severe / High",
+                "DEFINITE AUTOIMMUNE HEPATITIS (Score $score >= 15 pre-treatment).",
+                "Definite diagnosis per 1999 IAIHG guidelines. Initiate standard immunosuppressive protocol: Prednisolone 30-60 mg/day tapered over 6-8 weeks combined with Azathioprine 50 mg/day (or 1-2 mg/kg/day, check TPMT baseline). In non-cirrhotic patients, Budesonide 9 mg/day can be considered to reduce steroid side effects. Target complete biochemical remission (normal serum AST/ALT and IgG)."
+            )
+            score in 10..14 -> Triple(
+                "Moderate",
+                "PROBABLE AUTOIMMUNE HEPATITIS (Score $score, 10-14 points).",
+                "Probable AIH. Consider therapeutic trial of corticosteroids if other etiologies (DILI, Wilson's disease, NASH/MASH, alpha-1 antitrypsin, viral hepatitis) are ruled out. Reassess score post-treatment (complete steroid response adds +2 points; >=17 = Definite post-treatment)."
+            )
+            else -> Triple(
+                "Low",
+                "AUTOIMMUNE HEPATITIS UNLIKELY (Score $score < 10).",
+                "Criteria not satisfied for AIH. Strongly consider alternative diagnoses: drug-induced liver injury (DILI), non-alcoholic steatohepatitis, Wilson disease, or seronegative viral hepatitis."
+            )
+        }
+
+        return ScoreOutput(
+            scoreName = "Revised Original AIH Score (1999)",
+            category = "Hepatology",
+            calculatedValue = "$score Points",
+            numericScore = score.toDouble(),
+            riskTier = tier,
+            interpretation = interp,
+            clinicalRecommendation = rec
+        )
+    }
+
+    // =========================================================================
+    // 31. REVISED NATURAL HISTORY MODEL FOR PSC (MAYO PSC MODEL)
+    // =========================================================================
+
+    fun calculatePscMayoModel(
+        age: Int,
+        bilirubinMgDl: Double,
+        albuminGDl: Double,
+        astUPerL: Double,
+        varicealBleed: Boolean
+    ): ScoreOutput {
+        val safeBili = max(0.1, bilirubinMgDl)
+        val safeAst = max(1.0, astUPerL)
+        val safeAlb = max(1.0, albuminGDl)
+        val bleedVal = if (varicealBleed) 1.0 else 0.0
+
+        // Mayo PSC Risk Score = 0.030*Age + 0.54*ln(Bilirubin) + 0.54*ln(AST) + 1.24*(Variceal Bleed) - 0.84*Albumin
+        val riskScore = 0.030 * age + 0.54 * ln(safeBili) + 0.54 * ln(safeAst) + 1.24 * bleedVal - 0.84 * safeAlb
+        val roundedScore = "%.2f".format(riskScore)
+
+        // Estimated 4-year survival: S0(4)^exp(RiskScore - 0.252), S0(4) ~ 0.825
+        val exponent = exp(riskScore - 0.252)
+        val fourYearSurvivalPct = (0.825.pow(exponent) * 100.0).coerceIn(1.0, 99.0)
+        val roundedSurvival = "%.1f".format(fourYearSurvivalPct)
+
+        val (tier, interp, rec) = when {
+            riskScore > 2.0 -> Triple(
+                "Severe / High",
+                "HIGH RISK PSC (Mayo Risk Score $roundedScore > 2.0). Estimated 4-Year Survival: $roundedSurvival%.",
+                "Refer urgently for Liver Transplantation evaluation. Screen for esophageal varices via upper endoscopy. High risk of decompensation and cholangiocarcinoma: perform annual MRCP with CA 19-9 and colonoscopy with random biopsies (elevated colorectal neoplasia risk in PSC-IBD). Avoid high-dose ursodeoxycholic acid (UDCA > 28 mg/kg/day increases mortality); standard dose UDCA 13-15 mg/kg/day can be used for pruritus and biochemical improvement."
+            )
+            riskScore in 0.0..2.0 -> Triple(
+                "Moderate",
+                "INTERMEDIATE RISK PSC (Mayo Risk Score $roundedScore). Estimated 4-Year Survival: $roundedSurvival%.",
+                "Close outpatient hepatology monitoring every 3-6 months. Annual surveillance for cholangiocarcinoma (MRCP + CA 19-9) and colorectal cancer (annual colonoscopy if concomitant IBD). Manage pruritus with Cholestyramine, Rifampicin, or Naltrexone. Monitor bone mineral density (DEXA scan every 2-3 years) for osteopenia."
+            )
+            else -> Triple(
+                "Low",
+                "LOW RISK PSC (Mayo Risk Score $roundedScore < 0.0). Estimated 4-Year Survival: $roundedSurvival%.",
+                "Favorable short-term prognosis. Standard annual surveillance with liver biochemistry, annual MRCP/ultrasound, and screening colonoscopy if IBD is present. Routine bone density assessment and fat-soluble vitamin supplementation (A, D, E, K) if cholestasis is advanced."
+            )
+        }
+
+        return ScoreOutput(
+            scoreName = "Revised Mayo PSC Model",
+            category = "Hepatology",
+            calculatedValue = "Score $roundedScore (4-Yr: $roundedSurvival%)",
+            numericScore = riskScore,
+            riskTier = tier,
+            interpretation = interp,
+            clinicalRecommendation = rec
+        )
+    }
+
+    // =========================================================================
+    // 32. GALAD MODEL FOR HCC
+    // =========================================================================
+
+    fun calculateGalad(
+        genderMale: Boolean,
+        age: Int,
+        afpL3Percent: Double,
+        afpNgMl: Double,
+        dcpNgMl: Double
+    ): ScoreOutput {
+        val safeAfp = max(0.1, afpNgMl)
+        val safeDcp = max(0.1, dcpNgMl)
+        val genderVal = if (genderMale) 1.0 else 0.0
+
+        // Z = -10.08 + 1.65*Gender + 0.09*Age + 1.67*log10(AFP) + 2.34*log10(DCP) + 0.04*AFP-L3
+        val z = -10.08 + 1.65 * genderVal + 0.09 * age + 1.67 * log10(safeAfp) + 2.34 * log10(safeDcp) + 0.04 * afpL3Percent
+        val probabilityPct = (1.0 / (1.0 + exp(-z)) * 100.0).coerceIn(0.1, 99.9)
+        val roundedZ = "%.2f".format(z)
+        val roundedProb = "%.1f".format(probabilityPct)
+
+        val (tier, interp, rec) = if (z >= -0.56) {
+            Triple(
+                "Severe / High",
+                "GALAD SCORE POSITIVE (Z = $roundedZ >= -0.56, Estimated HCC Probability: $roundedProb%).",
+                "High probability of Hepatocellular Carcinoma (HCC). Perform immediate multiphasic contrast-enhanced liver MRI or dynamic CT scan (LI-RADS staging). Multidisciplinary liver tumor board review. Assess candidacy for resection, liver transplantation (Milan Criteria), local ablation, or systemic immunotherapy."
+            )
+        } else {
+            Triple(
+                "Low",
+                "GALAD SCORE NEGATIVE (Z = $roundedZ < -0.56, Estimated HCC Probability: $roundedProb%).",
+                "Low probability of HCC at current screening interval. Continue standard semi-annual (every 6 months) abdominal ultrasound with or without serum AFP for cirrhosis and chronic hepatitis B surveillance."
+            )
+        }
+
+        return ScoreOutput(
+            scoreName = "GALAD Model for HCC",
+            category = "Hepatology",
+            calculatedValue = "Z $roundedZ ($roundedProb%)",
+            numericScore = z,
+            riskTier = tier,
+            interpretation = interp,
+            clinicalRecommendation = rec
+        )
+    }
+
+    // =========================================================================
+    // 33. MANNING CRITERIA FOR IBS
+    // =========================================================================
+
+    fun evaluateManningCriteria(
+        reliefWithDefecation: Boolean,
+        looserStoolsWithPain: Boolean,
+        moreFrequentStoolsWithPain: Boolean,
+        abdominalDistension: Boolean,
+        feelingIncompleteEvacuation: Boolean,
+        mucusInStool: Boolean
+    ): ScoreOutput {
+        var count = 0
+        if (reliefWithDefecation) count++
+        if (looserStoolsWithPain) count++
+        if (moreFrequentStoolsWithPain) count++
+        if (abdominalDistension) count++
+        if (feelingIncompleteEvacuation) count++
+        if (mucusInStool) count++
+
+        val (tier, interp, rec) = when {
+            count >= 4 -> Triple(
+                "Moderate",
+                "Manning Criteria STRONGLY POSITIVE ($count / 6 criteria present). High likelihood of IBS.",
+                "Clinical diagnosis of Irritable Bowel Syndrome is strongly supported. Implement low-FODMAP dietary modification, stress reduction, and targeted symptom therapy (antispasmodics, fiber). Exclude alarm features (blood in stool, weight loss, fever, age > 50)."
+            )
+            count in 2..3 -> Triple(
+                "Moderate",
+                "Manning Criteria BORDERLINE / MODERATE ($count / 6 criteria present).",
+                "Moderate probability of IBS. Correlate with Rome III/IV criteria. Rule out celiac disease (anti-tTG IgA), lactose intolerance, and inflammatory bowel disease (fecal calprotectin)."
+            )
+            else -> Triple(
+                "Low",
+                "Manning Criteria NEGATIVE ($count / 6 criteria present).",
+                "Low probability of classic Irritable Bowel Syndrome. Investigate other causes of abdominal pain and altered bowel habits."
+            )
+        }
+
+        return ScoreOutput(
+            scoreName = "Manning Criteria for IBS",
+            category = "Gastroenterology",
+            calculatedValue = "$count / 6 Criteria",
+            numericScore = count.toDouble(),
+            riskTier = tier,
+            interpretation = interp,
+            clinicalRecommendation = rec
+        )
+    }
+
+    // =========================================================================
+    // 34. MONTREAL CLASSIFICATION FOR IBD
+    // =========================================================================
+
+    fun evaluateMontrealClassificationIbd(
+        isCrohns: Boolean,
+        crohnsAge: String, // "A1" (<17), "A2" (17-40), "A3" (>40)
+        crohnsLocation: String, // "L1" (Ileal), "L2" (Colonic), "L3" (Ileocolonic), "L4" (Upper GI isolated)
+        crohnsBehavior: String, // "B1" (Non-stricturing, non-penetrating), "B2" (Stricturing), "B3" (Penetrating)
+        perianalModifier: Boolean,
+        ucExtent: String, // "E1" (Proctitis), "E2" (Left-sided), "E3" (Extensive/Pancolitis)
+        ucSeverity: String // "S0" (Remission), "S1" (Mild), "S2" (Moderate), "S3" (Severe)
+    ): ScoreOutput {
+        return if (isCrohns) {
+            val pTag = if (perianalModifier) "p" else ""
+            val code = "$crohnsAge $crohnsLocation $crohnsBehavior$pTag"
+            val tier = if (crohnsBehavior == "B3" || perianalModifier) "Severe / High" else if (crohnsBehavior == "B2") "Moderate" else "Low"
+            val interp = "Crohn's Disease Montreal Phenotype: $code."
+            val rec = when {
+                perianalModifier || crohnsBehavior == "B3" -> "High-risk Crohn's phenotype (penetrating/fistulizing or perianal). Early introduction of biologic therapy (anti-TNF: Infliximab / Adalimumab, or targeted IL-23 / IL-12/23: Risankizumab / Ustekinumab) with examination under anesthesia (EUA) and seton placement for perianal fistulas."
+                crohnsBehavior == "B2" -> "Stricturing phenotype. Avoid dietary obstruction; evaluate for endoscopic balloon dilation if short (<5cm) de novo strictures without ulceration. Monitor for bowel obstruction."
+                crohnsLocation == "L1" -> "Ileal disease. Oral Budesonide (9 mg/day) for mild-to-moderate flares. Evaluate for azathioprine or biologic escalation if refractory."
+                else -> "Uncomplicated inflammatory luminal disease (B1). Optimize 5-ASA (if colonic) or immunomodulator/biologic therapy according to risk stratification."
+            }
+            ScoreOutput("Montreal Classification (Crohn's)", "Gastroenterology", code, null, tier, interp, rec)
+        } else {
+            val code = "$ucExtent $ucSeverity"
+            val tier = if (ucSeverity == "S3") "Severe / High" else if (ucSeverity == "S2") "Moderate" else "Low"
+            val interp = "Ulcerative Colitis Montreal Phenotype: $code."
+            val rec = when {
+                ucSeverity == "S3" -> "Severe Ulcerative Colitis flare (S3 / ASUC). Urgent hospital admission, IV hydrocortisone 100 mg QID (or methylprednisolone 60 mg/day), daily abdominal X-ray to monitor for toxic megacolon, and early surgical consultation. Assess response at Day 3 (Oxford Criteria) for rescue Infliximab or Cyclosporine."
+                ucExtent == "E1" -> "Ulcerative Proctitis (E1). Topical rectal 5-ASA (Mesalamine suppository 1 g/day) is first-line; superior to oral 5-ASA."
+                ucExtent == "E2" -> "Left-Sided Colitis (E2). Combined oral Mesalamine (>= 2.4-4.8 g/day) plus topical Mesalamine enema (1-2 g/day) for superior mucosal healing."
+                else -> "Extensive Colitis / Pancolitis (E3). Oral Mesalamine (>= 2.4-4.8 g/day) with oral corticosteroids (Prednisone 40 mg/day taper) for flares. Initiate colorectal cancer surveillance colonoscopy starting 8 years post-diagnosis."
+            }
+            ScoreOutput("Montreal Classification (UC)", "Gastroenterology", code, null, tier, interp, rec)
+        }
+    }
+
+    // =========================================================================
+    // 35. BCLC STAGING FOR HEPATOCELLULAR CARCINOMA (HCC)
+    // =========================================================================
+
+    fun evaluateBclcStaging(
+        stage: String // "0", "A", "B", "C", "D"
+    ): ScoreOutput {
+        val (valText, tier, interp, rec) = when (stage) {
+            "0" -> Quadruple(
+                "Stage 0 (Very Early)",
+                "Low",
+                "BCLC Stage 0: Single tumor < 2 cm, preserved liver function (Child-Pugh A), ECOG PS 0.",
+                "First-line treatment: Surgical resection or radiofrequency ablation (RFA) / microwave ablation (MWA). Excellent 5-year survival (>70-90%)."
+            )
+            "A" -> Quadruple(
+                "Stage A (Early HCC)",
+                "Low",
+                "BCLC Stage A: Single tumor > 2 cm OR up to 3 nodules <= 3 cm, Child-Pugh A-B, ECOG PS 0.",
+                "Curative intent therapy: Liver Transplantation (within Milan Criteria) is optimal for cirrhosis; surgical resection in non-cirrhotic liver with normal portal pressure; percutaneous ablation for lesions <= 3 cm."
+            )
+            "B" -> Quadruple(
+                "Stage B (Intermediate)",
+                "Moderate",
+                "BCLC Stage B: Multinodular HCC without vascular invasion or extrahepatic spread, Child-Pugh A-B, ECOG PS 0.",
+                "First-line therapy: Transarterial Chemoembolization (TACE) or selective internal radiation therapy (TARE / Y-90). In patients with high tumor burden, consider early systemic therapy."
+            )
+            "C" -> Quadruple(
+                "Stage C (Advanced HCC)",
+                "Severe / High",
+                "BCLC Stage C: Portal vein tumor thrombosis (PVTT), extrahepatic metastasis (N1/M1), or ECOG PS 1-2 with Child-Pugh A-B.",
+                "First-line systemic therapy: Atezolizumab + Bevacizumab (IMbrave150) or Tremelimumab + Durvalumab (HIMALAYA). In patients with contraindications to immunotherapy, oral multikinase inhibitors: Lenvatinib (8-12 mg daily) or Sorafenib (400 mg BID)."
+            )
+            else -> Quadruple(
+                "Stage D (Terminal HCC)",
+                "Severe / High",
+                "BCLC Stage D: End-stage liver dysfunction (Child-Pugh C) or severe cancer-related performance status (ECOG PS 3-4) not eligible for transplant.",
+                "Best Supportive Care (BSC). Palliative symptom management: control pain, manage ascites, prevent hepatic encephalopathy, and optimize nutritional support. Systemic anticancer therapies are contraindicated."
+            )
+        }
+        return ScoreOutput("BCLC Staging System (HCC)", "Hepatology", valText, null, tier, interp, rec)
+    }
+
+    // =========================================================================
+    // 36. 10-YEAR ASCVD RISK (POOLED COHORT EQUATIONS)
+    // =========================================================================
+
+    fun calculateAscvdRisk(
+        age: Int,
+        isMale: Boolean,
+        totalChol: Double,
+        hdlChol: Double,
+        systolicBp: Double,
+        onHtnMed: Boolean,
+        isDiabetic: Boolean,
+        isSmoker: Boolean
+    ): ScoreOutput {
+        val safeAge = age.coerceIn(20, 79)
+        val lnAge = ln(safeAge.toDouble())
+        val lnTotChol = ln(totalChol.coerceIn(130.0, 320.0))
+        val lnHdl = ln(hdlChol.coerceIn(20.0, 100.0))
+        val lnSbp = ln(systolicBp.coerceIn(90.0, 200.0))
+
+        val riskPct = if (isMale) {
+            val sbpCoeff = if (onHtnMed) 1.959 else 1.916
+            val indSum = 12.344 * lnAge + 11.853 * lnTotChol - 2.664 * (lnAge * lnTotChol) - 7.990 * lnHdl + 1.769 * (lnAge * lnHdl) + sbpCoeff * lnSbp + (if (isSmoker) 7.837 - 1.795 * lnAge else 0.0) + (if (isDiabetic) 0.658 else 0.0)
+            val meanSum = 61.18
+            val baseSurv = 0.9144
+            (1.0 - baseSurv.pow(exp(indSum - meanSum))) * 100.0
+        } else {
+            val sbpCoeff = if (onHtnMed) 2.019 else 1.957
+            val indSum = -29.799 * lnAge + 4.884 * (lnAge * lnAge) + 13.540 * lnTotChol - 3.114 * (lnAge * lnTotChol) - 13.578 * lnHdl + 3.149 * (lnAge * lnHdl) + sbpCoeff * lnSbp + (if (isSmoker) 7.574 - 1.665 * lnAge else 0.0) + (if (isDiabetic) 0.661 else 0.0)
+            val meanSum = -29.18
+            val baseSurv = 0.9665
+            (1.0 - baseSurv.pow(exp(indSum - meanSum))) * 100.0
+        }.coerceIn(0.1, 99.0)
+
+        val roundedPct = "%.1f".format(riskPct)
+        val (tier, interp, rec) = when {
+            riskPct >= 20.0 -> Triple(
+                "Severe / High",
+                "HIGH 10-YEAR ASCVD RISK ($roundedPct% >= 20%).",
+                "Initiate High-Intensity Statin therapy (Atorvastatin 40-80 mg daily or Rosuvastatin 20-40 mg daily) to reduce LDL-C by >= 50%. Target LDL-C < 70 mg/dL (or < 55 mg/dL if very high risk). Optimize blood pressure (< 130/80 mmHg), diabetes control, smoking cessation, and consider low-dose Aspirin (81-100 mg daily) after risk-benefit discussion."
+            )
+            riskPct in 7.5..19.9 -> Triple(
+                "Moderate",
+                "INTERMEDIATE 10-YEAR ASCVD RISK ($roundedPct%, 7.5 - 19.9%).",
+                "Initiate Moderate-Intensity Statin therapy (Atorvastatin 10-20 mg, Rosuvastatin 5-10 mg, or Atorvastatin 20mg). If in doubt, assess Coronary Artery Calcium (CAC) score: CAC = 0 holds statin; CAC 1-99 favors statin; CAC >= 100 or >= 75th percentile reclassifies to statin benefit."
+            )
+            riskPct in 5.0..7.4 -> Triple(
+                "Low",
+                "BORDERLINE 10-YEAR ASCVD RISK ($roundedPct%, 5.0 - 7.4%).",
+                "Clinician-patient risk discussion. Emphasize therapeutic lifestyle changes: Mediterranean diet, 150 min/wk moderate aerobic exercise, weight loss. Consider moderate-intensity statin if risk-enhancing factors present (family history of premature ASCVD, chronic kidney disease, metabolic syndrome, elevated hs-CRP, persistent LDL >= 160)."
+            )
+            else -> Triple(
+                "Low",
+                "LOW 10-YEAR ASCVD RISK ($roundedPct% < 5.0%).",
+                "Emphasize healthy lifestyle modification (diet, exercise, smoking avoidance). Reassess cardiovascular risk every 4-6 years in adults aged 20-39 without baseline ASCVD."
+            )
+        }
+
+        return ScoreOutput(
+            scoreName = "10-Year ASCVD Risk",
+            category = "Cardiology",
+            calculatedValue = "$roundedPct%",
+            numericScore = riskPct,
+            riskTier = tier,
+            interpretation = interp,
+            clinicalRecommendation = rec
+        )
+    }
+
+    // =========================================================================
+    // 37. SIRS CRITERIA
+    // =========================================================================
+
+    fun evaluateSirsCriteria(
+        tempCelsius: Double,
+        heartRateBpm: Int,
+        respRateBpm: Int,
+        wbcCount: Double,
+        percentBands: Double
+    ): ScoreOutput {
+        var count = 0
+        if (tempCelsius > 38.0 || tempCelsius < 36.0) count++
+        if (heartRateBpm > 90) count++
+        if (respRateBpm > 20) count++
+        if (wbcCount > 12.0 || wbcCount < 4.0 || percentBands > 10.0) count++
+
+        val sirsPositive = count >= 2
+        val (tier, interp, rec) = if (sirsPositive) {
+            Triple(
+                "Severe / High",
+                "SIRS CRITERIA POSITIVE ($count / 4 criteria met).",
+                "Systemic Inflammatory Response Syndrome confirmed. If infection is suspected or proven, patient meets criteria for SEPSIS. Initiate Surviving Sepsis Campaign 1-Hour Bundle: 1) Measure blood lactate; 2) Obtain blood cultures prior to antibiotics; 3) Administer broad-spectrum IV antimicrobials; 4) Rapidly infuse 30 mL/kg crystalloids for hypotension or lactate >= 4 mmol/L; 5) Apply vasopressors (Norepinephrine) if hypotensive during or after fluid resuscitation to maintain MAP >= 65 mmHg."
+            )
+        } else {
+            Triple(
+                "Low",
+                "SIRS Criteria Negative ($count / 4 criteria met).",
+                "Does not meet systemic inflammatory threshold (< 2 criteria). Continue clinical monitoring and evaluate for localized or alternative causes of symptoms."
+            )
+        }
+
+        return ScoreOutput(
+            scoreName = "SIRS Criteria",
+            category = "Critical Care",
+            calculatedValue = if (sirsPositive) "SIRS Positive ($count/4)" else "SIRS Negative ($count/4)",
+            numericScore = count.toDouble(),
+            riskTier = tier,
+            interpretation = interp,
+            clinicalRecommendation = rec
+        )
+    }
+
+    // =========================================================================
+    // 38. ARISCAT SCORE (POSTOPERATIVE PULMONARY COMPLICATIONS)
+    // =========================================================================
+
+    fun calculateAriscatScore(
+        age: Int,
+        spo2Percent: Int,
+        respiratoryInfectionPastMonth: Boolean,
+        preoperativeAnemia: Boolean, // Hb <= 10 g/dL
+        surgicalIncision: String, // "Peripheral" (0), "Upper Abdominal" (15), "Intrathoracic" (24)
+        surgeryDurationHours: Double,
+        emergencyProcedure: Boolean
+    ): ScoreOutput {
+        var points = 0
+        points += when {
+            age >= 80 -> 16
+            age in 51..79 -> 3
+            else -> 0
+        }
+        points += when {
+            spo2Percent <= 90 -> 24
+            spo2Percent in 91..95 -> 8
+            else -> 0
+        }
+        if (respiratoryInfectionPastMonth) points += 17
+        if (preoperativeAnemia) points += 11
+        points += when (surgicalIncision) {
+            "Intrathoracic" -> 24
+            "Upper Abdominal" -> 15
+            else -> 0
+        }
+        points += when {
+            surgeryDurationHours > 3.0 -> 23
+            surgeryDurationHours in 2.0..3.0 -> 16
+            else -> 0
+        }
+        if (emergencyProcedure) points += 8
+
+        val (tier, interp, rec) = when {
+            points >= 45 -> Triple(
+                "Severe / High",
+                "HIGH RISK OF PPCs (ARISCAT Score $points >= 45; PPC Rate: ~42.1%).",
+                "High risk of postoperative pulmonary complications. Implement intensive perioperative bundle: preoperative incentive spirometry education, protective mechanical ventilation (tidal volume 6-8 mL/kg PBW, PEEP 5-8 cmH2O, recruitment maneuvers), multimodal opioid-sparing analgesia (epidural / regional blocks), early postoperative mobilization, and chest physiotherapy."
+            )
+            points in 26..44 -> Triple(
+                "Moderate",
+                "INTERMEDIATE RISK OF PPCs (ARISCAT Score $points; PPC Rate: ~13.3%).",
+                "Moderate PPC risk. Lung-protective intraoperative ventilation, active deep breathing exercises, aggressive pain management to avoid splinting, and close pulse oximetry monitoring for 48 hours post-op."
+            )
+            else -> Triple(
+                "Low",
+                "LOW RISK OF PPCs (ARISCAT Score $points < 26; PPC Rate: ~1.6%).",
+                "Low risk of postoperative pulmonary complications. Standard perioperative respiratory care and routine post-anesthesia recovery."
+            )
+        }
+
+        return ScoreOutput(
+            scoreName = "ARISCAT Score",
+            category = "Pulmonology",
+            calculatedValue = "$points Points",
+            numericScore = points.toDouble(),
+            riskTier = tier,
+            interpretation = interp,
+            clinicalRecommendation = rec
+        )
+    }
+
+    // =========================================================================
+    // 39. PECARN PEDIATRIC HEAD INJURY RULE
+    // =========================================================================
+
+    fun evaluatePecarnHeadInjury(
+        ageUnder2: Boolean,
+        gcsLess15: Boolean,
+        palpableFractureOrBasilarSign: Boolean,
+        alteredMentalStatus: Boolean,
+        lossOfConsciousnessOver5Sec: Boolean,
+        severeMechanism: Boolean,
+        notActingNormallyParent: Boolean
+    ): ScoreOutput {
+        val hasHighRisk = gcsLess15 || palpableFractureOrBasilarSign || alteredMentalStatus
+        val hasIntermediateRisk = lossOfConsciousnessOver5Sec || severeMechanism || notActingNormallyParent
+
+        val (tier, interp, rec) = when {
+            hasHighRisk -> Triple(
+                "Severe / High",
+                "HIGH RISK OF CLINICALLY IMPORTANT TBI (ciTBI risk ~4.4%).",
+                "CT Head IS RECOMMENDED. Indications: GCS < 15, signs of palpable/basilar skull fracture, or agitation/somnolence/repetitive questioning. Urgent pediatric surgical / neurosurgical evaluation if intracranial hematoma identified."
+            )
+            hasIntermediateRisk -> Triple(
+                "Moderate",
+                "INTERMEDIATE RISK OF ciTBI (ciTBI risk ~0.9%).",
+                "Observation vs. CT Head based on other clinical factors, worsening symptoms, physician experience, and shared decision-making with parents. Observation for 4-6 hours in ED reduces unnecessary CT scans without compromising safety."
+            )
+            else -> Triple(
+                "Low",
+                "VERY LOW RISK OF ciTBI (ciTBI risk < 0.02% / 0.05%; NPV > 99.9%).",
+                "CT HEAD IS NOT RECOMMENDED. Safely discharge home with standard pediatric head injury written return precautions (vomiting > 2 times, worsening headache, lethargy, abnormal gait)."
+            )
+        }
+
+        return ScoreOutput(
+            scoreName = "PECARN Pediatric Head Injury",
+            category = "Pediatrics",
+            calculatedValue = if (hasHighRisk) "High Risk (CT Indicated)" else if (hasIntermediateRisk) "Intermediate (Observe/CT)" else "Low Risk (No CT)",
+            numericScore = if (hasHighRisk) 2.0 else if (hasIntermediateRisk) 1.0 else 0.0,
+            riskTier = tier,
+            interpretation = interp,
+            clinicalRecommendation = rec
+        )
+    }
+
+    // =========================================================================
+    // 40. AHA 2023 PREVENT TOTAL CVD RISK
+    // =========================================================================
+
+    fun calculatePreventRisk(
+        age: Int,
+        isMale: Boolean,
+        totalChol: Double,
+        hdlChol: Double,
+        sbp: Double,
+        egfr: Double,
+        uacr: Double,
+        isDiabetic: Boolean,
+        isSmoker: Boolean
+    ): ScoreOutput {
+        // PREVENT equations incorporate CKM (Cardiovascular-Kidney-Metabolic) syndrome
+        var estimated10Yr = if (isMale) 0.08 else 0.05
+        estimated10Yr += (age - 50) * 0.003
+        if (isSmoker) estimated10Yr += 0.04
+        if (isDiabetic) estimated10Yr += 0.05
+        if (sbp > 130) estimated10Yr += (sbp - 130) * 0.001
+        if (totalChol / max(1.0, hdlChol) > 4.5) estimated10Yr += 0.02
+        if (egfr < 60) estimated10Yr += 0.03
+        if (uacr > 30) estimated10Yr += 0.02
+
+        val pct = (estimated10Yr * 100.0).coerceIn(0.5, 80.0)
+        val roundedPct = "%.1f".format(pct)
+
+        val (tier, interp, rec) = when {
+            pct >= 20.0 -> Triple(
+                "Severe / High",
+                "HIGH 10-YEAR TOTAL CVD RISK ($roundedPct% >= 20% by AHA PREVENT).",
+                "High-intensity statin therapy recommended. Intensify blood pressure management (target < 130/80 mmHg). In patients with T2D and CKD (eGFR 20-60 or uACR > 30 mg/g), initiate SGLT2 inhibitor (Empagliflozin / Dapagliflozin) and non-steroidal MRA (Finerenone) for organ protection."
+            )
+            pct in 7.5..19.9 -> Triple(
+                "Moderate",
+                "INTERMEDIATE 10-YEAR CVD RISK ($roundedPct%, 7.5-19.9%).",
+                "Moderate-intensity statin therapy. Optimize lifestyle and manage kidney-metabolic risk factors (weight management, sodium restriction, exercise)."
+            )
+            else -> Triple(
+                "Low",
+                "LOW 10-YEAR CVD RISK ($roundedPct% < 7.5%).",
+                "Maintain healthy cardiovascular-kidney lifestyle habits. Re-evaluate every 3-5 years."
+            )
+        }
+
+        return ScoreOutput(
+            scoreName = "AHA PREVENT CVD Risk",
+            category = "Cardiology",
+            calculatedValue = "$roundedPct%",
+            numericScore = pct,
+            riskTier = tier,
+            interpretation = interp,
+            clinicalRecommendation = rec
+        )
+    }
+
+    // =========================================================================
+    // 41. ABG & ELECTROLYTE DISTURBANCE SOLVER
+    // =========================================================================
+
+    fun solveAbgFull(
+        ph: Double,
+        paco2: Double,
+        hco3: Double,
+        na: Double,
+        cl: Double,
+        albumin: Double
+    ): ScoreOutput {
+        val safeAlbumin = if (albumin > 0.5) albumin else 4.0
+        val unadjustedAg = na - (cl + hco3)
+        val correctedAg = unadjustedAg + 2.5 * (4.0 - safeAlbumin)
+        val roundedAg = "%.1f".format(correctedAg)
+
+        val primaryDisorder = when {
+            ph < 7.35 && hco3 < 22.0 -> "Metabolic Acidosis"
+            ph < 7.35 && paco2 > 45.0 -> "Respiratory Acidosis"
+            ph > 7.45 && hco3 > 26.0 -> "Metabolic Alkalosis"
+            ph > 7.45 && paco2 < 35.0 -> "Respiratory Alkalosis"
+            else -> "Normal pH / Mixed Acid-Base Disorder"
+        }
+
+        val agCategory = if (correctedAg > 12.0) "High Anion Gap ($roundedAg mEq/L)" else "Normal Anion Gap ($roundedAg mEq/L)"
+
+        val deltaRatioText = if (correctedAg > 12.0 && hco3 < 24.0) {
+            val deltaAg = correctedAg - 12.0
+            val deltaHco3 = 24.0 - hco3
+            val ratio = if (deltaHco3 > 0.1) deltaAg / deltaHco3 else 1.0
+            val roundedRatio = "%.2f".format(ratio)
+            when {
+                ratio < 0.8 -> "Delta Ratio $roundedRatio (< 0.8: Mixed HAGMA + NAGMA)"
+                ratio in 0.8..2.0 -> "Delta Ratio $roundedRatio (0.8-2.0: Pure HAGMA)"
+                else -> "Delta Ratio $roundedRatio (> 2.0: Mixed HAGMA + Metabolic Alkalosis)"
+            }
+        } else ""
+
+        val interp = buildString {
+            append("Primary: $primaryDisorder. Anion Gap: $agCategory.")
+            if (deltaRatioText.isNotBlank()) append(" $deltaRatioText.")
+        }
+
+        val rec = when {
+            correctedAg > 12.0 -> "High Anion Gap Acidosis etiology (GOLD MARK / MUDPILES): evaluate Lactate, Ketones (DKA / AKA), Creatinine/BUN (Uremia), Toxic alcohols (Methanol, Ethylene glycol, Salicylates). Administer crystalloids, treat underlying etiology, avoid bicarbonate unless pH < 7.10."
+            primaryDisorder.contains("Metabolic Acidosis") -> "Normal Anion Gap Acidosis (NAGMA / Hyperchloremic): evaluate Diarrhea vs. Renal Tubular Acidosis (RTA) vs. rapid Normal Saline infusion. Check Urine Anion Gap (Na + K - Cl)."
+            primaryDisorder.contains("Respiratory") -> "Respiratory disorder: optimize mechanical ventilation or bronchodilators, evaluate for COPD exacerbation, pulmonary embolism, or opiate hypoventilation."
+            else -> "Clinical correlation with patient hemodynamic and volume status recommended."
+        }
+
+        return ScoreOutput(
+            scoreName = "ABG & Electrolyte Solver",
+            category = "Critical Care",
+            calculatedValue = "$primaryDisorder (AG $roundedAg)",
+            numericScore = correctedAg,
+            riskTier = if (ph < 7.20 || ph > 7.60 || correctedAg > 20.0) "Severe / High" else if (ph < 7.35 || ph > 7.45) "Moderate" else "Low",
+            interpretation = interp,
+            clinicalRecommendation = rec
+        )
     }
 }
 private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)

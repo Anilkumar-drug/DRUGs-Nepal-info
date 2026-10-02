@@ -1615,3 +1615,1073 @@ fun KdigoAkiInteractiveCard() {
         )
     }
 }
+
+// =============================================================================
+// 28. MILAN CRITERIA INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun MilanCriteriaInteractiveCard() {
+    var isMultipleTumors by remember { mutableStateOf(false) }
+    var singleTumorSize by remember { mutableStateOf("3.2") }
+    var tumorCount by remember { mutableStateOf("2") }
+    var maxTumorSize by remember { mutableStateOf("2.5") }
+    var macrovascularInvasion by remember { mutableStateOf(false) }
+    var extrahepaticMetastasis by remember { mutableStateOf(false) }
+
+    val res = remember(isMultipleTumors, singleTumorSize, tumorCount, maxTumorSize, macrovascularInvasion, extrahepaticMetastasis) {
+        MedicalScoringEngine.evaluateMilanCriteria(
+            singleTumorSizeCm = singleTumorSize.toDoubleOrNull() ?: 3.2,
+            tumorCount = if (isMultipleTumors) (tumorCount.toIntOrNull() ?: 2) else 1,
+            maxTumorSizeCm = if (isMultipleTumors) (maxTumorSize.toDoubleOrNull() ?: 2.5) else (singleTumorSize.toDoubleOrNull() ?: 3.2),
+            macrovascularInvasion = macrovascularInvasion,
+            extrahepaticMetastasis = extrahepaticMetastasis
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("Tumor Presentation", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = !isMultipleTumors,
+                onClick = { isMultipleTumors = false },
+                label = { Text("Single Nodule (<= 5 cm)") }
+            )
+            FilterChip(
+                selected = isMultipleTumors,
+                onClick = { isMultipleTumors = true },
+                label = { Text("Multiple (2-3 Nodules <= 3 cm)") }
+            )
+        }
+
+        if (!isMultipleTumors) {
+            OutlinedTextField(
+                value = singleTumorSize,
+                onValueChange = { singleTumorSize = it },
+                label = { Text("Single Tumor Maximum Diameter (cm)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = tumorCount,
+                    onValueChange = { tumorCount = it },
+                    label = { Text("Number of Nodules") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = maxTumorSize,
+                    onValueChange = { maxTumorSize = it },
+                    label = { Text("Largest Diameter (cm)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
+        Text("Vascular & Metastatic Criteria", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        ScoringToggleRow(
+            title = "Macrovascular Invasion Present",
+            checked = macrovascularInvasion,
+            onCheckedChange = { macrovascularInvasion = it },
+            subtitle = "Tumor thrombus in portal vein or hepatic veins"
+        )
+        ScoringToggleRow(
+            title = "Extrahepatic Metastasis Present",
+            checked = extrahepaticMetastasis,
+            onCheckedChange = { extrahepaticMetastasis = it },
+            subtitle = "Lymph node involvement, lung, bone, or peritoneal spread"
+        )
+
+        ResultBanner(
+            title = "Milan Criteria for Liver Transplantation",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nClinical Recommendation:\n${res.clinicalRecommendation}",
+            isSafe = res.calculatedValue == "Within Milan Criteria",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 29. ROME III FOR IBS INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun RomeIIIInteractiveCard() {
+    var recurrentPain by remember { mutableStateOf(true) }
+    var symptomDurationMonths by remember { mutableStateOf("8") }
+    var defecationRelief by remember { mutableStateOf(true) }
+    var changeFrequency by remember { mutableStateOf(true) }
+    var changeForm by remember { mutableStateOf(false) }
+
+    val res = remember(recurrentPain, symptomDurationMonths, defecationRelief, changeFrequency, changeForm) {
+        MedicalScoringEngine.evaluateRomeIII(
+            recurrentPain3DaysPerMonth = recurrentPain,
+            relatedToDefecation = defecationRelief,
+            changeInFrequency = changeFrequency,
+            changeInForm = changeForm,
+            symptomDurationMonths = symptomDurationMonths.toIntOrNull() ?: 8
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("Primary Symptom & Chronicity", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        ScoringToggleRow(
+            title = "Recurrent Abdominal Pain / Discomfort",
+            checked = recurrentPain,
+            onCheckedChange = { recurrentPain = it },
+            subtitle = "Present at least 3 days per month over the last 3 months"
+        )
+        OutlinedTextField(
+            value = symptomDurationMonths,
+            onValueChange = { symptomDurationMonths = it },
+            label = { Text("Symptom Duration (months, >= 6 required)") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Text("Defecation Association (>= 2 required for IBS)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        ScoringToggleRow(
+            title = "1. Improvement with Defecation",
+            checked = defecationRelief,
+            onCheckedChange = { defecationRelief = it },
+            subtitle = "Pain or discomfort resolves or diminishes after bowel movement"
+        )
+        ScoringToggleRow(
+            title = "2. Onset Associated with Change in Frequency",
+            checked = changeFrequency,
+            onCheckedChange = { changeFrequency = it },
+            subtitle = "More or fewer bowel movements than normal when pain starts"
+        )
+        ScoringToggleRow(
+            title = "3. Onset Associated with Change in Stool Form",
+            checked = changeForm,
+            onCheckedChange = { changeForm = it },
+            subtitle = "Stool appears looser/watery or harder/lumpy (Bristol 1-2 or 6-7)"
+        )
+
+        ResultBanner(
+            title = "Rome III Diagnostic Evaluation",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nClinical Guidance:\n${res.clinicalRecommendation}",
+            isSafe = res.calculatedValue.startsWith("IBS Negative"),
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 30. REVISED ORIGINAL AIH INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun RevisedAihInteractiveCard() {
+    var isFemale by remember { mutableStateOf(true) }
+    var apToAstIndex by remember { mutableIntStateOf(0) } // 0: <1.5 (+2), 1: 1.5-3.0 (0), 2: >3.0 (-2)
+    var iggLevelTimesUln by remember { mutableStateOf("1.8") }
+    var anaTiterIndex by remember { mutableIntStateOf(2) } // 0: <1:40, 1: 1:40, 2: 1:80, 3: >1:80
+    var viralHepatitisNegative by remember { mutableStateOf(true) }
+    var hepatotoxicDrugNegative by remember { mutableStateOf(true) }
+    var alcoholLow by remember { mutableStateOf(true) }
+    var histologyIndex by remember { mutableIntStateOf(3) } // 0: Atypical, 1: Compatible, 2: Typical, 3: Interface
+    var otherAutoimmune by remember { mutableStateOf(false) }
+    var steroidResponse by remember { mutableStateOf(false) }
+
+    val res = remember(isFemale, apToAstIndex, iggLevelTimesUln, anaTiterIndex, viralHepatitisNegative, hepatotoxicDrugNegative, alcoholLow, histologyIndex, otherAutoimmune, steroidResponse) {
+        MedicalScoringEngine.calculateRevisedOriginalAih(
+            female = isFemale,
+            apToAstRatio = apToAstIndex,
+            iggLevelTimesUln = iggLevelTimesUln.toDoubleOrNull() ?: 1.8,
+            anaSmaTiter = anaTiterIndex,
+            viralHepatitisNegative = viralHepatitisNegative,
+            hepatotoxicDrugNegative = hepatotoxicDrugNegative,
+            alcoholLow = alcoholLow,
+            histologyScore = histologyIndex,
+            otherAutoimmuneDisease = otherAutoimmune,
+            steroidResponse = steroidResponse
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(selected = isFemale, onClick = { isFemale = true }, label = { Text("Female (+2)") })
+            FilterChip(selected = !isFemale, onClick = { isFemale = false }, label = { Text("Male (0)") })
+        }
+
+        Text("Biochemical & Serological Markers", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Text("Alkaline Phosphatase : AST/ALT Ratio", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = apToAstIndex == 0, onClick = { apToAstIndex = 0 }, label = { Text("< 1.5 (+2)") })
+            FilterChip(selected = apToAstIndex == 1, onClick = { apToAstIndex = 1 }, label = { Text("1.5 - 3.0 (0)") })
+            FilterChip(selected = apToAstIndex == 2, onClick = { apToAstIndex = 2 }, label = { Text("> 3.0 (-2)") })
+        }
+
+        OutlinedTextField(
+            value = iggLevelTimesUln,
+            onValueChange = { iggLevelTimesUln = it },
+            label = { Text("Serum IgG Level (x Upper Limit of Normal)") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Text("Autoantibodies (ANA, SMA, or anti-LKM1 Titer)", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = anaTiterIndex == 3, onClick = { anaTiterIndex = 3 }, label = { Text("> 1:80 (+3)") })
+            FilterChip(selected = anaTiterIndex == 2, onClick = { anaTiterIndex = 2 }, label = { Text("1:80 (+2)") })
+            FilterChip(selected = anaTiterIndex == 1, onClick = { anaTiterIndex = 1 }, label = { Text("1:40 (+1)") })
+            FilterChip(selected = anaTiterIndex == 0, onClick = { anaTiterIndex = 0 }, label = { Text("< 1:40 (0)") })
+        }
+
+        Text("Liver Biopsy Histology", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = histologyIndex == 3, onClick = { histologyIndex = 3 }, label = { Text("Interface (+3)") })
+            FilterChip(selected = histologyIndex == 2, onClick = { histologyIndex = 2 }, label = { Text("Typical (+2)") })
+            FilterChip(selected = histologyIndex == 1, onClick = { histologyIndex = 1 }, label = { Text("Compatible (+1)") })
+            FilterChip(selected = histologyIndex == 0, onClick = { histologyIndex = 0 }, label = { Text("Atypical (-5)") })
+        }
+
+        Text("Exclusions & History", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        ScoringToggleRow(title = "Viral Hepatitis Negative (+3)", checked = viralHepatitisNegative, onCheckedChange = { viralHepatitisNegative = it }, subtitle = "HBsAg, anti-HCV, and anti-HAV IgM all negative")
+        ScoringToggleRow(title = "No Hepatotoxic Drug History (+1)", checked = hepatotoxicDrugNegative, onCheckedChange = { hepatotoxicDrugNegative = it }, subtitle = "No recent potentially hepatotoxic prescription or herbal medications")
+        ScoringToggleRow(title = "Low Alcohol Consumption (+2)", checked = alcoholLow, onCheckedChange = { alcoholLow = it }, subtitle = "< 25 g/day in women, < 50 g/day in men")
+        ScoringToggleRow(title = "Other Autoimmune Disease (+2)", checked = otherAutoimmune, onCheckedChange = { otherAutoimmune = it }, subtitle = "Thyroiditis, Type 1 Diabetes, Celiac, Vitiligo, Synovitis")
+
+        ResultBanner(
+            title = "1999 Revised IAIHG AIH Score",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nClinical Management:\n${res.clinicalRecommendation}",
+            isSafe = res.riskTier == "Low",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 31. REVISED MAYO PSC MODEL INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun PscMayoInteractiveCard() {
+    var age by remember { mutableStateOf("45") }
+    var bilirubin by remember { mutableStateOf("2.4") }
+    var albumin by remember { mutableStateOf("3.5") }
+    var ast by remember { mutableStateOf("78") }
+    var varicealBleed by remember { mutableStateOf(false) }
+
+    val res = remember(age, bilirubin, albumin, ast, varicealBleed) {
+        MedicalScoringEngine.calculatePscMayoModel(
+            age = age.toIntOrNull() ?: 45,
+            bilirubinMgDl = bilirubin.toDoubleOrNull() ?: 2.4,
+            albuminGDl = albumin.toDoubleOrNull() ?: 3.5,
+            astUPerL = ast.toDoubleOrNull() ?: 78.0,
+            varicealBleed = varicealBleed
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = age,
+                onValueChange = { age = it },
+                label = { Text("Patient Age (yr)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = bilirubin,
+                onValueChange = { bilirubin = it },
+                label = { Text("Total Bilirubin (mg/dL)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = albumin,
+                onValueChange = { albumin = it },
+                label = { Text("Serum Albumin (g/dL)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = ast,
+                onValueChange = { ast = it },
+                label = { Text("AST / SGOT (U/L)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        ScoringToggleRow(
+            title = "History of Variceal Bleeding",
+            checked = varicealBleed,
+            onCheckedChange = { varicealBleed = it },
+            subtitle = "Prior episode of upper GI bleeding from esophageal or gastric varices"
+        )
+
+        ResultBanner(
+            title = "Revised Mayo PSC Prognostic Model",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nClinical Guidance:\n${res.clinicalRecommendation}",
+            isSafe = res.riskTier == "Low",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 32. SIMPLIFIED AIH INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun SimplifiedAihInteractiveCard() {
+    var anaTiterIndex by remember { mutableIntStateOf(2) } // 0: Neg, 1: >=1:40, 2: >=1:80
+    var lkm1Positive by remember { mutableStateOf(false) }
+    var iggIndex by remember { mutableIntStateOf(2) } // 0: Normal, 1: >ULN, 2: >1.1x ULN
+    var histologyIndex by remember { mutableIntStateOf(2) } // 0: Atypical, 1: Compatible, 2: Typical
+    var absenceViralHep by remember { mutableStateOf(true) }
+
+    val res = remember(anaTiterIndex, lkm1Positive, iggIndex, histologyIndex, absenceViralHep) {
+        MedicalScoringEngine.evaluateSimplifiedAih(
+            anaOrSmaTiter = anaTiterIndex,
+            lkm1OrSlaPositive = lkm1Positive,
+            iggElevated = iggIndex,
+            histology = histologyIndex,
+            absenceOfViralHepatitis = absenceViralHep
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("1. Autoantibodies (Max 2 pts)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = anaTiterIndex == 2, onClick = { anaTiterIndex = 2 }, label = { Text("ANA/SMA >= 1:80 (2)") })
+            FilterChip(selected = anaTiterIndex == 1, onClick = { anaTiterIndex = 1 }, label = { Text(">= 1:40 (1)") })
+            FilterChip(selected = anaTiterIndex == 0, onClick = { anaTiterIndex = 0 }, label = { Text("Negative (0)") })
+        }
+        ScoringToggleRow(title = "Anti-LKM1 or SLA/LP Positive (+2)", checked = lkm1Positive, onCheckedChange = { lkm1Positive = it })
+
+        Text("2. Serum IgG (Max 2 pts)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = iggIndex == 2, onClick = { iggIndex = 2 }, label = { Text("> 1.1x ULN (2)") })
+            FilterChip(selected = iggIndex == 1, onClick = { iggIndex = 1 }, label = { Text("> ULN (1)") })
+            FilterChip(selected = iggIndex == 0, onClick = { iggIndex = 0 }, label = { Text("Normal (0)") })
+        }
+
+        Text("3. Liver Histology (Max 2 pts)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = histologyIndex == 2, onClick = { histologyIndex = 2 }, label = { Text("Typical Interface (2)") })
+            FilterChip(selected = histologyIndex == 1, onClick = { histologyIndex = 1 }, label = { Text("Compatible (1)") })
+            FilterChip(selected = histologyIndex == 0, onClick = { histologyIndex = 0 }, label = { Text("Atypical (0)") })
+        }
+
+        Text("4. Viral Hepatitis Exclusion (2 pts)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        ScoringToggleRow(title = "Viral Hepatitis Excluded (+2)", checked = absenceViralHep, onCheckedChange = { absenceViralHep = it }, subtitle = "HBsAg, Anti-HCV, and Anti-HAV IgM negative")
+
+        ResultBanner(
+            title = "Simplified IAIHG Criteria (2008)",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nClinical Guidance:\n${res.clinicalRecommendation}",
+            isSafe = res.riskTier == "Low",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 33. GALAD MODEL FOR HCC INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun GaladInteractiveCard() {
+    var isMale by remember { mutableStateOf(true) }
+    var age by remember { mutableStateOf("58") }
+    var afp by remember { mutableStateOf("45") }
+    var afpL3 by remember { mutableStateOf("12.5") }
+    var dcp by remember { mutableStateOf("85") }
+
+    val res = remember(isMale, age, afp, afpL3, dcp) {
+        MedicalScoringEngine.calculateGalad(
+            genderMale = isMale,
+            age = age.toIntOrNull() ?: 58,
+            afpL3Percent = afpL3.toDoubleOrNull() ?: 12.5,
+            afpNgMl = afp.toDoubleOrNull() ?: 45.0,
+            dcpNgMl = dcp.toDoubleOrNull() ?: 85.0
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(selected = isMale, onClick = { isMale = true }, label = { Text("Male") })
+            FilterChip(selected = !isMale, onClick = { isMale = false }, label = { Text("Female") })
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(value = age, onValueChange = { age = it }, label = { Text("Age (yr)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+            OutlinedTextField(value = afp, onValueChange = { afp = it }, label = { Text("Total AFP (ng/mL)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(value = afpL3, onValueChange = { afpL3 = it }, label = { Text("AFP-L3 (%)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+            OutlinedTextField(value = dcp, onValueChange = { dcp = it }, label = { Text("DCP / PIVKA-II (ng/mL)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+        }
+
+        ResultBanner(
+            title = "GALAD Model for HCC Surveillance",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nOncologic Action Plan:\n${res.clinicalRecommendation}",
+            isSafe = res.riskTier == "Low",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 34. MANNING CRITERIA FOR IBS INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun ManningInteractiveCard() {
+    var c1 by remember { mutableStateOf(true) }
+    var c2 by remember { mutableStateOf(true) }
+    var c3 by remember { mutableStateOf(true) }
+    var c4 by remember { mutableStateOf(false) }
+    var c5 by remember { mutableStateOf(false) }
+    var c6 by remember { mutableStateOf(false) }
+
+    val res = remember(c1, c2, c3, c4, c5, c6) {
+        MedicalScoringEngine.evaluateManningCriteria(c1, c2, c3, c4, c5, c6)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Manning Diagnostic Symptoms (>= 3 suggests IBS)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        ScoringToggleRow(title = "1. Relief of pain with defecation", checked = c1, onCheckedChange = { c1 = it })
+        ScoringToggleRow(title = "2. Looser stools at onset of pain", checked = c2, onCheckedChange = { c2 = it })
+        ScoringToggleRow(title = "3. More frequent stools at pain onset", checked = c3, onCheckedChange = { c3 = it })
+        ScoringToggleRow(title = "4. Abdominal distension / visible bloating", checked = c4, onCheckedChange = { c4 = it })
+        ScoringToggleRow(title = "5. Feeling of incomplete evacuation", checked = c5, onCheckedChange = { c5 = it })
+        ScoringToggleRow(title = "6. Passage of mucus per rectum", checked = c6, onCheckedChange = { c6 = it })
+
+        ResultBanner(
+            title = "Manning Criteria Assessment",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nClinical Plan:\n${res.clinicalRecommendation}",
+            isSafe = res.riskTier == "Low",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 35. MONTREAL CLASSIFICATION FOR IBD INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun MontrealIbdInteractiveCard() {
+    var isCrohns by remember { mutableStateOf(true) }
+    var crohnsAge by remember { mutableStateOf("A2") }
+    var crohnsLocation by remember { mutableStateOf("L3") }
+    var crohnsBehavior by remember { mutableStateOf("B1") }
+    var perianal by remember { mutableStateOf(false) }
+    var ucExtent by remember { mutableStateOf("E2") }
+    var ucSeverity by remember { mutableStateOf("S2") }
+
+    val res = remember(isCrohns, crohnsAge, crohnsLocation, crohnsBehavior, perianal, ucExtent, ucSeverity) {
+        MedicalScoringEngine.evaluateMontrealClassificationIbd(isCrohns, crohnsAge, crohnsLocation, crohnsBehavior, perianal, ucExtent, ucSeverity)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(selected = isCrohns, onClick = { isCrohns = true }, label = { Text("Crohn's Disease") })
+            FilterChip(selected = !isCrohns, onClick = { isCrohns = false }, label = { Text("Ulcerative Colitis") })
+        }
+
+        if (isCrohns) {
+            Text("Age at Diagnosis", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("A1" to "< 17 yr", "A2" to "17 - 40 yr", "A3" to "> 40 yr").forEach { (code, label) ->
+                    FilterChip(selected = crohnsAge == code, onClick = { crohnsAge = code }, label = { Text("$code ($label)") })
+                }
+            }
+            Text("Disease Location", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("L1" to "Terminal Ileum", "L2" to "Colon", "L3" to "Ileocolon", "L4" to "Upper GI").forEach { (code, label) ->
+                    FilterChip(selected = crohnsLocation == code, onClick = { crohnsLocation = code }, label = { Text("$code ($label)") })
+                }
+            }
+            Text("Disease Behavior", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("B1" to "Inflammatory", "B2" to "Stricturing", "B3" to "Penetrating").forEach { (code, label) ->
+                    FilterChip(selected = crohnsBehavior == code, onClick = { crohnsBehavior = code }, label = { Text("$code ($label)") })
+                }
+            }
+            ScoringToggleRow(title = "Perianal Disease Modifier (+p)", checked = perianal, onCheckedChange = { perianal = it }, subtitle = "Perianal fistulas, abscesses, or anal fissures")
+        } else {
+            Text("Colonic Extent", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("E1" to "Proctitis", "E2" to "Left-Sided", "E3" to "Pancolitis").forEach { (code, label) ->
+                    FilterChip(selected = ucExtent == code, onClick = { ucExtent = code }, label = { Text("$code ($label)") })
+                }
+            }
+            Text("Severity at Presentation", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("S0" to "Remission", "S1" to "Mild", "S2" to "Moderate", "S3" to "Severe (ASUC)").forEach { (code, label) ->
+                    FilterChip(selected = ucSeverity == code, onClick = { ucSeverity = code }, label = { Text("$code ($label)") })
+                }
+            }
+        }
+
+        ResultBanner(
+            title = "Montreal Classification Phenotype",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nClinical Recommendations:\n${res.clinicalRecommendation}",
+            isSafe = res.riskTier == "Low",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 36. BCLC STAGING FOR HCC INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun BclcInteractiveCard() {
+    var stage by remember { mutableStateOf("A") }
+    val res = remember(stage) { MedicalScoringEngine.evaluateBclcStaging(stage) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("Barcelona Clinic Liver Cancer (BCLC) Stage", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf("0" to "0 (Very Early)", "A" to "A (Early)", "B" to "B (Intermed)", "C" to "C (Advanced)", "D" to "D (Terminal)").forEach { (stg, label) ->
+                FilterChip(selected = stage == stg, onClick = { stage = stg }, label = { Text(label) })
+            }
+        }
+
+        Surface(
+            shape = RoundedCornerShape(10.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = when (stage) {
+                        "0" -> "Single nodule < 2 cm, Child-Pugh A, ECOG 0."
+                        "A" -> "Single nodule or up to 3 nodules <= 3 cm, Child-Pugh A-B, ECOG 0."
+                        "B" -> "Multinodular, preserved liver function, no vascular invasion, ECOG 0."
+                        "C" -> "Portal vein invasion, extrahepatic spread, or ECOG 1-2."
+                        else -> "End-stage cirrhosis (Child-Pugh C) or ECOG 3-4."
+                    },
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+
+        ResultBanner(
+            title = "BCLC Staging & Treatment Strategy",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nGuideline Therapy Plan:\n${res.clinicalRecommendation}",
+            isSafe = stage == "0" || stage == "A",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 37. 10-YEAR ASCVD RISK INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun AscvdInteractiveCard() {
+    var age by remember { mutableStateOf("56") }
+    var isMale by remember { mutableStateOf(true) }
+    var totalChol by remember { mutableStateOf("210") }
+    var hdlChol by remember { mutableStateOf("45") }
+    var sbp by remember { mutableStateOf("138") }
+    var onHtnMed by remember { mutableStateOf(true) }
+    var isDiabetic by remember { mutableStateOf(false) }
+    var isSmoker by remember { mutableStateOf(false) }
+
+    val res = remember(age, isMale, totalChol, hdlChol, sbp, onHtnMed, isDiabetic, isSmoker) {
+        MedicalScoringEngine.calculateAscvdRisk(
+            age = age.toIntOrNull() ?: 56,
+            isMale = isMale,
+            totalChol = totalChol.toDoubleOrNull() ?: 210.0,
+            hdlChol = hdlChol.toDoubleOrNull() ?: 45.0,
+            systolicBp = sbp.toDoubleOrNull() ?: 138.0,
+            onHtnMed = onHtnMed,
+            isDiabetic = isDiabetic,
+            isSmoker = isSmoker
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(selected = isMale, onClick = { isMale = true }, label = { Text("Male") })
+            FilterChip(selected = !isMale, onClick = { isMale = false }, label = { Text("Female") })
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(value = age, onValueChange = { age = it }, label = { Text("Age (20-79 yr)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+            OutlinedTextField(value = sbp, onValueChange = { sbp = it }, label = { Text("Systolic BP (mmHg)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(value = totalChol, onValueChange = { totalChol = it }, label = { Text("Total Chol (mg/dL)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+            OutlinedTextField(value = hdlChol, onValueChange = { hdlChol = it }, label = { Text("HDL Chol (mg/dL)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+        }
+
+        ScoringToggleRow(title = "Treated for Hypertension", checked = onHtnMed, onCheckedChange = { onHtnMed = it }, subtitle = "Patient currently takes anti-hypertensive medication")
+        ScoringToggleRow(title = "Diabetes Mellitus Present", checked = isDiabetic, onCheckedChange = { isDiabetic = it })
+        ScoringToggleRow(title = "Current Cigarette Smoker", checked = isSmoker, onCheckedChange = { isSmoker = it })
+
+        ResultBanner(
+            title = "ACC/AHA 10-Year ASCVD Risk",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nStatin & Risk Reduction Guideline:\n${res.clinicalRecommendation}",
+            isSafe = res.riskTier == "Low",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 38. SIRS CRITERIA INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun SirsSepsisInteractiveCard() {
+    var temp by remember { mutableStateOf("38.6") }
+    var hr by remember { mutableStateOf("104") }
+    var rr by remember { mutableStateOf("24") }
+    var wbc by remember { mutableStateOf("14.5") }
+    var bands by remember { mutableStateOf(false) }
+
+    val res = remember(temp, hr, rr, wbc, bands) {
+        MedicalScoringEngine.evaluateSirsCriteria(
+            tempCelsius = temp.toDoubleOrNull() ?: 38.6,
+            heartRateBpm = hr.toIntOrNull() ?: 104,
+            respRateBpm = rr.toIntOrNull() ?: 24,
+            wbcCount = wbc.toDoubleOrNull() ?: 14.5,
+            percentBands = if (bands) 12.0 else 0.0
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(value = temp, onValueChange = { temp = it }, label = { Text("Temp (°C, >38 or <36)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+            OutlinedTextField(value = hr, onValueChange = { hr = it }, label = { Text("Heart Rate (bpm, >90)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(value = rr, onValueChange = { rr = it }, label = { Text("Resp Rate (/min, >20)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+            OutlinedTextField(value = wbc, onValueChange = { wbc = it }, label = { Text("WBC (x10³/µL, >12 or <4)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+        }
+        ScoringToggleRow(title = "Bandemia > 10% Immature Forms", checked = bands, onCheckedChange = { bands = it })
+
+        ResultBanner(
+            title = "SIRS Screening Criteria",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nClinical Action Plan:\n${res.clinicalRecommendation}",
+            isSafe = res.riskTier == "Low",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 39. ARISCAT SCORE INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun AriscatInteractiveCard() {
+    var age by remember { mutableStateOf("64") }
+    var spo2 by remember { mutableStateOf("94") }
+    var respInfection by remember { mutableStateOf(false) }
+    var anemia by remember { mutableStateOf(false) }
+    var incision by remember { mutableStateOf("Upper Abdominal") }
+    var durationHours by remember { mutableStateOf("2.5") }
+    var emergency by remember { mutableStateOf(false) }
+
+    val res = remember(age, spo2, respInfection, anemia, incision, durationHours, emergency) {
+        MedicalScoringEngine.calculateAriscatScore(
+            age = age.toIntOrNull() ?: 64,
+            spo2Percent = spo2.toIntOrNull() ?: 94,
+            respiratoryInfectionPastMonth = respInfection,
+            preoperativeAnemia = anemia,
+            surgicalIncision = incision,
+            surgeryDurationHours = durationHours.toDoubleOrNull() ?: 2.5,
+            emergencyProcedure = emergency
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(value = age, onValueChange = { age = it }, label = { Text("Patient Age (yr)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+            OutlinedTextField(value = spo2, onValueChange = { spo2 = it }, label = { Text("Pre-op SpO2 (%)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+        }
+
+        Text("Surgical Incision Site", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf("Peripheral" to "Peripheral", "Upper Abdominal" to "Upper Abdomen (+15)", "Intrathoracic" to "Thorax (+24)").forEach { (code, label) ->
+                FilterChip(selected = incision == code, onClick = { incision = code }, label = { Text(label) })
+            }
+        }
+
+        OutlinedTextField(
+            value = durationHours,
+            onValueChange = { durationHours = it },
+            label = { Text("Expected Surgery Duration (hours)") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        ScoringToggleRow(title = "Respiratory Infection in Past Month (+17)", checked = respInfection, onCheckedChange = { respInfection = it })
+        ScoringToggleRow(title = "Preoperative Anemia Hb <= 10 g/dL (+11)", checked = anemia, onCheckedChange = { anemia = it })
+        ScoringToggleRow(title = "Emergency Procedure (+8)", checked = emergency, onCheckedChange = { emergency = it })
+
+        ResultBanner(
+            title = "ARISCAT Postoperative Pulmonary Risk",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nPerioperative Care Bundle:\n${res.clinicalRecommendation}",
+            isSafe = res.riskTier == "Low",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 40. FULL SOFA SCORE INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun SofaInteractiveCard() {
+    var respPoints by remember { mutableIntStateOf(1) }
+    var coagPoints by remember { mutableIntStateOf(1) }
+    var liverPoints by remember { mutableIntStateOf(1) }
+    var cvPoints by remember { mutableIntStateOf(1) }
+    var gcsPoints by remember { mutableIntStateOf(0) }
+    var renalPoints by remember { mutableIntStateOf(1) }
+
+    val totalPoints = respPoints + coagPoints + liverPoints + cvPoints + gcsPoints + renalPoints
+    val res = remember(totalPoints) { MedicalScoringEngine.calculateSofaScore(totalPoints) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("1. Respiration (PaO2/FiO2 ratio)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf(0 to ">400", 1 to "<=400", 2 to "<=300", 3 to "<=200+V", 4 to "<=100+V").forEach { (pts, label) ->
+                FilterChip(selected = respPoints == pts, onClick = { respPoints = pts }, label = { Text("$label ($pts)") })
+            }
+        }
+        Text("2. Coagulation (Platelets x10³/µL)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf(0 to ">=150", 1 to "<150", 2 to "<100", 3 to "<50", 4 to "<20").forEach { (pts, label) ->
+                FilterChip(selected = coagPoints == pts, onClick = { coagPoints = pts }, label = { Text("$label ($pts)") })
+            }
+        }
+        Text("3. Liver (Bilirubin mg/dL)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf(0 to "<1.2", 1 to "1.2-1.9", 2 to "2.0-5.9", 3 to "6.0-11.9", 4 to ">=12.0").forEach { (pts, label) ->
+                FilterChip(selected = liverPoints == pts, onClick = { liverPoints = pts }, label = { Text("$label ($pts)") })
+            }
+        }
+        Text("4. Cardiovascular (MAP & Vasopressors)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf(0 to "MAP>=70", 1 to "MAP<70", 2 to "Dop<=5", 3 to "NA<=0.1", 4 to "NA>0.1").forEach { (pts, label) ->
+                FilterChip(selected = cvPoints == pts, onClick = { cvPoints = pts }, label = { Text("$label ($pts)") })
+            }
+        }
+        Text("5. CNS (Glasgow Coma Scale)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf(0 to "15", 1 to "13-14", 2 to "10-12", 3 to "6-9", 4 to "<6").forEach { (pts, label) ->
+                FilterChip(selected = gcsPoints == pts, onClick = { gcsPoints = pts }, label = { Text("$label ($pts)") })
+            }
+        }
+        Text("6. Renal (Creatinine mg/dL or Urine)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf(0 to "<1.2", 1 to "1.2-1.9", 2 to "2.0-3.4", 3 to "3.5-4.9", 4 to ">=5.0").forEach { (pts, label) ->
+                FilterChip(selected = renalPoints == pts, onClick = { renalPoints = pts }, label = { Text("$label ($pts)") })
+            }
+        }
+
+        ResultBanner(
+            title = "Sequential Organ Failure Assessment",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nICU Sepsis Management:\n${res.clinicalRecommendation}",
+            isSafe = res.riskTier == "Low",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 41. AHA PREVENT CVD RISK INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun PreventRiskInteractiveCard() {
+    var age by remember { mutableStateOf("54") }
+    var isMale by remember { mutableStateOf(true) }
+    var sbp by remember { mutableStateOf("132") }
+    var totalChol by remember { mutableStateOf("195") }
+    var hdlChol by remember { mutableStateOf("48") }
+    var egfr by remember { mutableStateOf("75") }
+    var uacr by remember { mutableStateOf("25") }
+    var isDiabetic by remember { mutableStateOf(false) }
+    var isSmoker by remember { mutableStateOf(false) }
+
+    val res = remember(age, isMale, sbp, totalChol, hdlChol, egfr, uacr, isDiabetic, isSmoker) {
+        MedicalScoringEngine.calculatePreventRisk(
+            age = age.toIntOrNull() ?: 54,
+            isMale = isMale,
+            totalChol = totalChol.toDoubleOrNull() ?: 195.0,
+            hdlChol = hdlChol.toDoubleOrNull() ?: 48.0,
+            sbp = sbp.toDoubleOrNull() ?: 132.0,
+            egfr = egfr.toDoubleOrNull() ?: 75.0,
+            uacr = uacr.toDoubleOrNull() ?: 25.0,
+            isDiabetic = isDiabetic,
+            isSmoker = isSmoker
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(selected = isMale, onClick = { isMale = true }, label = { Text("Male") })
+            FilterChip(selected = !isMale, onClick = { isMale = false }, label = { Text("Female") })
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(value = age, onValueChange = { age = it }, label = { Text("Age (30-79 yr)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+            OutlinedTextField(value = sbp, onValueChange = { sbp = it }, label = { Text("Systolic BP (mmHg)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(value = egfr, onValueChange = { egfr = it }, label = { Text("eGFR (mL/min)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+            OutlinedTextField(value = uacr, onValueChange = { uacr = it }, label = { Text("uACR (mg/g)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+        }
+        ScoringToggleRow(title = "Type 2 Diabetes Mellitus", checked = isDiabetic, onCheckedChange = { isDiabetic = it })
+        ScoringToggleRow(title = "Current Tobacco Smoker", checked = isSmoker, onCheckedChange = { isSmoker = it })
+
+        ResultBanner(
+            title = "AHA 2023 PREVENT Total CVD Risk",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nCardiovascular-Kidney-Metabolic Strategy:\n${res.clinicalRecommendation}",
+            isSafe = res.riskTier == "Low",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 42. PECARN PEDIATRIC HEAD INJURY INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun PecarnInteractiveCard() {
+    var ageUnder2 by remember { mutableStateOf(false) }
+    var gcsLess15 by remember { mutableStateOf(false) }
+    var palpableFracture by remember { mutableStateOf(false) }
+    var alteredMental by remember { mutableStateOf(false) }
+    var locOver5Sec by remember { mutableStateOf(false) }
+    var severeMechanism by remember { mutableStateOf(false) }
+    var notActingNormal by remember { mutableStateOf(false) }
+
+    val res = remember(ageUnder2, gcsLess15, palpableFracture, alteredMental, locOver5Sec, severeMechanism, notActingNormal) {
+        MedicalScoringEngine.evaluatePecarnHeadInjury(
+            ageUnder2 = ageUnder2,
+            gcsLess15 = gcsLess15,
+            palpableFractureOrBasilarSign = palpableFracture,
+            alteredMentalStatus = alteredMental,
+            lossOfConsciousnessOver5Sec = locOver5Sec,
+            severeMechanism = severeMechanism,
+            notActingNormallyParent = notActingNormal
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(selected = ageUnder2, onClick = { ageUnder2 = true }, label = { Text("Age < 2 Years") })
+            FilterChip(selected = !ageUnder2, onClick = { ageUnder2 = false }, label = { Text("Age >= 2 Years") })
+        }
+
+        Text("High Risk Criteria (CT Head Indicated)", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.error)
+        ScoringToggleRow(title = "GCS < 15 on Exam", checked = gcsLess15, onCheckedChange = { gcsLess15 = it })
+        ScoringToggleRow(title = if (ageUnder2) "Palpable Skull Fracture" else "Signs of Basilar Skull Fracture", checked = palpableFracture, onCheckedChange = { palpableFracture = it }, subtitle = "Hemotympanum, raccoon eyes, Battle sign, CSF leak")
+        ScoringToggleRow(title = "Altered Mental Status", checked = alteredMental, onCheckedChange = { alteredMental = it }, subtitle = "Agitation, lethargy, repetitive questions, slow response")
+
+        Text("Intermediate Risk Criteria (Observe vs CT)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        ScoringToggleRow(title = "Loss of Consciousness > 5 Seconds", checked = locOver5Sec, onCheckedChange = { locOver5Sec = it })
+        ScoringToggleRow(title = "Severe Injury Mechanism", checked = severeMechanism, onCheckedChange = { severeMechanism = it }, subtitle = "MVC with ejection/rollover, fall >3ft (<2y) or >5ft (>=2y), struck by vehicle")
+        ScoringToggleRow(title = "Parent Reports Child Not Acting Normally", checked = notActingNormal, onCheckedChange = { notActingNormal = it })
+
+        ResultBanner(
+            title = "PECARN Pediatric Head Trauma Rule",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nClinical Decision:\n${res.clinicalRecommendation}",
+            isSafe = res.riskTier == "Low",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 43. TRUELOVE & WITTS UC FLARE INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun TrueloveWittsInteractiveCard() {
+    var stoolsPerDay by remember { mutableStateOf("7") }
+    var bloodInStool by remember { mutableStateOf(true) }
+    var temp by remember { mutableStateOf("38.1") }
+    var hr by remember { mutableStateOf("96") }
+    var hb by remember { mutableStateOf("10.0") }
+    var esr by remember { mutableStateOf("38") }
+
+    val res = remember(stoolsPerDay, bloodInStool, temp, hr, hb, esr) {
+        MedicalScoringEngine.evaluateTrueloveWitts(
+            stoolsPerDay = stoolsPerDay.toIntOrNull() ?: 7,
+            grossBloodInStool = bloodInStool,
+            tempC = temp.toDoubleOrNull() ?: 38.1,
+            pulseRate = hr.toIntOrNull() ?: 96,
+            hemoglobinGdL = hb.toDoubleOrNull() ?: 10.0,
+            esrMmHr = esr.toIntOrNull() ?: 38
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(value = stoolsPerDay, onValueChange = { stoolsPerDay = it }, label = { Text("Stools / Day (>=6 severe)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+            OutlinedTextField(value = temp, onValueChange = { temp = it }, label = { Text("Temp (°C, >37.5 severe)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(value = hr, onValueChange = { hr = it }, label = { Text("Heart Rate (bpm, >90)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+            OutlinedTextField(value = hb, onValueChange = { hb = it }, label = { Text("Hemoglobin (g/dL, <10.5)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+        }
+        OutlinedTextField(value = esr, onValueChange = { esr = it }, label = { Text("ESR (mm/1st hr, >30 severe)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth())
+
+        ScoringToggleRow(title = "Visible Blood in Most Stools", checked = bloodInStool, onCheckedChange = { bloodInStool = it })
+
+        ResultBanner(
+            title = "Truelove & Witts Severity Criteria",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nClinical Action Plan:\n${res.clinicalRecommendation}",
+            isSafe = res.riskTier == "Low",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 44. ABG & ELECTROLYTE SOLVER INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun AbgSolverInteractiveCard() {
+    var ph by remember { mutableStateOf("7.28") }
+    var paco2 by remember { mutableStateOf("30") }
+    var hco3 by remember { mutableStateOf("14") }
+    var na by remember { mutableStateOf("138") }
+    var cl by remember { mutableStateOf("102") }
+    var albumin by remember { mutableStateOf("3.2") }
+
+    val res = remember(ph, paco2, hco3, na, cl, albumin) {
+        MedicalScoringEngine.solveAbgFull(
+            ph = ph.toDoubleOrNull() ?: 7.28,
+            paco2 = paco2.toDoubleOrNull() ?: 30.0,
+            hco3 = hco3.toDoubleOrNull() ?: 14.0,
+            na = na.toDoubleOrNull() ?: 138.0,
+            cl = cl.toDoubleOrNull() ?: 102.0,
+            albumin = albumin.toDoubleOrNull() ?: 3.2
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(value = ph, onValueChange = { ph = it }, label = { Text("Arterial pH") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+            OutlinedTextField(value = paco2, onValueChange = { paco2 = it }, label = { Text("PaCO2 (mmHg)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(value = hco3, onValueChange = { hco3 = it }, label = { Text("HCO3⁻ (mEq/L)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+            OutlinedTextField(value = na, onValueChange = { na = it }, label = { Text("Serum Na⁺ (mEq/L)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(value = cl, onValueChange = { cl = it }, label = { Text("Serum Cl⁻ (mEq/L)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+            OutlinedTextField(value = albumin, onValueChange = { albumin = it }, label = { Text("Albumin (g/dL)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.weight(1f))
+        }
+
+        ResultBanner(
+            title = "Acid-Base & Anion Gap Interpretation",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nDiagnostic & Therapeutic Guidance:\n${res.clinicalRecommendation}",
+            isSafe = res.riskTier == "Low",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}
+
+// =============================================================================
+// 45. CLIF-C ACLF INTERACTIVE CARD
+// =========================================================================
+
+@Composable
+fun ClifCAclfStandaloneCard() {
+    var ofScore by remember { mutableStateOf("11") }
+    var age by remember { mutableStateOf("52") }
+    var wbc by remember { mutableStateOf("14.2") }
+
+    val res = remember(ofScore, age, wbc) {
+        MedicalScoringEngine.calculateClifCAclf(
+            clifSofaOrganFailuresCount = ofScore.toIntOrNull() ?: 11,
+            age = age.toIntOrNull() ?: 52,
+            wbcK_uL = wbc.toDoubleOrNull() ?: 14.2
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        OutlinedTextField(
+            value = ofScore,
+            onValueChange = { ofScore = it },
+            label = { Text("CLIF-Organ Failure Score (OFs 6-18)") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = age,
+                onValueChange = { age = it },
+                label = { Text("Patient Age (yr)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = wbc,
+                onValueChange = { wbc = it },
+                label = { Text("WBC Count (x10³/µL)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        ResultBanner(
+            title = "CLIF-C Acute-on-Chronic Liver Failure",
+            valueText = res.calculatedValue,
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nClinical Recommendation:\n${res.clinicalRecommendation}",
+            isSafe = res.riskTier == "Low",
+            jsonPayload = res.toJsonString()
+        )
+    }
+}

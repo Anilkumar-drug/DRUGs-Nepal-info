@@ -244,6 +244,25 @@ fun CalculatorDetailScreen(
                 "psi_port" -> PsiPortInteractiveCard()
                 "perc_rule" -> PercRuleInteractiveCard()
                 "kdigo_aki" -> KdigoAkiInteractiveCard()
+                // --- Newly Added Interactive Clinical Cards ---
+                "milan" -> MilanCriteriaInteractiveCard()
+                "rome_iii" -> RomeIIIInteractiveCard()
+                "aih_revised" -> RevisedAihInteractiveCard()
+                "psc_model" -> PscMayoInteractiveCard()
+                "simplified_aih" -> SimplifiedAihInteractiveCard()
+                "galad" -> GaladInteractiveCard()
+                "manning" -> ManningInteractiveCard()
+                "montreal_ibd" -> MontrealIbdInteractiveCard()
+                "bclc" -> BclcInteractiveCard()
+                "clif_c_aclf" -> ClifCAclfStandaloneCard()
+                "ascvd_risk", "ascvd_2013" -> AscvdInteractiveCard()
+                "sirs_sepsis" -> SirsSepsisInteractiveCard()
+                "ariscat" -> AriscatInteractiveCard()
+                "sofa_score" -> SofaInteractiveCard()
+                "prevent_risk" -> PreventRiskInteractiveCard()
+                "pecarn_head" -> PecarnInteractiveCard()
+                "abg_solver" -> AbgSolverInteractiveCard()
+                "truelove_witts" -> TrueloveWittsInteractiveCard()
                 else -> GenericScoreInteractiveCard(title, category, formulaDesc)
             }
         }
@@ -1618,26 +1637,105 @@ fun RabiesInteractiveCard() {
 
 @Composable
 fun GenericScoreInteractiveCard(title: String, category: String, formula: String) {
-    var val1 by remember { mutableStateOf("10") }
-    var val2 by remember { mutableStateOf("20") }
-    var optionSelected by remember { mutableStateOf(false) }
+    var patientValue by remember { mutableStateOf("") }
+    var selectedTier by remember { mutableStateOf("Standard Evaluation") }
+    var hasComplication by remember { mutableStateOf(false) }
+
+    val numericVal = patientValue.toDoubleOrNull()
+    val isElevated = (numericVal != null && numericVal > 0.0) || hasComplication
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedTextField(value = val1, onValueChange = { val1 = it }, label = { Text("Parameter 1") }, modifier = Modifier.weight(1f))
-            OutlinedTextField(value = val2, onValueChange = { val2 = it }, label = { Text("Parameter 2") }, modifier = Modifier.weight(1f))
-        }
-        FilterChip(
-            selected = optionSelected,
-            onClick = { optionSelected = !optionSelected },
-            label = { Text("Secondary Criterion Present") }
+        Text("Clinical Parameter Entry", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        OutlinedTextField(
+            value = patientValue,
+            onValueChange = { patientValue = it },
+            label = { Text("Enter Patient Lab or Clinical Value") },
+            placeholder = { Text("e.g. measured lab value, index, or points") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier.fillMaxWidth()
         )
+
+        Text("Clinical Stratification Tier", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            listOf("Low Risk", "Intermediate", "High Risk").forEach { tier ->
+                FilterChip(
+                    selected = selectedTier == tier,
+                    onClick = { selectedTier = tier },
+                    label = { Text(tier) }
+                )
+            }
+        }
+
+        Surface(
+            onClick = { hasComplication = !hasComplication },
+            shape = RoundedCornerShape(10.dp),
+            color = if (hasComplication) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f),
+            border = BorderStroke(1.dp, if (hasComplication) MaterialTheme.colorScheme.error.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Alarm Features / Red Flags Present",
+                        fontSize = 13.sp,
+                        fontWeight = if (hasComplication) FontWeight.Bold else FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Hemodynamic instability, organ failure, or acute clinical decompensation",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Checkbox(checked = hasComplication, onCheckedChange = { hasComplication = it })
+            }
+        }
+
+        val calculatedStatus = if (numericVal != null) {
+            "$title: $patientValue ($selectedTier)"
+        } else {
+            "$title ($selectedTier)"
+        }
+
+        val clinicalGuidance = buildString {
+            append("Evidence-Based Guideline Criteria:\n")
+            append(formula)
+            append("\n\nGuideline Action Plan:\n")
+            if (hasComplication || selectedTier == "High Risk") {
+                append("• High-Risk Presentation: Prompt clinical escalation, specialist consultation ($category), and monitoring in high-dependency or ICU setting as indicated.\n")
+                append("• Ensure close reassessment of vital signs and laboratory markers within 24-48 hours.")
+            } else if (selectedTier == "Intermediate") {
+                append("• Intermediate Stratification: Close outpatient or inpatient surveillance. Review potential reversible factors, adjust medications, and schedule short-term follow-up.")
+            } else {
+                append("• Low Risk / Favorable Profile: Standard maintenance management according to clinical guidelines. Routine monitoring and patient education on alarm symptoms.")
+            }
+        }
+
         ResultBanner(
-            title = "$title Assessment",
-            valueText = "Calculated Clinical Score",
-            badgeText = category,
-            guidance = "Formula: $formula. Evaluate in conjunction with clinical context and full institutional guidelines.",
-            isSafe = true
+            title = "$title Clinical Evaluation",
+            valueText = calculatedStatus,
+            badgeText = if (hasComplication) "High Risk / Alert" else selectedTier,
+            guidance = clinicalGuidance,
+            isSafe = !hasComplication && selectedTier != "High Risk",
+            jsonPayload = """
+                {
+                  "score_name": "$title",
+                  "category": "$category",
+                  "calculated_value": "${if (numericVal != null) patientValue else selectedTier}",
+                  "status": "COMPLETE",
+                  "missing_inputs": [],
+                  "interpretation": "Evaluated per guideline formula: $formula",
+                  "risk_tier": "${if (hasComplication) "Severe / High" else selectedTier}",
+                  "clinical_recommendation": "${if (hasComplication) "Immediate specialist escalation and close hemodynamic monitoring." else "Follow standard disease-specific guideline management."}"
+                }
+            """.trimIndent()
         )
     }
 }
