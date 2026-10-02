@@ -1,0 +1,988 @@
+package com.example.data.repository
+
+import com.example.data.model.BrandInfo
+import com.example.data.model.Drug
+
+object EssentialClinicalFormularyDataPart1 {
+
+    val drugs: List<Drug> = listOf(
+        // =========================================================================
+        // 1. CRITICAL CARE, RESUSCITATION & ANTIDOTES
+        // =========================================================================
+        Drug(
+            id = "crit_vasopressin",
+            genericName = "Vasopressin (Arginine Vasopressin / AVP)",
+            system = "Emergency & Critical Care",
+            drugClass = "Non-peptide Pituitary Hormone / V1 Receptor Agonist",
+            blackBoxWarning = null,
+            indications = "Septic Shock refractory to first-line norepinephrine, Vasodilatory Shock post-cardiac surgery, Asystole / PEA Cardiac Arrest, Acute Variceal Bleeding.",
+            doses = "Septic Shock: 0.03 units/min fixed IV continuous infusion (do NOT titrate; add to Norepinephrine to raise MAP or reduce NE dosage).\nPost-cardiotomy shock: 0.01 - 0.03 units/min IV.",
+            administration = "Continuous IV infusion via dedicated central venous line (CVC) using an infusion syringe pump. Never administer as rapid IV push in shock.",
+            timing = "Continuous intravenous infusion with continuous invasive arterial blood pressure monitoring.",
+            specialInstructions = "Peripheral extravasation causes severe ischemic necrosis. High doses (>0.04 units/min) cause coronary and mesenteric vasoconstriction.",
+            pkPd = "Rapid onset (<5 min). Hepatic and renal clearance via vasopressinases. Terminal half-life 10-20 minutes. Acts on vascular V1a receptors causing calcium-mediated smooth muscle contraction.",
+            renalAdj = "No dose adjustment required in acute kidney injury or CRRT. Vasopressin restores renal perfusion pressure in vasodilatory shock.",
+            hepaticAdj = "No adjustment needed. Monitor for splanchnic vasoconstriction in advanced cirrhosis.",
+            pregnancy = "Category C (Oxytocic effects may stimulate uterine contractions; use only if maternal life is in jeopardy).",
+            lactation = "Large peptide unlikely to be absorbed orally by infant; safety not established in nursing.",
+            sideEffects = "Distal digital ischemia, myocardial ischemia, bradycardia, hyponatremia (V2 antidiuretic action), mesenteric ischemia, skin necrosis.",
+            priceNpr = "NPR 950.00 - 1,450.00 per vial (20 units/mL)",
+            priceInr = "INR 650.00 - 950.00 per vial (20 units/mL)",
+            brandsNepal = listOf(
+                BrandInfo("Vaso-Care", "Deurali-Janta Pharmaceuticals", "Inj", "20 units/mL"),
+                BrandInfo("Vasopres-NPL", "Nepal Pharmaceuticals Lab", "Inj", "20 units/mL")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Pitressin", "Pfizer India", "Inj", "20 units/mL"),
+                BrandInfo("Vasopin", "Samarth Life Sciences", "Inj", "20 units/mL"),
+                BrandInfo("C-Pressin", "Centaur Pharmaceuticals", "Inj", "20 units/mL")
+            ),
+            modeOfAction = "V1a receptor agonist on vascular smooth muscle leading to arterial vasoconstriction independent of adrenergic receptors.",
+            packSize = "1 mL glass ampoule / vial containing 20 units/mL",
+            ddaSchedule = "Schedule Ka (Prescription Only / Hospital ICU Use)",
+            nemlCategory = "WHO Complementary List (Intensive Care)"
+        ),
+        Drug(
+            id = "crit_dobutamine",
+            genericName = "Dobutamine Hydrochloride",
+            system = "Emergency & Critical Care",
+            drugClass = "Selective Beta-1 Adrenergic Agonist / Inotrope",
+            blackBoxWarning = null,
+            indications = "Cardiogenic Shock, Severe decompensated heart failure with low cardiac index, Septic cardiomyopathy with persistent hypoperfusion despite MAP >= 65 mmHg.",
+            doses = "Initial: 2.5 - 5.0 mcg/kg/min continuous IV infusion. Titrate by 2.5 mcg/kg/min every 15-30 min based on cardiac index and urine output. Usual therapeutic range: 5 - 20 mcg/kg/min. Max: 20 mcg/kg/min.",
+            administration = "Administer by continuous IV infusion via infusion pump through central line or large peripheral vein. Compatible with 5% Dextrose or 0.9% Normal Saline.",
+            timing = "Continuous titration guided by echocardiography, ScvO2, lactate clearance, and cardiac output monitoring.",
+            specialInstructions = "Correct severe hypovolemia prior to initiating. May cause significant tachycardia and provoke tachyarrhythmias or worsen myocardial ischemia.",
+            pkPd = "Onset: 1-2 minutes; Peak effect: 10 minutes; Half-life: 2 minutes. Metabolized by COMT (catechol-O-methyltransferase) and glucuronidation in liver and tissues.",
+            renalAdj = "No dose adjustment required in renal failure or hemodialysis.",
+            hepaticAdj = "No initial dose reduction required; titrate to clinical hemodynamic response.",
+            pregnancy = "Category B (Animal studies reveal no teratogenicity; used safely in severe maternal cardiac decompensation).",
+            lactation = "Unknown if excreted in human milk; temporary cessation during infusion advised.",
+            sideEffects = "Tachycardia, ventricular ectopy, ventricular tachycardia, angina, hypotension (mild beta-2 vasodilation), headache, hypokalemia.",
+            priceNpr = "NPR 450.00 - 750.00 per vial (250 mg / 5 mL)",
+            priceInr = "INR 280.00 - 480.00 per vial (250 mg / 5 mL)",
+            brandsNepal = listOf(
+                BrandInfo("Dobutrex-NPL", "Nepal Pharmaceuticals Lab", "Inj", "250 mg / 5 mL"),
+                BrandInfo("Dobutan", "Quest Pharmaceuticals", "Inj", "250 mg / 5 mL")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Dobutrex", "Eli Lilly / Abbott India", "Inj", "250 mg / 20 mL"),
+                BrandInfo("Cardiject", "Samarth Life Sciences", "Inj", "250 mg / 5 mL"),
+                BrandInfo("Dotamin", "Neon Laboratories", "Inj", "250 mg / 5 mL")
+            ),
+            modeOfAction = "Strong beta-1 agonist stimulation increasing myocardial contractility and stroke volume with minimal alpha-1 vasoconstriction.",
+            packSize = "Vial of 250 mg in 5 mL or 20 mL aqueous solution",
+            ddaSchedule = "Schedule Ka (Emergency & ICU Rx)",
+            nemlCategory = "WHO Model Essential Medicines List (Inotropic Medicines)"
+        ),
+        Drug(
+            id = "crit_milrinone",
+            genericName = "Milrinone Lactate",
+            system = "Emergency & Critical Care",
+            drugClass = "Phosphodiesterase-3 (PDE3) Inhibitor / Inodilator",
+            blackBoxWarning = "MORTALITY IN CHRONIC USE: Long-term oral milrinone therapy has been shown to increase morbidity and mortality in patients with Class III-IV heart failure. Milrinone is indicated strictly for acute, short-term inpatient IV support.",
+            indications = "Acute decompensated biventricular heart failure, Cardiogenic shock unresponsive to beta-agonists, Post-cardiac surgery low-output syndrome, Pulmonary arterial hypertension crisis.",
+            doses = "Loading dose (optional): 50 mcg/kg IV over 10-20 min (omit in hypotensive patients). Maintenance infusion: 0.375 - 0.75 mcg/kg/min IV continuous infusion. Standard dose: 0.5 mcg/kg/min.",
+            administration = "Administer via dedicated IV line using continuous volumetric infusion pump. Dilute in 0.45% Saline, 0.9% Saline, or 5% Dextrose.",
+            timing = "Continuous intravenous infusion with invasive arterial blood pressure and continuous ECG monitoring.",
+            specialInstructions = "Causes systemic vasodilation; combine with Norepinephrine if systemic vascular resistance (SVR) is low to preserve mean arterial pressure.",
+            pkPd = "Volume of distribution 0.38 L/kg. Protein binding 70%. Excreted 90% unchanged in urine via active tubular secretion. Elimination half-life: 2.3-3 hours (prolonged up to 6-8h in renal failure).",
+            renalAdj = "CrCl 50: 0.43 mcg/kg/min; CrCl 40: 0.38 mcg/kg/min; CrCl 30: 0.33 mcg/kg/min; CrCl 20: 0.28 mcg/kg/min; CrCl 10: 0.23 mcg/kg/min; CrCl <10 or HD: 0.20 mcg/kg/min.",
+            hepaticAdj = "No dose adjustment required for hepatic impairment.",
+            pregnancy = "Category C (Use only if potential benefit justifies fetal risk).",
+            lactation = "Excretion in human milk unknown; use with caution in nursing mothers.",
+            sideEffects = "Ventricular arrhythmias, sustained VT, hypotension, thrombocytopenia (rare compared to inamrinone), headache, hypokalemia, elevated LFTs.",
+            priceNpr = "NPR 1,200.00 - 1,800.00 per vial (10 mg / 10 mL)",
+            priceInr = "INR 750.00 - 1,200.00 per vial (10 mg / 10 mL)",
+            brandsNepal = listOf(
+                BrandInfo("Milricard", "Deurali-Janta Pharmaceuticals", "Inj", "10 mg / 10 mL")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Primacor", "Sanofi India", "Inj", "10 mg / 10 mL"),
+                BrandInfo("Milrone", "Neon Laboratories", "Inj", "10 mg / 10 mL"),
+                BrandInfo("Myoperm", "Samarth Life Sciences", "Inj", "10 mg / 10 mL")
+            ),
+            modeOfAction = "Inhibits cyclic AMP phosphodiesterase isozyme III, leading to increased intracellular cAMP in myocardium (inotropy) and vascular smooth muscle (vasodilation).",
+            packSize = "Single-dose vial of 10 mg / 10 mL",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "Tertiary Cardiac Formulary"
+        ),
+        Drug(
+            id = "crit_naloxone",
+            genericName = "Naloxone Hydrochloride",
+            system = "Emergency & Critical Care",
+            drugClass = "Pure Opioid Receptor Antagonist",
+            blackBoxWarning = null,
+            indications = "Complete or partial reversal of opioid depression, Acute opioid overdose (respiratory depression, miosis, coma), Suspected acute intoxication, Postoperative opioid depression.",
+            doses = "Adult (Suspected Overdose): 0.4 - 2.0 mg IV, IM, or SC. If no response, repeat every 2-3 minutes up to 10 mg total.\nPostoperative reversal: 0.1 - 0.2 mg IV q2-3min titrated to adequate ventilation without full analgesia reversal.\nContinuous IV Infusion: 2/3 of initial effective bolus dose per hour in long-acting opioid toxicity (e.g. Methadone).",
+            administration = "IV push preferred for emergency resuscitation; IM or subcutaneous if no venous access. Can be given endotracheally (2-2.5x IV dose diluted in 5 mL saline) or intranasally.",
+            timing = "Immediate emergency administration upon identifying opioid-induced respiratory depression (RR < 8 breaths/min).",
+            specialInstructions = "Duration of action of Naloxone (30-90 min) is shorter than most opioids (Morphine, Methadone, Fentanyl patches). Re-sedation and recurrent apnea may occur; observe for at least 4-6 hours.",
+            pkPd = "Onset: IV 1-2 min, IM 2-5 min. Duration: 30-90 minutes. Hepatic metabolism via glucuronidation. Elimination half-life: 60-90 minutes.",
+            renalAdj = "No dose adjustment required.",
+            hepaticAdj = "No dose adjustment required. Reversal effect occurs normally.",
+            pregnancy = "Category B (Safe in emergency resuscitation; may precipitate acute opioid withdrawal in opioid-dependent pregnant patient).",
+            lactation = "Compatible with breastfeeding due to minimal oral bioavailability in infant.",
+            sideEffects = "Acute opioid withdrawal (agitation, vomiting, diaphoresis, piloerection, abdominal cramps), severe tachycardia, hypertensive crisis, non-cardiogenic pulmonary edema.",
+            priceNpr = "NPR 120.00 - 220.00 per ampoule (0.4 mg / mL)",
+            priceInr = "INR 70.00 - 140.00 per ampoule (0.4 mg / mL)",
+            brandsNepal = listOf(
+                BrandInfo("Nalox-NPL", "Nepal Pharmaceuticals Lab", "Inj", "0.4 mg / mL"),
+                BrandInfo("Narconal", "Deurali-Janta Pharmaceuticals", "Inj", "0.4 mg / mL")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Narcotan", "Neon Laboratories", "Inj", "0.4 mg / mL"),
+                BrandInfo("Nalox", "Samarth Life Sciences", "Inj", "0.4 mg / mL"),
+                BrandInfo("Nex", "Troikaa Pharmaceuticals", "Inj", "0.4 mg / mL")
+            ),
+            modeOfAction = "Competitive antagonist at mu, kappa, and delta opioid receptors, displacing opioid agonists and reversing respiratory depression.",
+            packSize = "Box of 10 ampoules (0.4 mg in 1 mL each)",
+            ddaSchedule = "Schedule Ka (Life-Saving Emergency Antidote)",
+            nemlCategory = "WHO Model List of Essential Medicines (Antidotes Section)"
+        ),
+        Drug(
+            id = "crit_flumazenil",
+            genericName = "Flumazenil",
+            system = "Emergency & Critical Care",
+            drugClass = "Benzodiazepine Receptor Antagonist",
+            blackBoxWarning = "SEIZURE RISK: Flumazenil has been associated with the occurrence of seizures, especially in patients on long-term benzodiazepines or in concurrent tricyclic antidepressant overdose.",
+            indications = "Complete or partial reversal of the sedative effects of benzodiazepines after procedural sedation, general anesthesia, or acute isolated benzodiazepine overdose.",
+            doses = "Procedural sedation reversal: 0.2 mg IV over 15 seconds. If consciousness not regained after 45 seconds, give 0.1 mg; repeat at 60-second intervals (max: 1.0 mg).\nOverdose: Initial 0.2 mg IV; if no response after 30 sec, give 0.3 mg over 30 sec; subsequent doses 0.5 mg every 60 sec up to maximum 3.0 mg total.",
+            administration = "Administer IV through a free-flowing IV infusion into a large vein to avoid local irritation. Inject over 15 to 30 seconds.",
+            timing = "Emergency administration under continuous airway and ECG monitoring.",
+            specialInstructions = "Do NOT administer in mixed overdose involving tricyclic antidepressants (TCAs), bupropion, or epileptogenic substances. Contraindicated in known seizure disorder on chronic benzodiazepine therapy.",
+            pkPd = "Onset of antagonism: 1-2 minutes; Peak effect: 6-10 minutes. Protein binding 50%. Extensively metabolized by hepatic CYP enzymes to inactive carboxylic acid. Half-life: 40-80 minutes.",
+            renalAdj = "No adjustment required in renal insufficiency.",
+            hepaticAdj = "Clearance decreased by 70-80% in severe hepatic dysfunction; reduce repeated dosing interval.",
+            pregnancy = "Category C (Use only if maternal emergency dictates).",
+            lactation = "Caution advised; unknown if excreted in human milk.",
+            sideEffects = "Seizures, acute withdrawal syndrome (anxiety, agitation, tremors), nausea, vomiting, facial flushing, dizziness, diaphoresis, cardiac dysrhythmias.",
+            priceNpr = "NPR 850.00 - 1,400.00 per vial (0.5 mg / 5 mL)",
+            priceInr = "INR 450.00 - 850.00 per vial (0.5 mg / 5 mL)",
+            brandsNepal = listOf(
+                BrandInfo("Flumaz-NPL", "Nepal Pharmaceuticals Lab", "Inj", "0.5 mg / 5 mL")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Anexate", "Roche Products / Piramal", "Inj", "0.5 mg / 5 mL"),
+                BrandInfo("Fludots", "Neon Laboratories", "Inj", "0.5 mg / 5 mL"),
+                BrandInfo("Flumaz", "Samarth Life Sciences", "Inj", "0.5 mg / 5 mL")
+            ),
+            modeOfAction = "Competitively antagonizes benzodiazepine binding at the GABA-A receptor complex in the central nervous system.",
+            packSize = "Vial of 0.5 mg in 5 mL solution (0.1 mg/mL)",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Essential Medicines (Specific Antidotes)"
+        ),
+        Drug(
+            id = "crit_calcium_gluconate",
+            genericName = "Calcium Gluconate 10%",
+            system = "Emergency & Critical Care",
+            drugClass = "Electrolyte / Cardioprotective Calcium Salt",
+            blackBoxWarning = null,
+            indications = "Severe Hyperkalemia with ECG changes (peaked T waves, PR prolongation, widened QRS), Severe Acute Symptomatic Hypocalcemia (tetany, Chvostek/Trousseau sign, seizure), Magnesium Toxicity, Calcium Channel Blocker Overdose.",
+            doses = "Hyperkalemia ECG stabilization: 10 - 20 mL of 10% solution (1-2 g) IV over 2 to 5 minutes under continuous ECG monitoring. Repeat after 5-10 minutes if ECG abnormalities persist.\nAcute Hypocalcemia: 10 - 20 mL of 10% solution IV over 10 minutes, followed by continuous infusion of 1 mg/kg/hour of elemental calcium.",
+            administration = "Administer slow IV push over 5-10 minutes into a large vein. Never give IM or SC (causes severe tissue necrosis and sloughing). Do NOT mix with Sodium Bicarbonate or Phosphate solutions (calcium precipitation).",
+            timing = "Immediate emergency administration upon identifying hyperkalemic ECG abnormalities.",
+            specialInstructions = "10 mL of 10% Calcium Gluconate provides ~93 mg (4.65 mEq) of elemental calcium (1/3 of Calcium Chloride; less irritating to peripheral veins). Use with extreme caution in digitalized patients.",
+            pkPd = "Onset of cardioprotection: 1-3 minutes; Duration: 30-60 minutes. Ionized calcium equilibrates with bone depot and intracellular stores; excreted in urine and feces.",
+            renalAdj = "Monitor serum ionized calcium; caution in end-stage renal disease to prevent metastatic tissue calcification.",
+            hepaticAdj = "No adjustment needed.",
+            pregnancy = "Category C (Widely and safely used for magnesium sulfate toxicity in preeclampsia/eclampsia).",
+            lactation = "Compatible with breastfeeding; normal physiological constituent of human breast milk.",
+            sideEffects = "Bradycardia, hypotension, peripheral vasodilation, sensation of warmth/flushing, chalky taste, cardiac arrest if injected rapidly, local vein irritation.",
+            priceNpr = "NPR 45.00 - 85.00 per ampoule (10 mL 10%)",
+            priceInr = "INR 25.00 - 55.00 per ampoule (10 mL 10%)",
+            brandsNepal = listOf(
+                BrandInfo("Calglu-NPL", "Nepal Pharmaceuticals Lab", "Inj", "10% (10 mL)"),
+                BrandInfo("Calcitate", "Deurali-Janta Pharmaceuticals", "Inj", "10% (10 mL)")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Calcium Gluconate Inj", "Neon Laboratories", "Inj", "10% (10 mL)"),
+                BrandInfo("Calcinate", "Samarth Life Sciences", "Inj", "10% (10 mL)")
+            ),
+            modeOfAction = "Antagonizes the membrane-depolarizing effect of hyperkalemia by raising myocardial action potential threshold, restoring cardiac membrane excitability.",
+            packSize = "Box of 10 glass ampoules (10 mL each, 10% w/v)",
+            ddaSchedule = "Schedule Ka (Universal Emergency Resuscitation)",
+            nemlCategory = "National Essential Medicines List Nepal (Core Resuscitation Medicine)"
+        ),
+        Drug(
+            id = "crit_sodium_bicarbonate",
+            genericName = "Sodium Bicarbonate 8.4%",
+            system = "Emergency & Critical Care",
+            drugClass = "Systemic & Urinary Alkalinizing Agent",
+            blackBoxWarning = null,
+            indications = "Severe metabolic acidosis with hemodynamic instability (arterial pH < 7.10), Tricyclic Antidepressant (TCA) / Sodium Channel Blocker cardiotoxicity (QRS > 100 ms), Severe Hyperkalemia, Urinary alkalinization in salicylate poisoning, Rhabdomyolysis.",
+            doses = "TCA Toxicity / QRS widening: 1 - 2 mEq/kg (1-2 mL/kg of 8.4% solution) IV push over 2-3 minutes. Goal arterial pH 7.45 - 7.55 and QRS narrowing.\nSevere Acidosis: 50 - 100 mEq (50-100 mL of 8.4%) infused over 15-30 minutes. Calculate base deficit: 0.2 × Weight (kg) × Base Deficit.",
+            administration = "Administer IV. 8.4% is hyperosmolar (2,000 mOsm/L); inject into central line or large vein. In pediatric patients, dilute 1:1 with sterile water to 4.2% solution.",
+            timing = "Emergency bolus or controlled infusion guided by serial Arterial Blood Gas (ABG) measurements.",
+            specialInstructions = "Incompatible with Calcium Gluconate, Calcium Chloride, and catecholamines (Dopamine, Norepinephrine) in the same IV line. Ineffective in lactic acidosis without adequate alveolar ventilation (produces CO2).",
+            pkPd = "Dissociates to sodium and bicarbonate; bicarbonate buffers hydrogen ions to form carbonic acid, which decomposes to water and carbon dioxide exhaled by lungs.",
+            renalAdj = "Use cautiously; sodium load can precipitate volume overload, pulmonary edema, and metabolic alkalosis in oliguric renal failure.",
+            hepaticAdj = "Caution in cirrhosis; alkaline pH promotes conversion of ammonium (NH4+) to toxic diffusible ammonia (NH3) worsening hepatic encephalopathy.",
+            pregnancy = "Category C (Used in severe maternal acidemia or TCA poisoning under maternal monitoring).",
+            lactation = "Compatible with breastfeeding.",
+            sideEffects = "Metabolic alkalosis, hypernatremia, hyperosmolality, hypokalemia, hypocalcemia (tetany), paradoxical intracellular CNS acidosis, volume overload.",
+            priceNpr = "NPR 65.00 - 120.00 per ampoule (25 mL 8.4%)",
+            priceInr = "INR 35.00 - 75.00 per ampoule (25 mL 8.4%)",
+            brandsNepal = listOf(
+                BrandInfo("Bicarb-NPL", "Nepal Pharmaceuticals Lab", "Inj", "8.4% (25 mL)"),
+                BrandInfo("Sodabicarb", "Curex Pharmaceuticals", "Inj", "8.4% (25 mL)")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Soda Bicarb Inj", "Neon Laboratories", "Inj", "8.4% (25 mL)"),
+                BrandInfo("Bicarb", "Samarth Life Sciences", "Inj", "8.4% (25 mL)")
+            ),
+            modeOfAction = "Increases plasma bicarbonate concentration, buffers excess hydrogen ions, raises blood pH, and increases extracellular sodium reversing fast sodium channel blockade.",
+            packSize = "Glass ampoule or vial of 25 mL (8.4% w/v = 1 mEq/mL)",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Essential Medicines (Emergency Alkalinizer)"
+        ),
+        Drug(
+            id = "crit_pralidoxime",
+            genericName = "Pralidoxime Chloride (2-PAM)",
+            system = "Emergency & Critical Care",
+            drugClass = "Cholinesterase Reactivator (Oxime Antidote)",
+            blackBoxWarning = null,
+            indications = "Organophosphate Poisoning (Insecticides, Chemical Nerve Agents) with nicotinic and muscarinic signs, in combination with Atropine.",
+            doses = "Adult: Loading dose 1 - 2 g IV in 100 mL 0.9% Saline infused over 15-30 minutes. Followed by continuous IV infusion of 500 mg/hour (8-10 mg/kg/hour) for 24-48 hours until atropine is no longer needed.\nPediatric: 20 - 50 mg/kg IV loading over 30 min, then 10-20 mg/kg/hour infusion.",
+            administration = "Administer IV as slow intermittent infusion or continuous infusion. Avoid rapid bolus injection (<5 min) which can cause laryngospasm, muscle rigidity, and tachycardia.",
+            timing = "Initiate as early as possible after Atropine is given. Most effective before 'aging' of the phosphorylated enzyme occurs (within 24-48 hours of exposure).",
+            specialInstructions = "Always administer Atropine FIRST to counter life-threatening bronchospasm and bronchorrhea. Ineffective and NOT indicated in carbamate poisoning alone.",
+            pkPd = "Onset of action: 10-20 minutes. Minimal protein binding. Rapidly excreted unchanged in urine (80-90% within 12 hours) via renal tubular secretion. Half-life: 1-2 hours.",
+            renalAdj = "Reduce dose by 50% in renal impairment (CrCl < 50 mL/min) to avoid central toxicity and neuromuscular blockade.",
+            hepaticAdj = "No adjustment needed.",
+            pregnancy = "Category C (Used in acute maternal insecticide poisoning as benefit far outweighs risk).",
+            lactation = "Safety unknown; maternal antidote therapy is life-saving.",
+            sideEffects = "Dizziness, blurred vision, diplopia, headache, drowsiness, nausea, tachycardia, hypertension, laryngospasm, muscle weakness if infused too quickly.",
+            priceNpr = "NPR 380.00 - 650.00 per vial (1 g)",
+            priceInr = "INR 220.00 - 380.00 per vial (1 g)",
+            brandsNepal = listOf(
+                BrandInfo("Pam-Care", "Deurali-Janta Pharmaceuticals", "Inj", "1 g vial"),
+                BrandInfo("Aldopam", "Nepal Pharmaceuticals Lab", "Inj", "1 g vial")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Pam-Inj", "Neon Laboratories", "Inj", "1 g vial"),
+                BrandInfo("Neopam", "Samarth Life Sciences", "Inj", "1 g vial"),
+                BrandInfo("Pralidox", "Troikaa Pharmaceuticals", "Inj", "1 g vial")
+            ),
+            modeOfAction = "Attaches to organophosphate-inhibited acetylcholinesterase, breaks the organophosphate-enzyme bond, and regenerates active functional acetylcholinesterase.",
+            packSize = "Vial of 1 g dry powder with sterile water for injection",
+            ddaSchedule = "Schedule Ka (Critical Toxicology Antidote)",
+            nemlCategory = "National Essential Medicines List Nepal (Core Agricultural Antidote)"
+        ),
+
+        // =========================================================================
+        // 2. CARDIOVASCULAR SYSTEM & ANTICOAGULATION
+        // =========================================================================
+        Drug(
+            id = "cvs_heparin_ufh",
+            genericName = "Unfractionated Heparin (Heparin Sodium)",
+            system = "Cardiovascular System (CVS)",
+            drugClass = "Parenteral Anticoagulant (Indirect Thrombin Inhibitor)",
+            blackBoxWarning = null,
+            indications = "Acute Coronary Syndromes (STEMI, NSTEMI, Unstable Angina), Acute Pulmonary Embolism, Deep Vein Thrombosis, Cardiopulmonary Bypass, Hemodialysis circuit anticoagulation, Thromboembolism in severe renal failure (CrCl < 15 mL/min).",
+            doses = "Treatment of DVT/PE/ACS: IV loading bolus 80 units/kg (max 5,000 units), then initial continuous infusion 18 units/kg/hour (max 1,000 units/hr).\nTitrate every 6 hours using institutional weight-based nomogram to target anti-Xa 0.3-0.7 units/mL or aPTT 1.5 - 2.5 times control (60-80 seconds).\nVTE Prophylaxis: 5,000 units SC q8h or q12h.",
+            administration = "Administer IV continuous infusion using electronic infusion pump. Subcutaneous injection for prophylaxis only. Never administer intramuscularly (severe hematoma).",
+            timing = "Continuous intravenous infusion with serial aPTT / anti-Xa monitoring at 6 hours post-initiation and 6 hours after any dose adjustment.",
+            specialInstructions = "Monitor baseline and serial platelet counts every 2-3 days from Day 4 to Day 14 to screen for Heparin-Induced Thrombocytopenia (HIT). Complete reversal with Protamine Sulfate (1 mg per 100 units heparin).",
+            pkPd = "Onset: IV immediate, SC 20-60 min. Cleared by reticuloendothelial system (saturable) and renal excretion. Half-life: 30-90 minutes (dose-dependent).",
+            renalAdj = "Preferred anticoagulant of choice in severe renal impairment (CrCl < 30 mL/min) and dialysis patients over LMWH due to non-renal reticuloendothelial clearance.",
+            hepaticAdj = "Caution in severe liver disease; monitor baseline coagulopathy closely.",
+            pregnancy = "Category C (Does NOT cross the placenta; safe for maternal anticoagulation in pregnancy).",
+            lactation = "Compatible with breastfeeding (large molecular weight does not pass into breast milk).",
+            sideEffects = "Major bleeding, Heparin-Induced Thrombocytopenia (HIT Type II), osteoporosis (prolonged therapy >3 months), transient transaminitis, hyperkalemia (hypoaldosteronism), alopecia.",
+            priceNpr = "NPR 320.00 - 550.00 per vial (25,000 units / 5 mL)",
+            priceInr = "INR 180.00 - 320.00 per vial (25,000 units / 5 mL)",
+            brandsNepal = listOf(
+                BrandInfo("Heparin-NPL", "Nepal Pharmaceuticals Lab", "Inj", "25,000 IU / 5 mL"),
+                BrandInfo("Hepsol", "Deurali-Janta Pharmaceuticals", "Inj", "25,000 IU / 5 mL")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Beparine", "Biological E. Ltd.", "Inj", "25,000 IU / 5 mL"),
+                BrandInfo("Lupihap", "Lupin Ltd.", "Inj", "25,000 IU / 5 mL"),
+                BrandInfo("Caprin", "Samarth Life Sciences", "Inj", "25,000 IU / 5 mL")
+            ),
+            modeOfAction = "Binds to antithrombin III (ATIII), producing conformational change that accelerates ATIII-mediated inactivation of thrombin (Factor IIa) and Factor Xa by 1,000-fold.",
+            packSize = "Multi-dose vial containing 25,000 IU in 5 mL (5,000 IU/mL)",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model List of Essential Medicines (Antithrombotic)"
+        ),
+        Drug(
+            id = "cvs_rivaroxaban",
+            genericName = "Rivaroxaban",
+            system = "Cardiovascular System (CVS)",
+            drugClass = "Direct Oral Factor Xa Inhibitor (DOAC)",
+            blackBoxWarning = "PREMATURE DISCONTINUATION INCREASES RISK OF THROMBOTIC EVENTS: Discontinuing rivaroxaban without adequate alternative anticoagulation increases stroke risk. EPIDURAL/SPINAL HEMATOMA: Epidural or spinal hematomas may occur in patients receiving neuraxial anesthesia or spinal puncture.",
+            indications = "Non-valvular Atrial Fibrillation (stroke prevention), Acute DVT and Pulmonary Embolism treatment, Secondary VTE prevention, Post-orthopedic surgery (hip/knee arthroplasty) thromboprophylaxis, CAD/PAD vascular protection (low dose 2.5mg BID with aspirin).",
+            doses = "AFib: 20 mg PO once daily with evening meal (CrCl 15-50: 15 mg PO once daily with evening meal).\nDVT/PE Acute Treatment: 15 mg PO BID with food for 21 days, then 20 mg PO once daily with food.\nVTE Prophylaxis (Hip): 10 mg PO once daily for 35 days (Knee: 10 mg PO once daily for 12 days).",
+            administration = "Doses of 15 mg and 20 mg MUST be taken WITH FOOD to ensure optimal absorption (bioavailability drops from ~80% to 66% if taken fasting). 10 mg dose may be taken with or without food.",
+            timing = "Once daily in the evening with dinner (AFib) or twice daily with morning and evening meals (first 21 days DVT/PE).",
+            specialInstructions = "No routine coagulation monitoring required. Avoid concomitant strong dual inhibitors of CYP3A4 and P-glycoprotein (e.g. Ketoconazole, Ritonavir). Reversal agent: Andexanet alfa.",
+            pkPd = "Peak plasma concentration: 2-4 hours. Plasma protein binding 92-95%. Dual elimination: 1/3 excreted unchanged in urine, 2/3 metabolized by hepatic CYP3A4/2J2. Half-life: 5-9 hours (young) to 11-13 hours (elderly).",
+            renalAdj = "CrCl >50 mL/min: 20 mg OD; CrCl 15-50 mL/min: 15 mg OD; CrCl <15 mL/min: Avoid use.",
+            hepaticAdj = "Contraindicated in Child-Pugh Class B and C hepatic disease associated with coagulopathy.",
+            pregnancy = "Category C (Avoid in pregnancy; passes placental barrier and causes maternal/fetal bleeding).",
+            lactation = "Contraindicated; excreted into human breast milk.",
+            sideEffects = "Major bleeding (gastrointestinal hemorrhage, intracranial), hematuria, epistaxis, peripheral edema, elevated transaminases, wound secretion.",
+            priceNpr = "NPR 45.00 - 85.00 per tablet (15mg / 20mg)",
+            priceInr = "INR 28.00 - 55.00 per tablet (15mg / 20mg)",
+            brandsNepal = listOf(
+                BrandInfo("Rivarox", "Quest Pharmaceuticals", "Tab", "10 mg / 15 mg / 20 mg"),
+                BrandInfo("Xaban", "Deurali-Janta Pharmaceuticals", "Tab", "10 mg / 15 mg / 20 mg"),
+                BrandInfo("Ribanep", "Nepal Pharmaceuticals Lab", "Tab", "15 mg / 20 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Xarelto", "Bayer Zydus Pharma", "Tab", "10 mg / 15 mg / 20 mg"),
+                BrandInfo("Rivoct", "Sun Pharma", "Tab", "10 mg / 15 mg / 20 mg"),
+                BrandInfo("Ixarola", "Torrent Pharmaceuticals", "Tab", "15 mg / 20 mg"),
+                BrandInfo("Rivaroz", "Cipla Ltd.", "Tab", "15 mg / 20 mg")
+            ),
+            modeOfAction = "Direct, selective, reversible inhibitor of both free and clot-bound Factor Xa, blocking the intrinsic and extrinsic pathways of blood coagulation.",
+            packSize = "Blister strip of 10 or 14 film-coated tablets",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "Specialty Antithrombotic Formulary"
+        ),
+        Drug(
+            id = "cvs_dabigatran",
+            genericName = "Dabigatran Etexilate",
+            system = "Cardiovascular System (CVS)",
+            drugClass = "Direct Oral Thrombin (Factor IIa) Inhibitor (DOAC)",
+            blackBoxWarning = "PREMATURE DISCONTINUATION INCREASES RISK OF THROMBOTIC EVENTS: Discontinuing early without adequate alternative anticoagulation increases stroke risk. SPINAL/EPIDURAL HEMATOMA: Epidural hematoma risk during neuraxial anesthesia.",
+            indications = "Non-valvular Atrial Fibrillation stroke prevention, Treatment and secondary prevention of Deep Vein Thrombosis and Pulmonary Embolism (following 5-10 days of parenteral anticoagulation).",
+            doses = "AFib: 150 mg PO twice daily (CrCl 30-50 mL/min with high bleed risk: 110 mg PO BID; CrCl 15-30 mL/min: 75 mg PO BID in USA / Contraindicated in Europe/Nepal).\nDVT/PE Treatment: 150 mg PO twice daily following 5-10 days of IV heparin or SC enoxaparin.",
+            administration = "Swallow capsules WHOLE with a full glass of water. Do NOT crush, chew, or open capsules (opening capsule increases oral bioavailability by 75% causing severe bleed hazard).",
+            timing = "Morning and evening, with or without food. Maintain capsules in original desiccant blister pack (sensitive to moisture; use within 4 months of opening bottle).",
+            specialInstructions = "Reversal agent: Idarucizumab (Praxbind) 5 g IV rapidly reverses anticoagulation within minutes for emergency surgery or life-threatening hemorrhage.",
+            pkPd = "Prodrug rapidly converted by esterases to dabigatran. Bioavailability 3-7%. Protein binding 35%. 80% eliminated unchanged via kidneys. Half-life: 12-17 hours (prolonged to 28 hours in severe renal failure).",
+            renalAdj = "CrCl >50: 150 mg BID; CrCl 30-50: 150 mg BID (or 110 mg BID if elderly/bleeding risk); CrCl <30 mL/min: Contraindicated.",
+            hepaticAdj = "Contraindicated in patients with hepatic impairment or liver disease expected to impact survival.",
+            pregnancy = "Category C (Avoid in pregnancy).",
+            lactation = "Not recommended during breastfeeding.",
+            sideEffects = "Dyspepsia / GERD (due to tartaric acid core in capsule, occurs in up to 15%), gastrointestinal bleeding, epistaxis, hematoma.",
+            priceNpr = "NPR 60.00 - 110.00 per capsule (110mg / 150mg)",
+            priceInr = "INR 35.00 - 75.00 per capsule (110mg / 150mg)",
+            brandsNepal = listOf(
+                BrandInfo("Dabigat", "Quest Pharmaceuticals", "Cap", "110 mg / 150 mg"),
+                BrandInfo("Dabitran", "Deurali-Janta Pharmaceuticals", "Cap", "110 mg / 150 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Pradaxa", "Boehringer Ingelheim India", "Cap", "110 mg / 150 mg"),
+                BrandInfo("Dabigo", "Lupin Ltd.", "Cap", "110 mg / 150 mg"),
+                BrandInfo("Dabistar", "Mankind Pharma", "Cap", "110 mg / 150 mg")
+            ),
+            modeOfAction = "Competitive, reversible direct thrombin inhibitor that prevents the conversion of fibrinogen into fibrin clots.",
+            packSize = "Aluminum blister strip of 10 or 30 capsules with desiccant",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "Specialty Antithrombotic"
+        ),
+        Drug(
+            id = "cvs_protamine",
+            genericName = "Protamine Sulfate",
+            system = "Cardiovascular System (CVS)",
+            drugClass = "Heparin Antagonist / Basic Polycationic Peptide",
+            blackBoxWarning = "SEVERE HYPOTENSION AND ANAPHYLACTOID REACTIONS: Protamine sulfate can cause severe hypotension, cardiovascular collapse, noncardiogenic pulmonary edema, catastrophic pulmonary hypertension, and fatal anaphylaxis.",
+            indications = "Reversal of unfractionated heparin (UFH) following cardiopulmonary bypass, dialysis, or acute life-threatening heparin-induced hemorrhage; Partial reversal of low molecular weight heparin (LMWH).",
+            doses = "Heparin reversal: 1 mg of protamine neutralizes approximately 100 units of heparin administered within the preceding 30-60 minutes.\nIf 60-120 min post-heparin: give 0.5 mg per 100 units. If >120 min: give 0.25-0.375 mg per 100 units.\nMax single dose: 50 mg IV.\nEnoxaparin reversal: 1 mg protamine per 1 mg enoxaparin given in prior 8 hours.",
+            administration = "Administer slow IV infusion over at least 10 minutes (never exceed 5 mg/min). Rapid infusion triggers profound systemic vasodilation and catastrophic pulmonary vasoconstriction.",
+            timing = "Immediate emergency administration upon active heparinized hemorrhage or post-CPB decannulation.",
+            specialInstructions = "High risk of anaphylaxis in patients with prior vasectomy (anti-protamine antibodies), fish allergy (protamine is extracted from salmon sperm), or prior protamine-zinc insulin use.",
+            pkPd = "Onset: Rapid neutralization within 30-60 seconds. Clearance by reticuloendothelial system. Half-life: ~7 minutes. Caution for 'heparin rebound' bleeding 2-6 hours post-op.",
+            renalAdj = "No adjustment needed.",
+            hepaticAdj = "No adjustment needed.",
+            pregnancy = "Category C (Use when maternal hemorrhage from heparin warrants reversal).",
+            lactation = "Safety unknown; maternal indication is critical.",
+            sideEffects = "Severe systemic hypotension, bradycardia, pulmonary hypertension, bronchospasm, anaphylactic shock, dyspnea, nausea, paradoxical anticoagulation if overdosed.",
+            priceNpr = "NPR 350.00 - 650.00 per ampoule (50 mg / 5 mL)",
+            priceInr = "INR 200.00 - 380.00 per ampoule (50 mg / 5 mL)",
+            brandsNepal = listOf(
+                BrandInfo("Protamin-NPL", "Nepal Pharmaceuticals Lab", "Inj", "50 mg / 5 mL"),
+                BrandInfo("Protasol", "Deurali-Janta Pharmaceuticals", "Inj", "50 mg / 5 mL")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Protamine Sulphate Inj", "Neon Laboratories", "Inj", "50 mg / 5 mL"),
+                BrandInfo("Protasulf", "Samarth Life Sciences", "Inj", "50 mg / 5 mL")
+            ),
+            modeOfAction = "Strongly basic polycationic peptide that binds strongly acidic polyanionic heparin to form a stable, inactive neutral salt lacking anticoagulant activity.",
+            packSize = "Box of 5 ampoules (50 mg in 5 mL each)",
+            ddaSchedule = "Schedule Ka (Life-Saving Reversal Antidote)",
+            nemlCategory = "WHO Model List of Essential Medicines (Antidotes)"
+        ),
+        Drug(
+            id = "cvs_furosemide",
+            genericName = "Furosemide",
+            system = "Cardiovascular System (CVS)",
+            drugClass = "Loop Diuretic (Sulfonamide derivative)",
+            blackBoxWarning = "PROFOUND DIURESIS WITH WATER AND ELECTROLYTE DEPLETION: Furosemide is a potent diuretic that, if given in excessive amounts, can lead to profound diuresis with water and electrolyte depletion.",
+            indications = "Acute pulmonary edema, Congestive heart failure, Edema associated with hepatic cirrhosis (ascites) and nephrotic syndrome, Hypertensive crisis (adjunct), Acute kidney injury fluid overload.",
+            doses = "Acute Pulmonary Edema: 40 - 80 mg IV bolus over 1-2 min (double dose at 1-2 hours if inadequate response; max single dose 160-200 mg).\nChronic Heart Failure: 20 - 80 mg PO once daily in morning, titrate up to 160 mg/day.\nCirrhotic Ascites: Combine with Spironolactone (ratio 40 mg Furosemide to 100 mg Spironolactone).",
+            administration = "Oral: Morning with breakfast. IV push: Slow injection at rate not exceeding 40 mg/min (higher rates cause transient or permanent ototoxicity).",
+            timing = "Morning dose to prevent nocturia and sleep interruption; twice daily dosing at 8 AM and 2 PM.",
+            specialInstructions = "Monitor serum potassium, sodium, magnesium, and creatinine regularly. Watch for contraction alkalosis and digitalis toxicity in hypokalemic patients.",
+            pkPd = "Bioavailability: 50% (oral dose = 2x IV dose). Onset: IV 5 min, Oral 30-60 min. Duration: IV 2 hours, Oral 6-8 hours ('six-hour diuretic'). Protein binding 91-99%. Renal excretion 65-80%.",
+            renalAdj = "High doses (up to 250-500 mg IV) may be required in severe chronic kidney disease due to reduced tubular secretion into the loop of Henle.",
+            hepaticAdj = "Caution in cirrhosis; sudden fluid shifts and hypokalemic metabolic alkalosis can precipitate hepatic encephalopathy and hepatorenal syndrome.",
+            pregnancy = "Category C (Crosses placenta; monitor fetal growth and amniotic fluid).",
+            lactation = "Excreted in breast milk; may suppress lactation.",
+            sideEffects = "Hypokalemia, hyponatremia, hypomagnesemia, hypocalcemia, hyperuricemia (gout flare), ototoxicity (tinnitus, hearing loss), prerenal azotemia, orthostatic hypotension.",
+            priceNpr = "NPR 1.80 - 4.00 per tablet (40mg); NPR 15.00 - 30.00 per amp (20mg/2mL)",
+            priceInr = "INR 1.00 - 2.50 per tablet (40mg); INR 8.00 - 18.00 per amp (20mg/2mL)",
+            brandsNepal = listOf(
+                BrandInfo("Lasix", "Sanofi India / Nepal Distribution", "Tab / Inj", "40 mg / 20 mg/2mL"),
+                BrandInfo("Furocot", "Deurali-Janta Pharmaceuticals", "Tab", "40 mg"),
+                BrandInfo("Urid-40", "Nepal Pharmaceuticals Lab", "Tab", "40 mg"),
+                BrandInfo("Frusenep", "National Healthcare", "Inj", "20 mg / 2 mL")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Lasix", "Sanofi India Ltd.", "Tab / Inj", "40 mg / 20 mg/2mL"),
+                BrandInfo("Salinex", "Torrent Pharmaceuticals", "Tab", "40 mg"),
+                BrandInfo("Frusix", "Mankind Pharma", "Inj", "20 mg / 2 mL")
+            ),
+            modeOfAction = "Inhibits Na+/K+/2Cl- cotransporter in the thick ascending limb of the loop of Henle, blocking sodium and chloride reabsorption and causing potent natriuresis and diuresis.",
+            packSize = "Strips of 10/20 tablets (40mg); Box of 10 ampoules (20mg/2mL)",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model List of Essential Medicines (Core Diuretic)"
+        ),
+        Drug(
+            id = "cvs_carvedilol",
+            genericName = "Carvedilol",
+            system = "Cardiovascular System (CVS)",
+            drugClass = "Non-Selective Beta-Blocker with Alpha-1 Vasodilatory Activity",
+            blackBoxWarning = "DO NOT ABRUPTLY DISCONTINUE THERAPY: Abrupt cessation of beta-blockers in patients with ischemic heart disease can precipitate severe angina exacerbation, ventricular arrhythmias, or myocardial infarction.",
+            indications = "Heart Failure with Reduced Ejection Fraction (HFrEF NYHA Class II-IV), Post-Myocardial Infarction left ventricular dysfunction (LVEF <= 40%), Essential Hypertension, Cirrhotic Portal Hypertension (reduces hepatic venous pressure gradient / HVPG).",
+            doses = "Heart Failure: Start 3.125 mg PO twice daily with meals. If tolerated, double dose every 2 weeks to 6.25 mg BID, then 12.5 mg BID, up to target 25 mg PO BID (or 50 mg BID if weight > 85 kg).\nHypertension: 6.25 - 12.5 mg PO BID.\nCirrhosis (HVPG reduction): 6.25 mg PO once daily, titrate to 6.25 mg BID (target SBP >= 90 mmHg, HR 55-60).",
+            administration = "Take orally TWICE daily WITH FOOD to slow rate of absorption and reduce risk of orthostatic hypotension.",
+            timing = "Morning and evening with breakfast and dinner.",
+            specialInstructions = "Check baseline BP and pulse before initiation. Contraindicated in bronchial asthma, severe COPD, 2nd/3rd degree AV block without pacemaker, and cardiogenic shock.",
+            pkPd = "Rapid absorption; bioavailability ~25-35% due to extensive first-pass hepatic metabolism via CYP2D6 and CYP2C9. Highly protein bound (98%). Terminal half-life: 7-10 hours. Fecal/biliary excretion >60%.",
+            renalAdj = "No dose adjustment required in mild-to-severe renal failure or hemodialysis.",
+            hepaticAdj = "Contraindicated in severe hepatic impairment (Child-Pugh C); plasma concentrations increase 4- to 7-fold.",
+            pregnancy = "Category C (Beta-blockers can cause fetal bradycardia, growth restriction, and hypoglycemia).",
+            lactation = "Excreted in human milk; avoid during breastfeeding.",
+            sideEffects = "Dizziness, orthostatic hypotension, bradycardia, fluid retention/worsening edema during initiation, fatigue, hyperglycemia, diarrhea, erectile dysfunction.",
+            priceNpr = "NPR 6.50 - 15.00 per tablet (3.125mg / 6.25mg / 12.5mg / 25mg)",
+            priceInr = "INR 4.00 - 10.00 per tablet",
+            brandsNepal = listOf(
+                BrandInfo("Carvil", "Deurali-Janta Pharmaceuticals", "Tab", "3.125 / 6.25 / 12.5 / 25 mg"),
+                BrandInfo("Carveta", "Quest Pharmaceuticals", "Tab", "6.25 mg / 12.5 mg / 25 mg"),
+                BrandInfo("Cardivas-NPL", "Nepal Pharmaceuticals Lab", "Tab", "6.25 mg / 12.5 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Cardivas", "Sun Pharma", "Tab", "3.125 / 6.25 / 12.5 / 25 mg"),
+                BrandInfo("Carvil", "Zydus Cadila", "Tab", "6.25 mg / 12.5 mg / 25 mg"),
+                BrandInfo("Carca", "Intas Pharmaceuticals", "Tab", "6.25 mg / 12.5 mg")
+            ),
+            modeOfAction = "Non-selective beta-1 and beta-2 adrenergic receptor blocker with alpha-1 selective adrenergic antagonism, reducing systemic vascular resistance without reflex tachycardia.",
+            packSize = "Strips of 10 or 14 tablets",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model Essential Medicines List (Cardiovascular)"
+        ),
+        Drug(
+            id = "cvs_digoxin",
+            genericName = "Digoxin",
+            system = "Cardiovascular System (CVS)",
+            drugClass = "Cardiac Glycoside / Inotropic Antiarrhythmic Agent",
+            blackBoxWarning = null,
+            indications = "Rate control in permanent or persistent Atrial Fibrillation with heart failure, Symptomatic Heart Failure with Reduced Ejection Fraction (HFrEF) refractory to GDMT.",
+            doses = "Atrial Fibrillation Rapid Digitalization: 0.25 - 0.5 mg IV/PO, then 0.25 mg q4-6h to maximum 1.0-1.5 mg over 24h.\nMaintenance: 0.125 - 0.25 mg PO once daily in morning. Elderly / CKD: 0.0625 - 0.125 mg PO daily or every other day.\nTarget Therapeutic Serum Level: 0.5 - 0.9 ng/mL (heart failure) or 0.8 - 1.2 ng/mL (AFib rate control).",
+            administration = "Take orally once daily in the morning with a full glass of water. IV push must be diluted in 4-fold volume of saline and injected over at least 5 minutes.",
+            timing = "Consistent morning dosing. Draw trough serum digoxin levels at least 6-8 hours after dose.",
+            specialInstructions = "NARROW THERAPEUTIC INDEX. Hypokalemia, hypomagnesemia, and hypercalcemia markedly potentiate digoxin toxicity. In toxicity, administer Digoxin Immune Fab (DigiFab).",
+            pkPd = "Bioavailability: tablets 60-80%, elixir 80%, IV 100%. Apparent volume of distribution 7 L/kg (binds heavily to skeletal muscle). 70-80% excreted unchanged by kidneys. Half-life: 36-48 hours (prolonged to 3.5-5 days in anuria).",
+            renalAdj = "CrCl >50: 0.125-0.25 mg OD; CrCl 30-50: 0.125 mg OD; CrCl 10-30: 0.0625 mg OD; CrCl <10 or HD: 0.0625 mg every 48 hours. Not dialyzable.",
+            hepaticAdj = "No adjustment needed.",
+            pregnancy = "Category C (Crosses placenta; monitor fetal HR and maternal drug levels).",
+            lactation = "Excreted in low concentrations in breast milk; compatible with breastfeeding.",
+            sideEffects = "Cardiac arrhythmias (PVCs, bigeminy, junctional tachycardia, AV block, VT/VF), visual disturbances (xanthopsia / yellow-green halos), nausea, vomiting, anorexia, confusion.",
+            priceNpr = "NPR 3.50 - 6.50 per tablet (0.25mg); NPR 45.00 - 85.00 per ampoule",
+            priceInr = "INR 2.00 - 4.50 per tablet (0.25mg); INR 25.00 - 55.00 per ampoule",
+            brandsNepal = listOf(
+                BrandInfo("Lanoxin", "GlaxoSmithKline / Nepal Import", "Tab", "0.25 mg"),
+                BrandInfo("Digoxin-NPL", "Nepal Pharmaceuticals Lab", "Tab", "0.25 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Lanoxin", "GlaxoSmithKline India", "Tab / Inj", "0.25 mg / 0.5 mg/2mL"),
+                BrandInfo("Digitox", "Samarth Life Sciences", "Inj", "0.5 mg / 2 mL")
+            ),
+            modeOfAction = "Inhibits sarcolemmal Na+/K+-ATPase pump, increasing intracellular sodium and activating Na+/Ca2+ exchanger to increase intracellular calcium and myocardial contractility; stimulates vagal tone slowing AV conduction.",
+            packSize = "Strips of 10 or 30 tablets (0.25 mg)",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model List of Essential Medicines (Cardiovascular Medicines)"
+        ),
+        Drug(
+            id = "cvs_nitroglycerin",
+            genericName = "Nitroglycerin (Glyceryl Trinitrate / GTN)",
+            system = "Cardiovascular System (CVS)",
+            drugClass = "Organic Nitrate Vasodilator (NO Donor)",
+            blackBoxWarning = null,
+            indications = "Acute angina pectoris relief and prophylaxis, Acute Coronary Syndrome (STEMI / NSTEMI), Acute hypertensive crisis with acute pulmonary edema, Perioperative hypertension.",
+            doses = "Sublingual: 0.5 mg SL tablet under tongue at onset of chest pain. Repeat every 5 minutes up to 3 doses. Call emergency services if pain persists > 5 minutes after first dose.\nContinuous IV Infusion: Start 5 - 10 mcg/min. Titrate up by 5-10 mcg/min every 3-5 minutes until symptom relief or MAP drops by 10-15%. Max: 200 mcg/min.",
+            administration = "Sublingual: Dissolve under tongue; do NOT swallow or chew. IV: Administer via infusion pump using NON-PVC glass or polyethylene tubing (PVC absorbs up to 80% of drug).",
+            timing = "Sublingual at onset of angina or 5-10 min prior to precipitating exertion. IV continuous titration.",
+            specialInstructions = "ABSOLUTELY CONTRAINDICATED with PDE5 inhibitors (Sildenafil/Vardenafil within 24h, Tadalafil within 48h) due to fatal refractory hypotension. Avoid in inferior wall MI with RV infarction.",
+            pkPd = "Onset: SL 1-3 min, IV immediate. Duration: SL 30-60 min, IV 5-10 min. Hepatic first-pass metabolism near 100% (oral inactive). Half-life: 1-4 minutes.",
+            renalAdj = "No adjustment needed.",
+            hepaticAdj = "Use with caution; hypotension risk increased.",
+            pregnancy = "Category C (Used in severe hypertensive emergencies in late pregnancy with fetal monitoring).",
+            lactation = "Safety unknown; transient use acceptable.",
+            sideEffects = "Throbbing headache, severe reflex tachycardia, orthostatic hypotension, facial flushing, syncope, nitrate tolerance (with prolonged continuous infusions > 24h).",
+            priceNpr = "NPR 120.00 - 220.00 per bottle of 25 sublingual tabs; NPR 250.00 - 450.00 per 25mg vial",
+            priceInr = "INR 70.00 - 140.00 per bottle (0.5mg SL); INR 150.00 - 280.00 per 25mg vial",
+            brandsNepal = listOf(
+                BrandInfo("Nitrolong", "Deurali-Janta Pharmaceuticals", "Tab", "2.6 mg / 6.4 mg CR"),
+                BrandInfo("Angispan", "Nepal Pharmaceuticals Lab", "Cap", "2.5 mg / 6.5 mg TR"),
+                BrandInfo("Nitro-Care", "Quest Pharmaceuticals", "Inj", "25 mg / 5 mL")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Angispan-TR", "Sun Pharma", "Cap", "2.5 mg / 6.5 mg"),
+                BrandInfo("Nitrocontin", "Modi-Mundipharma", "CR Tab", "2.6 mg / 6.4 mg"),
+                BrandInfo("Myonit", "Troikaa Pharmaceuticals", "Inj", "25 mg / 5 mL"),
+                BrandInfo("Sorbitrate", "Abbott India", "SL Tab", "5 mg / 10 mg")
+            ),
+            modeOfAction = "Denitrated by aldehyde dehydrogenase to release nitric oxide (NO), stimulating guanylate cyclase and cGMP, producing relaxation of vascular smooth muscle, predominantly in venous capacitance vessels.",
+            packSize = "Glass bottle of 25 sublingual tablets (0.5 mg) or 5 mL ampoule (5 mg/mL)",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model List of Essential Medicines (Anti-anginal)"
+        ),
+        Drug(
+            id = "cvs_diltiazem",
+            genericName = "Diltiazem Hydrochloride",
+            system = "Cardiovascular System (CVS)",
+            drugClass = "Non-Dihydropyridine Benzothiazepine Calcium Channel Blocker",
+            blackBoxWarning = null,
+            indications = "Acute ventricular rate control in Atrial Fibrillation or Atrial Flutter, Paroxysmal Supraventricular Tachycardia (PSVT) conversion, Chronic stable angina, Essential hypertension.",
+            doses = "IV Bolus for AFib/Flutter: 0.25 mg/kg IV over 2 minutes (typical dose 15-20 mg). If response inadequate after 15 min, give second bolus of 0.35 mg/kg IV over 2 min (typical 20-25 mg).\nContinuous IV Infusion: 5 - 15 mg/hour IV continuous infusion, titrated to heart rate < 100 bpm.\nOral Maintenance: 120 - 360 mg/day PO divided BID or as once-daily extended-release formulation.",
+            administration = "IV bolus administered over 2 minutes under continuous ECG and blood pressure monitoring. Oral: Swallow extended-release capsules whole.",
+            timing = "Oral immediate release: 3-4 times daily before meals and at bedtime. Extended-release: Once daily in morning.",
+            specialInstructions = "Contraindicated in 2nd or 3rd degree AV block, sick sinus syndrome (unless pacemaker present), severe hypotension (SBP < 90), and decompensated heart failure with LVEF < 40%.",
+            pkPd = "Bioavailability ~40% (extensive first-pass hepatic metabolism). Onset: IV 2-5 min, Oral 30-60 min. Protein binding 70-80%. Hepatic metabolism via CYP3A4. Half-life: 3.5-6 hours.",
+            renalAdj = "No initial adjustment needed; monitor for fluid retention.",
+            hepaticAdj = "Extensively metabolized by liver; reduce dose and monitor heart rate and blood pressure closely.",
+            pregnancy = "Category C (Teratogenic in animal models; avoid in pregnancy).",
+            lactation = "Excreted in human milk; avoid or use alternative rate-control agent.",
+            sideEffects = "Bradycardia, AV block, hypotension, peripheral bilateral ankle edema, dizziness, headache, constipation (less severe than verapamil), elevated LFTs.",
+            priceNpr = "NPR 8.00 - 18.00 per tablet (60mg / 90mg SR); NPR 180.00 - 320.00 per vial (25mg)",
+            priceInr = "INR 5.00 - 12.00 per tablet; INR 95.00 - 190.00 per vial (25mg)",
+            brandsNepal = listOf(
+                BrandInfo("Dilgard", "Deurali-Janta Pharmaceuticals", "Tab", "30 mg / 60 mg / 90 mg SR"),
+                BrandInfo("Diltiaz-NPL", "Nepal Pharmaceuticals Lab", "Tab", "60 mg / 90 mg SR"),
+                BrandInfo("Dilti-Care", "Quest Pharmaceuticals", "Inj", "25 mg / 5 mL")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Dilzem", "Torrent Pharmaceuticals", "Tab / Inj", "30 / 60 / 90 SR / 25mg Inj"),
+                BrandInfo("Angizem", "Sun Pharma", "Tab", "30 mg / 60 mg / 90 mg CD"),
+                BrandInfo("Dilcontin", "Modi-Mundipharma", "CR Tab", "90 mg / 120 mg")
+            ),
+            modeOfAction = "Inhibits L-type voltage-sensitive calcium channels in cardiac myocytes and vascular smooth muscle, decreasing SA nodal automaticity and delaying AV nodal conduction.",
+            packSize = "Strips of 10 or 15 tablets; Vial of 25 mg in 5 mL",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model List of Essential Medicines (Antiarrhythmic)"
+        ),
+
+        // =========================================================================
+        // 3. INFECTIOUS DISEASES & ANTIMICROBIALS (WHO AWaRe & CRITICAL PATHOGENS)
+        // =========================================================================
+        Drug(
+            id = "anti_cefotaxime",
+            genericName = "Cefotaxime Sodium",
+            system = "Anti-Infectives & Antimicrobials",
+            drugClass = "Third-Generation Cephalosporin Antibiotic",
+            blackBoxWarning = null,
+            indications = "Spontaneous Bacterial Peritonitis (SBP) in cirrhosis (drug of choice), Bacterial Meningitis, Neonatal Sepsis, Severe Community-Acquired Pneumonia, Complicated UTI, Pelvic Inflammatory Disease.",
+            doses = "Adult (SBP Treatment & Sepsis): 2 g IV every 8 hours (or 1-2 g q8h).\nMeningitis: 2 g IV every 4-6 hours (max 12 g/day).\nPediatric: 100 - 200 mg/kg/day divided q6-8h (Neonatal: 50 mg/kg/dose q12h in first week of life).",
+            administration = "Administer IV push over 3-5 minutes or IV intermittent infusion over 20-30 minutes. Also compatible with deep IM injection (dissolve with 1% lidocaine).",
+            timing = "Regular 8-hourly intervals around the clock.",
+            specialInstructions = "First-line empirical agent of choice for SBP per AASLD guidelines because it does not cause aminoglycoside-type nephrotoxicity in cirrhotic patients and has high ascitic fluid penetration.",
+            pkPd = "Bioavailability: 100% IV. Peak plasma: 30 min. Protein binding 30-40%. Partially metabolized by hepatic esterases to active desacetylcefotaxime (synergistic). 50-60% excreted unchanged in urine. Half-life: 1-1.5 hours.",
+            renalAdj = "CrCl 10-50 mL/min: Give standard dose q12h. CrCl <10 mL/min: Give standard dose q24h. Hemodialysis: Give 50% of standard dose q24h post-dialysis.",
+            hepaticAdj = "No dose adjustment required in liver disease or cirrhosis.",
+            pregnancy = "Category B (Safe and widely used in pregnancy and neonatal care).",
+            lactation = "Excreted in low concentrations in breast milk; compatible with breastfeeding.",
+            sideEffects = "Diarrhea, nausea, Clostridioides difficile colitis, phlebitis at injection site, rash, eosinophilia, positive direct Coombs test without hemolysis.",
+            priceNpr = "NPR 110.00 - 195.00 per vial (1 g IV)",
+            priceInr = "INR 65.00 - 120.00 per vial (1 g IV)",
+            brandsNepal = listOf(
+                BrandInfo("Cefotax-NPL", "Nepal Pharmaceuticals Lab", "Inj", "500 mg / 1 g"),
+                BrandInfo("Taxim-NPL", "Deurali-Janta Pharmaceuticals", "Inj", "1 g vial"),
+                BrandInfo("Omnicef-NPL", "Asian Pharmaceuticals", "Inj", "1 g vial")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Taxim", "Alkem Laboratories", "Inj", "500 mg / 1 g"),
+                BrandInfo("Claforan", "Sanofi India", "Inj", "1 g vial"),
+                BrandInfo("Omnatax", "Abbott India", "Inj", "1 g vial")
+            ),
+            modeOfAction = "Inhibits bacterial cell wall synthesis by binding to one or more penicillin-binding proteins (PBPs), leading to bacterial cell wall lysis.",
+            packSize = "Glass vial of 1 g dry powder with sterile water diluent",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model List of Essential Medicines (Watch Category)"
+        ),
+        Drug(
+            id = "anti_ceftazidime",
+            genericName = "Ceftazidime",
+            system = "Anti-Infectives & Antimicrobials",
+            drugClass = "Third-Generation Antipseudomonal Cephalosporin",
+            blackBoxWarning = null,
+            indications = "Pseudomonas aeruginosa infections, Febrile Neutropenia empiric monotherapy, Hospital-Acquired Pneumonia, Melioidosis (Burkholderia pseudomallei acute phase), Severe cystic fibrosis pulmonary exacerbation.",
+            doses = "Adult: 1 - 2 g IV every 8 hours.\nFebrile Neutropenia / Severe Sepsis: 2 g IV every 8 hours.\nMelioidosis (Acute Intensive Phase): 2 g IV q8h (50 mg/kg q8h up to 6g/day) for at least 14 days, followed by oral eradication therapy.\nPediatric: 100 - 150 mg/kg/day divided q8h.",
+            administration = "Administer IV intermittent infusion over 30 minutes, or extended infusion over 3-4 hours to optimize time above MIC (T > MIC).",
+            timing = "Strict 8-hourly schedule around the clock.",
+            specialInstructions = "Unlike ceftriaxone, ceftazidime has weak Gram-positive coverage (poor against Staph aureus and Strep pneumoniae); add Vancomycin or Oxacillin if Gram-positive infection suspected.",
+            pkPd = "Protein binding <10%. High CSF penetration in inflamed meninges. 80-90% excreted unchanged by glomerular filtration in urine. Elimination half-life: 1.5-2 hours (extended up to 25-35 hours in ESRD).",
+            renalAdj = "CrCl 30-50: 1 g q12h; CrCl 16-30: 1 g q24h; CrCl 6-15: 500 mg q24h; CrCl <5 or HD: 500 mg q48h or after each hemodialysis session.",
+            hepaticAdj = "No adjustment needed.",
+            pregnancy = "Category B (Safe in pregnancy).",
+            lactation = "Excreted into breast milk in small amounts; compatible with breastfeeding.",
+            sideEffects = "Diarrhea, Clostridioides difficile-associated diarrhea, eosinophilia, elevated transaminases, neurotoxicity (encephalopathy, myoclonus, seizures if unadjusted in renal failure).",
+            priceNpr = "NPR 280.00 - 450.00 per vial (1 g IV)",
+            priceInr = "INR 160.00 - 290.00 per vial (1 g IV)",
+            brandsNepal = listOf(
+                BrandInfo("Zidime", "Deurali-Janta Pharmaceuticals", "Inj", "1 g vial"),
+                BrandInfo("Ceftaz-NPL", "Nepal Pharmaceuticals Lab", "Inj", "1 g vial"),
+                BrandInfo("Tazid", "Quest Pharmaceuticals", "Inj", "1 g vial")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Fortum", "GlaxoSmithKline India", "Inj", "1 g / 2 g"),
+                BrandInfo("Ceftaz", "Cipla Ltd.", "Inj", "1 g vial"),
+                BrandInfo("Tazidime", "Alkem Laboratories", "Inj", "1 g vial")
+            ),
+            modeOfAction = "Binds to bacterial PBPs (especially PBP-3 of Pseudomonas and Gram-negative bacilli), arresting cell wall peptidoglycan synthesis.",
+            packSize = "Glass vial of 1 g dry powder with 10 mL diluent",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model List of Essential Medicines (Watch Category)"
+        ),
+        Drug(
+            id = "anti_cefepime",
+            genericName = "Cefepime Hydrochloride",
+            system = "Anti-Infectives & Antimicrobials",
+            drugClass = "Fourth-Generation Extended-Spectrum Cephalosporin",
+            blackBoxWarning = null,
+            indications = "Hospital-Acquired and Ventilator-Associated Pneumonia (HAP/VAP), Empiric therapy in Febrile Neutropenia, Complicated Intra-abdominal Infections (with metronidazole), Severe Pyelonephritis, AmpC beta-lactamase producer infections.",
+            doses = "Adult (Severe Hospital Infections): 2 g IV every 8 hours.\nModerate Sepsis / UTI: 1 - 2 g IV every 12 hours.\nFebrile Neutropenia: 2 g IV every 8 hours.\nPediatric: 50 mg/kg/dose IV every 8 hours (max 2 g/dose).",
+            administration = "Administer by IV intermittent infusion over 30 minutes, or extended infusion over 3-4 hours for resistant pathogens.",
+            timing = "Regular 8- or 12-hourly intervals.",
+            specialInstructions = "NEUROTOXICITY RISK: Can cross the blood-brain barrier and cause non-convulsive status epilepticus, myoclonus, encephalopathy, and coma in patients with renal impairment if dose is not renally adjusted.",
+            pkPd = "Zwitterionic structure allows rapid penetration through Gram-negative outer membrane porins (OmpF/OmpC). Protein binding 20%. 85% excreted unchanged in urine. Half-life: 2 hours.",
+            renalAdj = "CrCl 30-50: 2 g q12h; CrCl 11-29: 2 g q24h; CrCl <11 or HD: 1 g q24h (administer post-dialysis on dialysis days).",
+            hepaticAdj = "No dose adjustment required.",
+            pregnancy = "Category B (Safe in pregnancy).",
+            lactation = "Excreted in low levels in breast milk; compatible with breastfeeding.",
+            sideEffects = "Neurotoxicity (encephalopathy, myoclonus, altered mental status), rash, diarrhea, positive direct Coombs test, elevated LFTs, Clostridioides difficile colitis.",
+            priceNpr = "NPR 380.00 - 620.00 per vial (1 g / 2 g)",
+            priceInr = "INR 220.00 - 390.00 per vial (1 g / 2 g)",
+            brandsNepal = listOf(
+                BrandInfo("Cefepim-NPL", "Nepal Pharmaceuticals Lab", "Inj", "1 g / 2 g"),
+                BrandInfo("Novapime", "Deurali-Janta Pharmaceuticals", "Inj", "1 g vial"),
+                BrandInfo("Epime", "Asian Pharmaceuticals", "Inj", "1 g vial")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Maxipime", "Bristol-Myers Squibb / Abbott", "Inj", "1 g / 2 g"),
+                BrandInfo("Kefage", "Alkem Laboratories", "Inj", "1 g / 2 g"),
+                BrandInfo("Cepime", "Cipla Ltd.", "Inj", "1 g vial")
+            ),
+            modeOfAction = "Zwitterionic extended-spectrum cephalosporin resistant to common plasmid- and chromosome-mediated beta-lactamases (including AmpC); binds high-affinity PBPs.",
+            packSize = "Vial of 1 g or 2 g dry powder",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model List of Essential Medicines (Watch Category)"
+        ),
+        Drug(
+            id = "anti_amikacin",
+            genericName = "Amikacin Sulfate",
+            system = "Anti-Infectives & Antimicrobials",
+            drugClass = "Aminoglycoside Antibiotic",
+            blackBoxWarning = "NEPHROTOXICITY AND OTOTOXICITY: Amikacin can cause dose-dependent nephrotoxicity and irreversible bilateral congenital or acquired sensorineural ototoxicity. NEUROMUSCULAR BLOCKADE: May aggravate myasthenia gravis or cause respiratory paralysis post-anesthesia.",
+            indications = "Severe Gram-negative sepsis (Klebsiella, Enterobacter, Pseudomonas), Multi-Drug Resistant Tuberculosis (MDR-TB second-line injectable), Complicated pyelonephritis, Empiric synergy in infective endocarditis.",
+            doses = "Once-Daily Extended-Interval Dosing (Preferred): 15 - 20 mg/kg IV once daily infused over 60 minutes.\nConventional Multiple-Daily: 5 mg/kg IV q8h or 7.5 mg/kg IV q12h.\nMDR-TB: 15 mg/kg IV/IM once daily (max 1 g) 5-6 days per week.\nTarget Levels: Peak 20-30 mcg/mL (multi-daily) or 56-64 mcg/mL (once-daily); Trough < 5 mcg/mL (preferably < 1 mcg/mL before next dose).",
+            administration = "Administer IV intermittent infusion in 100 mL Normal Saline or 5% Dextrose over 30 to 60 minutes. Never give by rapid IV push.",
+            timing = "Once daily in the morning. Obtain trough level 30 minutes before 2nd or 3rd dose.",
+            specialInstructions = "Calculate dose using Adjusted Body Weight in obese patients. Ensure adequate hydration. Avoid co-administration with other nephrotoxins (Vancomycin, Amphotericin, Colistin, Furosemide, NSAIDs).",
+            pkPd = "Concentration-dependent bactericidal killing with prolonged post-antibiotic effect (PAE). Hydrophilic, distributes primarily to extracellular fluid. Excreted 95% unchanged by glomerular filtration. Half-life: 2-3 hours.",
+            renalAdj = "Extend interval based on CrCl: CrCl 40-50: q24h; CrCl 20-39: q48h; CrCl <20: single dose then redose based on serum levels (<2-3 mcg/mL).",
+            hepaticAdj = "No dose adjustment required.",
+            pregnancy = "Category D (Risk of congenital permanent bilateral sensorineural deafness in fetus).",
+            lactation = "Poorly absorbed orally by infant; monitor infant for thrush and diarrhea.",
+            sideEffects = "Acute tubular necrosis (nephrotoxicity with rising creatinine), irreversible cochlear/vestibular ototoxicity (high-frequency hearing loss, ataxia), neuromuscular blockade.",
+            priceNpr = "NPR 95.00 - 180.00 per vial (500 mg / 2 mL)",
+            priceInr = "INR 55.00 - 110.00 per vial (500 mg / 2 mL)",
+            brandsNepal = listOf(
+                BrandInfo("Amikacin-NPL", "Nepal Pharmaceuticals Lab", "Inj", "250 mg / 500 mg"),
+                BrandInfo("Mikacin-NPL", "Deurali-Janta Pharmaceuticals", "Inj", "500 mg / 2 mL"),
+                BrandInfo("Cinmik", "Quest Pharmaceuticals", "Inj", "500 mg / 2 mL")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Amikin", "Bristol-Myers Squibb", "Inj", "500 mg / 2 mL"),
+                BrandInfo("Mikacin", "Aristo Pharmaceuticals", "Inj", "250 mg / 500 mg"),
+                BrandInfo("Cinmik", "Cipla Ltd.", "Inj", "500 mg / 2 mL")
+            ),
+            modeOfAction = "Irreversibly binds to the 30S ribosomal subunit, causing misreading of genetic code and inhibiting protein synthesis; resistant to most aminoglycoside-modifying enzymes.",
+            packSize = "Vial of 500 mg in 2 mL aqueous solution",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model List of Essential Medicines (Access/Watch)"
+        ),
+        Drug(
+            id = "anti_clindamycin",
+            genericName = "Clindamycin Hydrochloride / Phosphate",
+            system = "Anti-Infectives & Antimicrobials",
+            drugClass = "Lincosamide Antibiotic (Protein Synthesis Inhibitor)",
+            blackBoxWarning = "CLOSTRIDIOIDES DIFFICILE-ASSOCIATED DIARRHEA (CDAD): Clindamycin therapy has been associated with severe, potentially fatal pseudomembranous colitis caused by C. difficile hypertoxin production.",
+            indications = "Severe Skin and Soft Tissue Infections (Necrotizing Fasciitis, Cellulitis), Toxic Shock Syndrome (anti-toxin effect against Strep/Staph), Osteomyelitis, Aspiration Pneumonia / Lung Abscess, Dental infections in penicillin allergy, Toxoplasmosis encephalitis (with pyrimethamine).",
+            doses = "Oral: 150 - 450 mg PO every 6 hours (max 1.8 g/day).\nIntravenous: 600 - 900 mg IV every 8 hours (Severe/Necrotizing: 900 mg IV q8h).\nPediatric: 20 - 40 mg/kg/day divided q6-8h.",
+            administration = "Oral: Swallow with a full glass of water and remain upright for at least 30 minutes to prevent severe pill-induced esophageal ulceration. IV: Infuse over 30-60 minutes (rate <= 30 mg/min).",
+            timing = "Regular 6- or 8-hourly intervals around the clock.",
+            specialInstructions = "In necrotizing fasciitis caused by Streptococcus pyogenes, Clindamycin suppresses M-protein and bacterial exotoxin synthesis independent of bacterial load ('Eagle effect').",
+            pkPd = "Bioavailability: 90% oral. Excellent penetration into bone, synovial fluid, and abscesses; poor CSF penetration. Protein binding 90%. Extensively metabolized by liver to active sulfoxide. Half-life: 2.5-3 hours.",
+            renalAdj = "No dose adjustment required in renal failure or hemodialysis.",
+            hepaticAdj = "Use with caution in severe hepatic impairment; monitor serum transaminases.",
+            pregnancy = "Category B (Safe and widely used in penicillin-allergic pregnant patients).",
+            lactation = "Excreted into breast milk; monitor infant for bloody stools and candida.",
+            sideEffects = "Severe C. difficile pseudomembranous colitis, diarrhea, esophageal ulceration (if taken recumbent), maculopapular morbilliform rash, metallic taste, elevated transaminases.",
+            priceNpr = "NPR 18.00 - 32.00 per capsule (300mg); NPR 140.00 - 240.00 per amp (600mg IV)",
+            priceInr = "INR 11.00 - 22.00 per capsule; INR 85.00 - 160.00 per amp (600mg IV)",
+            brandsNepal = listOf(
+                BrandInfo("Clincin", "Deurali-Janta Pharmaceuticals", "Cap / Inj", "300 mg / 600 mg IV"),
+                BrandInfo("Dalacin-NPL", "Nepal Pharmaceuticals Lab", "Cap", "150 mg / 300 mg"),
+                BrandInfo("Clindax", "Quest Pharmaceuticals", "Cap", "300 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Dalacin C", "Pfizer India", "Cap / Inj", "150 / 300 mg / 600mg Inj"),
+                BrandInfo("Clindac-A", "Alkem Laboratories", "Cap", "300 mg"),
+                BrandInfo("Erytop", "USV Ltd.", "Cap", "300 mg")
+            ),
+            modeOfAction = "Reversibly binds to 50S ribosomal subunit, suppressing peptidyltransferase and arresting bacterial protein synthesis; directly shuts down bacterial exotoxin production.",
+            packSize = "Strips of 10 capsules (300 mg) or 4 mL ampoule (600 mg/4mL)",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model List of Essential Medicines (Access Category)"
+        ),
+        Drug(
+            id = "anti_cotrimoxazole",
+            genericName = "Co-trimoxazole (Trimethoprim + Sulfamethoxazole / TMP-SMX)",
+            system = "Anti-Infectives & Antimicrobials",
+            drugClass = "Folate Synthesis Inhibitor Combination (Sulfonamide + Diaminopyrimidine)",
+            blackBoxWarning = "FATAL DERMATOLOGIC AND HEMATOLOGIC TOXICITY: Fatalities associated with sulfonamides have occurred from severe reactions including Stevens-Johnson syndrome, toxic epidermal necrolysis, fulminant hepatic necrosis, and agranulocytosis.",
+            indications = "Pneumocystis jirovecii pneumonia (PCP treatment and secondary prophylaxis in HIV/immunocompromised), Stenotrophomonas maltophilia infections, Nocardiosis, Melioidosis eradication phase, Community-Acquired MRSA skin infections, Toxoplasmosis encephalitis prophylaxis.",
+            doses = "PCP Treatment: 15 - 20 mg/kg/day (based on TMP component) IV or PO divided every 6-8 hours for 21 days (combined with Prednisone if PaO2 < 70 mmHg).\nPCP Prophylaxis: 1 Double Strength (DS: 160mg TMP/800mg SMX) tablet PO once daily or 3 times weekly.\nUncomplicated UTI / Skin MRSA: 1-2 DS tablets PO BID.",
+            administration = "Oral: Take with a full glass of water. Maintain fluid intake >= 1.5-2 L/day to prevent crystalluria. IV: Dilute 1 ampoule (5 mL) in 125 mL 5% Dextrose; infuse over 60-90 minutes.",
+            timing = "Oral: Morning and evening with meals.",
+            specialInstructions = "Check baseline G6PD status if suspected (hemolysis risk). Monitor serum potassium (TMP blocks epithelial sodium channels in distal nephron mimicking amiloride).",
+            pkPd = "Rapid absorption (~90-100%). Wide tissue distribution including CSF, lung, and prostate. Hepatic metabolism via N4-acetylation. Renal excretion 60-80% unchanged. Half-life: TMP 10h, SMX 11h.",
+            renalAdj = "CrCl 15-30: Reduce dose by 50% (or give q18-24h); CrCl <15 mL/min: Not recommended.",
+            hepaticAdj = "Contraindicated in severe hepatic parenchymal damage.",
+            pregnancy = "Category D (Contraindicated in 1st trimester due to neural tube defects, and 3rd trimester near term due to kernicterus risk).",
+            lactation = "Avoid in nursing infants < 2 months of age or with G6PD deficiency / hyperbilirubinemia.",
+            sideEffects = "Hyperkalemia (pseudo-hypoaldosteronism), elevation in serum creatinine (competitive inhibition of tubular secretion without GFR drop), Stevens-Johnson syndrome (SJS), leukopenia, megaloblastic anemia.",
+            priceNpr = "NPR 3.50 - 6.00 per tablet (DS: 160/800mg)",
+            priceInr = "INR 2.00 - 4.50 per tablet (DS)",
+            brandsNepal = listOf(
+                BrandInfo("Bactrim-DS", "Roche / Nepal Import", "Tab", "160 mg / 800 mg"),
+                BrandInfo("Septran-DS", "GlaxoSmithKline Nepal", "Tab", "160 mg / 800 mg"),
+                BrandInfo("Cotrim-NPL", "Nepal Pharmaceuticals Lab", "Tab", "160 mg / 800 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Bactrim DS", "Abbott India", "Tab", "160 mg / 800 mg"),
+                BrandInfo("Septran DS", "GlaxoSmithKline India", "Tab", "160 mg / 800 mg"),
+                BrandInfo("Ciplin DS", "Cipla Ltd.", "Tab", "160 mg / 800 mg")
+            ),
+            modeOfAction = "Sequential synergistic inhibition of bacterial folic acid synthesis: Sulfamethoxazole inhibits dihydropteroate synthase; Trimethoprim inhibits dihydrofolate reductase.",
+            packSize = "Strips of 10 double-strength (DS) tablets",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model List of Essential Medicines (Access Category)"
+        ),
+        Drug(
+            id = "anti_fosfomycin",
+            genericName = "Fosfomycin Trometamol",
+            system = "Anti-Infectives & Antimicrobials",
+            drugClass = "Epoxide / Phosphonic Acid Cell Wall Synthesis Inhibitor",
+            blackBoxWarning = null,
+            indications = "Acute uncomplicated lower urinary tract infection (cystitis) in women caused by E. coli or Enterococcus faecalis, Multi-drug resistant ESBL-producing urinary isolates.",
+            doses = "Adult Female (Uncomplicated Cystitis): Single 3 g oral sachet dissolved in water.\nComplicated / Recurrent ESBL UTI (Off-label specialist): 3 g PO every 48 to 72 hours for 3 doses.",
+            administration = "Dissolve entire contents of one 3 g sachet in 100-120 mL (half cup) of cold water; stir and drink immediately. Take on an EMPTY stomach (2 hours before or after meals) or at bedtime after emptying bladder.",
+            timing = "Single bedtime dose after voiding ensures prolonged drug concentration in bladder urine overnight.",
+            specialInstructions = "Do NOT take with metoclopramide or prokinetic agents which speed gastric emptying and reduce urinary fosfomycin concentrations.",
+            pkPd = "Bioavailability ~35-40%. Does NOT bind to plasma proteins. Filtered by glomerulus; achieves high urinary concentrations (>1,000 mcg/mL) persisting above MIC for 48-72 hours. Half-life: 4-6 hours.",
+            renalAdj = "Contraindicated in severe renal impairment (CrCl < 10 mL/min) as effective urinary bactericidal concentrations cannot be attained.",
+            hepaticAdj = "No dose adjustment required.",
+            pregnancy = "Category B (Safe in pregnancy; first-line single-dose therapy for asymptomatic bacteriuria in pregnancy).",
+            lactation = "Excreted in breast milk in low concentrations; compatible with breastfeeding.",
+            sideEffects = "Diarrhea, nausea, headache, vaginitis, dyspepsia, dizziness, transient transaminitis.",
+            priceNpr = "NPR 380.00 - 620.00 per single sachet (3 g)",
+            priceInr = "INR 240.00 - 420.00 per single sachet (3 g)",
+            brandsNepal = listOf(
+                BrandInfo("Fosfocare", "Deurali-Janta Pharmaceuticals", "Sachet", "3 g"),
+                BrandInfo("Urifos-NPL", "Nepal Pharmaceuticals Lab", "Sachet", "3 g")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Monurol", "Zambon / Modi-Mundipharma", "Sachet", "3 g"),
+                BrandInfo("Fosfocin", "Cipla Ltd.", "Sachet", "3 g"),
+                BrandInfo("Craburil", "Alkem Laboratories", "Sachet", "3 g")
+            ),
+            modeOfAction = "Inactivates UDP-N-acetylglucosamine enolpyruvyl transferase (MurA), the first committed step in bacterial peptidoglycan biosynthesis; no cross-resistance with other antibiotic classes.",
+            packSize = "Single-dose 3 g sachet with orange/mandarin flavor",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model List of Essential Medicines (Access Category)"
+        ),
+        Drug(
+            id = "anti_fluconazole",
+            genericName = "Fluconazole",
+            system = "Anti-Infectives & Antimicrobials",
+            drugClass = "Triazole Antifungal Agent (14-alpha Demethylase Inhibitor)",
+            blackBoxWarning = null,
+            indications = "Cryptococcal Meningitis (Consolidation & Maintenance Phase), Candidemia & Invasive Candidiasis (in non-neutropenic clinically stable patients), Esophageal and Oropharyngeal Candidiasis, Vulvovaginal Candidiasis, Coccidioidomycosis.",
+            doses = "Cryptococcal Meningitis Consolidation: 400 - 800 mg PO/IV once daily for 8 weeks (after amphotericin induction), then maintenance 200 mg PO daily.\nCandidemia: Loading dose 800 mg (12 mg/kg) IV/PO Day 1, then 400 mg (6 mg/kg) daily for 14 days after negative blood cultures.\nEsophageal Candidiasis: 200 mg Day 1, then 100-200 mg daily for 14-21 days.\nVulvovaginal Candidiasis: Single 150 mg PO dose.",
+            administration = "Oral: Take with or without food. IV: Administer by infusion at rate <= 200 mg/hour (100 mL/hr).",
+            timing = "Once daily at the same time every day.",
+            specialInstructions = "Candida krusei is INTRINSICALLY RESISTANT to fluconazole. Candida glabrata shows dose-dependent susceptibility; do NOT use for C. krusei. Strong inhibitor of CYP2C9, CYP2C19, and moderate inhibitor of CYP3A4.",
+            pkPd = "Bioavailability >90% (oral equals IV dose). Excellent penetration into CSF (70-80% of serum levels), saliva, and urine. Protein binding 11%. Excreted 80% unchanged in urine. Elimination half-life: 30 hours.",
+            renalAdj = "CrCl >50: Standard dose; CrCl <=50 mL/min: Reduce dose by 50%. Hemodialysis: 100% of dose after each dialysis session.",
+            hepaticAdj = "Use with caution; rarely causes fulminant hepatic necrosis.",
+            pregnancy = "Category D for high-dose/chronic therapy (craniofacial and cardiac malformations reported); Category C for single 150mg vaginal dose.",
+            lactation = "Excreted in human milk at concentrations similar to plasma; compatible after single dose, caution with chronic therapy.",
+            sideEffects = "QTc prolongation, Torsades de pointes, elevated transaminases, nausea, headache, abdominal pain, alopecia (prolonged high-dose therapy), exfoliative skin disorders.",
+            priceNpr = "NPR 14.00 - 28.00 per tablet (150mg); NPR 120.00 - 220.00 per 100mL IV bottle (200mg)",
+            priceInr = "INR 8.00 - 18.00 per tablet (150mg); INR 75.00 - 140.00 per 100mL IV bottle",
+            brandsNepal = listOf(
+                BrandInfo("Flunec", "Deurali-Janta Pharmaceuticals", "Cap / Tab", "150 mg / 200 mg"),
+                BrandInfo("Fungizol", "Nepal Pharmaceuticals Lab", "Cap", "150 mg"),
+                BrandInfo("Syscan-NPL", "Asian Pharmaceuticals", "Cap", "150 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Diflucan", "Pfizer India", "Cap / IV", "150 mg / 200mg IV"),
+                BrandInfo("Forcan", "Cipla Ltd.", "Tab / IV", "150 mg / 200mg IV"),
+                BrandInfo("Syscan", "Torrent Pharmaceuticals", "Cap", "150 mg / 200 mg")
+            ),
+            modeOfAction = "Selectively inhibits fungal cytochrome P-450 sterol 14-alpha-demethylase, preventing the conversion of lanosterol to ergosterol and destabilizing fungal cell membrane.",
+            packSize = "Blister of 1 or 3 tablets (150 mg); Glass IV bottle of 100 mL (200 mg)",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model List of Essential Medicines (Antifungal)"
+        ),
+        Drug(
+            id = "anti_caspofungin",
+            genericName = "Caspofungin Acetate",
+            system = "Anti-Infectives & Antimicrobials",
+            drugClass = "Echinocandin Antifungal Agent (Beta-1,3-D-Glucan Synthase Inhibitor)",
+            blackBoxWarning = null,
+            indications = "Invasive Candidiasis / Candidemia in ICU / neutropenic patients (first-line), Refractory Invasive Aspergillosis, Empirical antifungal therapy in persistent febrile neutropenia.",
+            doses = "Adult: Loading dose 70 mg IV on Day 1, followed by maintenance 50 mg IV once daily (increase to 70 mg daily if body weight > 80 kg or co-administered with CYP inducers).\nPediatric (>= 3 months): 70 mg/m2 IV loading Day 1, then 50 mg/m2 daily (max 70 mg/day).",
+            administration = "Administer by slow IV infusion over 60 minutes. Do NOT mix with Dextrose-containing solutions (reconstitute and dilute only in 0.9% Normal Saline or Ringer's Lactate).",
+            timing = "Once daily continuous intravenous infusion.",
+            specialInstructions = "Echinocandins are FIRST-LINE for invasive candidiasis per IDSA guidelines due to superior fungicidal activity and lower mortality compared to fluconazole. Fungicidal against Candida (including C. glabrata and C. krusei); fungistatic against Aspergillus.",
+            pkPd = "Extensive tissue distribution. Protein binding 97%. Slowly metabolized by peptide hydrolysis and N-acetylation in liver; negligible renal excretion. Half-life: 9-11 hours (beta phase) and 40-50 hours (gamma phase).",
+            renalAdj = "No dose adjustment required in renal impairment or hemodialysis. Not dialyzable.",
+            hepaticAdj = "Moderate hepatic impairment (Child-Pugh 7-9): 70 mg loading Day 1, then 35 mg IV once daily.",
+            pregnancy = "Category C (Embryotoxic in animal models; use only if maternal survival is threatened).",
+            lactation = "Avoid during breastfeeding.",
+            sideEffects = "Fever, histamine-mediated infusion reactions (flushing, rash, bronchospasm), hypokalemia, elevated ALT/AST/alkaline phosphatase, phlebitis, peripheral edema.",
+            priceNpr = "NPR 4,500.00 - 7,800.00 per vial (50 mg / 70 mg)",
+            priceInr = "INR 2,800.00 - 4,800.00 per vial (50 mg / 70 mg)",
+            brandsNepal = listOf(
+                BrandInfo("Caspocare", "Deurali-Janta Pharmaceuticals", "Inj", "50 mg / 70 mg"),
+                BrandInfo("Casponep", "Nepal Pharmaceuticals Lab", "Inj", "50 mg / 70 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Cancidas", "Merck Sharp & Dohme (MSD)", "Inj", "50 mg / 70 mg"),
+                BrandInfo("Caspogin", "Cipla Ltd.", "Inj", "50 mg / 70 mg"),
+                BrandInfo("Casfung", "Alkem Laboratories", "Inj", "50 mg / 70 mg")
+            ),
+            modeOfAction = "Non-competitively inhibits 1,3-beta-D-glucan synthase enzyme, blocking synthesis of beta-1,3-D-glucan, an essential structural component of fungal cell wall.",
+            packSize = "Single-use glass vial containing 50 mg or 70 mg lyophilized cake",
+            ddaSchedule = "Schedule Ka (Tertiary Antifungal)",
+            nemlCategory = "WHO Model List of Essential Medicines (Watch Antifungal)"
+        ),
+        Drug(
+            id = "anti_acyclovir",
+            genericName = "Acyclovir Sodium (IV)",
+            system = "Anti-Infectives & Antimicrobials",
+            drugClass = "Guanosine Analogue Antiviral Agent (DNA Polymerase Inhibitor)",
+            blackBoxWarning = null,
+            indications = "Herpes Simplex Encephalitis (HSV-1), Neonatal HSV Infection, Severe Varicella-Zoster Virus (VZV / Shingles) in immunocompromised hosts, Disseminated HSV, Eczema herpeticum.",
+            doses = "HSV Encephalitis: 10 mg/kg IV every 8 hours for 14 to 21 days (calculate based on Ideal Body Weight in obese patients).\nSevere VZV / Immunocompromised: 10 mg/kg IV every 8 hours for 7-10 days.\nNeonatal HSV: 20 mg/kg IV every 8 hours for 21 days.",
+            administration = "Administer by slow intravenous infusion over at least 1 hour. Never give by rapid IV bolus or IM injection. Ensure patient is well-hydrated before and during infusion.",
+            timing = "Regular 8-hourly intervals around the clock.",
+            specialInstructions = "CRYSTALLURIA RISK: Rapid infusion or dehydration causes precipitation of acyclovir crystals in renal collecting tubules, producing acute crystalline nephropathy. Maintain urine output >= 75-100 mL/hour.",
+            pkPd = "Low protein binding (9-33%). Excellent CSF penetration (50% of plasma concentration). Cleared primarily by glomerular filtration and active tubular secretion (60-90% excreted unchanged). Half-life: 2.5-3 hours.",
+            renalAdj = "CrCl 25-50: 10 mg/kg q12h; CrCl 10-25: 10 mg/kg q24h; CrCl <10 or HD: 5 mg/kg q24h (administer post-dialysis).",
+            hepaticAdj = "No dose adjustment required.",
+            pregnancy = "Category B (Extensively used in pregnancy without evidence of congenital teratogenicity).",
+            lactation = "Concentrates in breast milk; compatible with breastfeeding for maternal indications.",
+            sideEffects = "Acute crystalline nephropathy (elevated BUN/creatinine), neurotoxicity (encephalopathy, tremors, hallucinations, myoclonus, delirium), phlebitis, nausea, vomiting.",
+            priceNpr = "NPR 250.00 - 450.00 per vial (500 mg IV)",
+            priceInr = "INR 150.00 - 280.00 per vial (500 mg IV)",
+            brandsNepal = listOf(
+                BrandInfo("Herpex-NPL", "Nepal Pharmaceuticals Lab", "Inj", "250 mg / 500 mg"),
+                BrandInfo("Zovir-Care", "Deurali-Janta Pharmaceuticals", "Inj", "500 mg vial")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Zovirax", "GlaxoSmithKline India", "Inj", "250 mg / 500 mg"),
+                BrandInfo("Acivir", "Cipla Ltd.", "Inj", "250 mg / 500 mg"),
+                BrandInfo("Herperax", "Micro Labs", "Inj", "500 mg vial")
+            ),
+            modeOfAction = "Selectively phosphorylated by viral thymidine kinase to acyclovir monophosphate, then converted by host kinases to acyclovir triphosphate, which inhibits viral DNA polymerase and causes chain termination.",
+            packSize = "Glass vial of 500 mg lyophilized powder",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model List of Essential Medicines (Antiviral)"
+        ),
+        Drug(
+            id = "anti_oseltamivir",
+            genericName = "Oseltamivir Phosphate",
+            system = "Anti-Infectives & Antimicrobials",
+            drugClass = "Neuraminidase Inhibitor Antiviral Agent",
+            blackBoxWarning = null,
+            indications = "Treatment of Acute Uncomplicated Influenza A and B within 48 hours of symptom onset, Severe hospitalized Influenza / H1N1 pneumonia, Post-exposure influenza chemoprophylaxis in high-risk individuals.",
+            doses = "Treatment (Adult): 75 mg PO twice daily for 5 days (extend to 10 days in critically ill / immunocompromised ICU patients).\nProphylaxis: 75 mg PO once daily for 10 days (or up to 6 weeks during seasonal epidemic).\nPediatric Treatment: <15 kg: 30 mg BID; 15-23 kg: 45 mg BID; 23-40 kg: 60 mg BID; >40 kg: 75 mg BID.",
+            administration = "Take orally with food or milk to minimize gastrointestinal intolerance and nausea.",
+            timing = "Morning and evening for 5 consecutive days. Must initiate within 48 hours of symptom onset for maximum clinical benefit.",
+            specialInstructions = "Does NOT replace annual seasonal influenza vaccination. Does not treat bacterial complications of influenza (e.g. secondary Staph aureus or pneumococcal pneumonia).",
+            pkPd = "Oral prodrug rapidly converted by hepatic carboxylesterases to active oseltamivir carboxylate. Bioavailability ~80%. Protein binding 3%. Renal excretion >99% unchanged via glomerular filtration. Half-life: 6-10 hours.",
+            renalAdj = "CrCl 30-60: 30 mg PO BID; CrCl 10-30: 30 mg PO once daily; ESRD on Hemodialysis: 30 mg post-alternate dialysis session.",
+            hepaticAdj = "No dose adjustment required in mild to moderate hepatic impairment.",
+            pregnancy = "Category C (Recommended by CDC and WHO as drug of choice for pregnant women with suspected or confirmed influenza due to high maternal-fetal mortality of flu).",
+            lactation = "Excreted in low levels in breast milk; compatible with breastfeeding.",
+            sideEffects = "Nausea, vomiting (10-15%), headache, neuropsychiatric events (delirium, hallucinations, abnormal behavior reported predominantly in pediatric patients), insomnia.",
+            priceNpr = "NPR 45.00 - 85.00 per capsule (75mg)",
+            priceInr = "INR 28.00 - 55.00 per capsule (75mg)",
+            brandsNepal = listOf(
+                BrandInfo("Fluvir-NPL", "Nepal Pharmaceuticals Lab", "Cap", "75 mg"),
+                BrandInfo("Oseltar", "Deurali-Janta Pharmaceuticals", "Cap", "75 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Tamiflu", "Roche / Abbott India", "Cap", "75 mg"),
+                BrandInfo("Fluvir", "Hetero Healthcare", "Cap", "75 mg"),
+                BrandInfo("Antiflu", "Cipla Ltd.", "Cap", "75 mg")
+            ),
+            modeOfAction = "Potent competitive inhibitor of influenza virus neuraminidase enzyme, preventing the release and spread of newly formed virions from the host cell membrane.",
+            packSize = "Blister strip of 10 capsules (75 mg)",
+            ddaSchedule = "Schedule Ka",
+            nemlCategory = "WHO Model List of Essential Medicines (Access Antiviral)"
+        ),
+        Drug(
+            id = "anti_tb_4fdc",
+            genericName = "Fixed-Dose Combination 4FDC (Isoniazid + Rifampicin + Pyrazinamide + Ethambutol / HRZE)",
+            system = "Anti-Infectives & Antimicrobials",
+            drugClass = "First-Line Antitubercular Fixed-Dose Combination",
+            blackBoxWarning = "SEVERE AND FATAL HEPATITIS: Isoniazid and Rifampicin can cause severe, sometimes fatal drug-induced liver injury (DILI). Monitor baseline and monthly transaminases (ALT/AST).",
+            indications = "Intensive Phase (Initial 2 months) Treatment of Drug-Susceptible Active Pulmonary and Extrapulmonary Tuberculosis (TB) per Nepal National Tuberculosis Program (NTP) / WHO guidelines.",
+            doses = "Adult Weight-Band Dosing (Daily for 2 months / 56 doses):\n• 30 - 39 kg: 2 tablets once daily\n• 40 - 54 kg: 3 tablets once daily\n• 55 - 70 kg: 4 tablets once daily\n• > 70 kg: 5 tablets once daily\nEach 4FDC tablet contains: Rifampicin 150 mg + Isoniazid 75 mg + Pyrazinamide 400 mg + Ethambutol 275 mg.",
+            administration = "Take all tablets together as a SINGLE DOSE in the morning on an EMPTY STOMACH (at least 1 hour before breakfast or 2 hours after meals) with water.",
+            timing = "Once daily in the morning on an empty stomach. Co-administer Pyridoxine (Vitamin B6) 20-50 mg daily to prevent isoniazid peripheral neuropathy.",
+            specialInstructions = "Warn patient that Rifampicin causes harmless reddish-orange discoloration of urine, tears, sweat, and saliva (stains soft contact lenses). Test visual acuity and color discrimination (red-green) for Ethambutol optic neuritis.",
+            pkPd = "Rifampicin induces hepatic CYP3A4, markedly reducing levels of oral contraceptives, warfarin, antiretrovirals, and corticosteroids. Isoniazid undergoes hepatic N-acetylation (slow vs fast acetylators). Pyrazinamide active in acidic intracellular macrophage environment.",
+            renalAdj = "Because Pyrazinamide and Ethambutol metabolites clear renally, in CrCl < 30 mL/min or hemodialysis, split formulations are preferred to allow 3-times-weekly dosing of pyrazinamide and ethambutol.",
+            hepaticAdj = "Discontinue immediately if serum ALT/AST rises > 5 times Upper Limit of Normal (ULN) or > 3 times ULN with symptoms of jaundice, nausea, or abdominal pain.",
+            pregnancy = "Safe per WHO / NTP Nepal guidelines (active TB untreated is far more lethal to mother and fetus). Provide Pyridoxine supplementation.",
+            lactation = "Compatible with breastfeeding; baby should receive preventive therapy if mother is sputum-positive.",
+            sideEffects = "Drug-Induced Liver Injury (hepatitis / jaundice), peripheral neuropathy (isoniazid), hyperuricemia / arthralgias (pyrazinamide), retrobulbar optic neuritis (ethambutol), orange secretions, flu-like syndrome.",
+            priceNpr = "NPR 18.00 - 32.00 per tablet (Distributed free across all Nepal Government DOTS clinics)",
+            priceInr = "INR 12.00 - 24.00 per tablet",
+            brandsNepal = listOf(
+                BrandInfo("Nepal NTP 4FDC", "Government DOTS Program / Free Distribution", "Tab", "150/75/400/275 mg"),
+                BrandInfo("Akurit-4", "Lupin / Nepal Pharmaceuticals Lab", "Tab", "150/75/400/275 mg"),
+                BrandInfo("Forecox", "Macleods Pharmaceuticals", "Tab", "150/75/400/275 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Akurit-4", "Lupin Ltd.", "Tab", "150/75/400/275 mg"),
+                BrandInfo("Forecox", "Macleods Pharmaceuticals", "Tab", "150/75/400/275 mg"),
+                BrandInfo("Rifater-Plus", "Sanofi India", "Tab", "150/75/400/275 mg")
+            ),
+            modeOfAction = "Multi-target bacterial eradication: Isoniazid inhibits mycolic acid synthesis; Rifampicin inhibits bacterial DNA-dependent RNA polymerase; Pyrazinamide disrupts membrane energy; Ethambutol blocks arabinogalactan arabinosyltransferase.",
+            packSize = "Blister strips of 28 tablets (NTP 2-month treatment pack)",
+            ddaSchedule = "Schedule Ka (Controlled Tuberculosis Formulary)",
+            nemlCategory = "National Essential Medicines List Nepal (Core DOTS Medicine)"
+        )
+    )
+}

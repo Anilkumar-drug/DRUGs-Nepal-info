@@ -391,23 +391,15 @@ fun DrugDetailModal(
 
                             Spacer(modifier = Modifier.height(4.dp))
 
-                            // Unit Price & Action Buttons (Other Brand & WEB)
+                            // Action Buttons (Other Brand, Interactions, WEB, Copilot)
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // Unit Price
-                                Text(
-                                    text = "Unit Price : ${drug.priceNpr.ifBlank { "Rs. 25.00 NPR" }}",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color.White,
-                                    modifier = Modifier.weight(1f)
-                                )
-
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    // Other Brand Button
+                                // Other Brand Button
                                     OutlinedButton(
                                         onClick = { showOtherBrandDialog = true },
                                         shape = RoundedCornerShape(8.dp),
@@ -506,7 +498,6 @@ fun DrugDetailModal(
                                 }
                             }
                         }
-                    }
 
                     // High-Alert Medication Warning Banner
                     if (drug.highAlertNotice != null) {

@@ -272,11 +272,11 @@ object ClinicalCalculatorRegistry {
         ),
         CalculatorSummary(
             id = "child_pugh",
-            title = "Child-Pugh Score",
+            title = "Child-Turcotte-Pugh (CTP) Score",
             category = "Hepatology",
-            description = "Prognosis in cirrhosis; guides treatment.",
+            description = "Prognosis in cirrhosis; evaluates encephalopathy, ascites, bilirubin, albumin, and INR.",
             formulaSummary = "Class A (5-6 points), Class B (7-9 points), Class C (10-15 points) assessing 1-2 year mortality & drug titration.",
-            aliases = listOf("Child-Pugh", "Cirrhosis Score", "Hepatic Impairment", "Ascites", "Encephalopathy", "CTP Score"),
+            aliases = listOf("Child-Turcotte-Pugh", "Child-Pugh", "Child Turcotte Pugh", "CTP", "CTP Score", "Cirrhosis Score", "Hepatic Impairment", "Ascites", "Encephalopathy", "CTP Class A/B/C"),
             isPopular = true,
             isNew = false
         ),
@@ -374,11 +374,11 @@ object ClinicalCalculatorRegistry {
         ),
         CalculatorSummary(
             id = "curb65",
-            title = "CURB-65 Score",
+            title = "CURB-65 Score for Pneumonia",
             category = "Pulmonology",
-            description = "Mortality in CAP: inpatient vs outpatient.",
-            formulaSummary = "Confusion, Urea > 19, RR >= 30, SBP < 90 or DBP <= 60, Age >= 65 predicting pneumonia mortality.",
-            aliases = listOf("CURB-65", "CURB65", "Pneumonia", "CAP", "Pneumonia Admission"),
+            description = "Mortality in CAP: inpatient vs outpatient disposition.",
+            formulaSummary = "Confusion, Urea > 19 mg/dL, RR >= 30, SBP < 90 or DBP <= 60, Age >= 65 predicting pneumonia mortality.",
+            aliases = listOf("CURB-65", "CURB65", "CURB 65", "Pneumonia", "CAP", "Pneumonia Admission", "Pneumonia Mortality", "Community Acquired Pneumonia"),
             isPopular = true,
             isNew = false
         ),
@@ -627,6 +627,353 @@ object ClinicalCalculatorRegistry {
             aliases = listOf("Rabies", "Rabies PEP", "Dog Bite", "Wound Category", "ERIG", "Immunoglobulin", "Nepal Rabies"),
             isPopular = true,
             isNew = false
+        ),
+        // --- Medical Scoring Engine: Alcohol-Associated Hepatitis ---
+        CalculatorSummary(
+            id = "lille_model",
+            title = "Lille Model (Day 7 Steroid Response)",
+            category = "Hepatology",
+            description = "Corticosteroid response at Day 7 in severe alcoholic hepatitis.",
+            formulaSummary = "Evaluates baseline & Day 7 Bilirubin, Albumin, Creatinine, PT/INR. Score > 0.45 = non-responder (discontinue steroids).",
+            aliases = listOf("Lille", "Lille Score", "Alcoholic Hepatitis", "Steroid Response", "Day 7 Lille", "Hepatology"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "abic_score",
+            title = "ABIC Score for Alcoholic Hepatitis",
+            category = "Hepatology",
+            description = "Stratifies 90-day mortality risk in alcoholic hepatitis.",
+            formulaSummary = "ABIC = (Age × 0.1) + (Bilirubin × 0.08) + (INR × 0.3) + (Creatinine × 0.3). Low (<6.71), Int (6.71-8.99), High (>8.99).",
+            aliases = listOf("ABIC", "Alcoholic Hepatitis", "ABIC Score", "Liver Mortality"),
+            isPopular = false,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "gahs_score",
+            title = "Glasgow Alcoholic Hepatitis Score (GAHS)",
+            category = "Hepatology",
+            description = "Identifies alcoholic hepatitis patients benefiting from steroids.",
+            formulaSummary = "Evaluates Age, WBC, Urea, PT ratio/INR, and Bilirubin. Score >= 9 indicates high 28-day mortality and steroid benefit.",
+            aliases = listOf("GAHS", "Glasgow Alcoholic Hepatitis", "Alcoholic Hepatitis Score"),
+            isPopular = false,
+            isNew = true
+        ),
+
+        // --- Medical Scoring Engine: Autoimmune & Metabolic Liver Disease ---
+        CalculatorSummary(
+            id = "leipzig_score",
+            title = "Leipzig Score for Wilson Disease",
+            category = "Hepatology",
+            description = "Diagnostic criteria for Wilson Disease.",
+            formulaSummary = "KF rings (2), Neuro symptoms (1-2), Hemolysis (1), Ceruloplasmin, 24h Urine Cu, Liver Cu, ATP7B mutations. >=4 confirmed.",
+            aliases = listOf("Leipzig", "Wilson Disease", "Wilson", "Copper", "KF Rings", "Ceruloplasmin", "ATP7B"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "dhawan_score",
+            title = "Dhawan Score (Revised King's Wilson)",
+            category = "Hepatology",
+            description = "Emergency liver transplant prognostic score in Wilson disease.",
+            formulaSummary = "Bilirubin, AST, WBC, INR, Albumin. Score > 11 predicts extremely high mortality without urgent liver transplantation.",
+            aliases = listOf("Dhawan", "Revised Kings Wilson", "Wilson Transplant", "Fulminant Wilson"),
+            isPopular = false,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "hemochromatosis_eval",
+            title = "Hemochromatosis Evaluation",
+            category = "Hepatology",
+            description = "Transferrin saturation, ferritin, and HFE genotyping criteria.",
+            formulaSummary = "TSAT > 45-50%, Serum Ferritin, HFE C282Y / H63D mutations, Hepatic Iron Index (HII >= 1.9) for phlebotomy initiation.",
+            aliases = listOf("Hemochromatosis", "Iron Overload", "Transferrin Saturation", "Ferritin", "HFE", "Phlebotomy"),
+            isPopular = false,
+            isNew = true
+        ),
+
+        // --- Medical Scoring Engine: Inflammatory Bowel Disease ---
+        CalculatorSummary(
+            id = "hbi_crohn",
+            title = "Harvey-Bradshaw Index (HBI) for Crohn's",
+            category = "Gastroenterology",
+            description = "Bedside clinical assessment of Crohn's disease activity.",
+            formulaSummary = "Wellbeing (0-4) + Pain (0-3) + Liquid stools/day + Abdominal mass (0-3) + Complications count. <5 remission, >16 severe.",
+            aliases = listOf("HBI", "Harvey-Bradshaw", "Crohn's Disease", "IBD Activity", "Crohn Score"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "partial_mayo",
+            title = "Partial Mayo Score for Ulcerative Colitis",
+            category = "Gastroenterology",
+            description = "Non-invasive bedside monitoring of Ulcerative Colitis activity.",
+            formulaSummary = "Stool frequency (0-3) + Rectal bleeding (0-3) + Physician's global assessment (0-3). <=1 remission, 8-9 severe flare.",
+            aliases = listOf("Partial Mayo", "Mayo Score", "Ulcerative Colitis", "UC Activity", "IBD Flare"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "truelove_witts",
+            title = "Truelove and Witts Criteria (UC)",
+            category = "Gastroenterology",
+            description = "Severity grading of acute severe ulcerative colitis flares.",
+            formulaSummary = "Stools/day (>=6), bloody stools, temperature >37.5°C, HR >90, Hb <10.5 g/dL, ESR >30 mm/h. Severe = admission for IV steroids.",
+            aliases = listOf("Truelove", "Truelove Witts", "Severe UC", "Colitis Flare", "IV Steroids UC"),
+            isPopular = false,
+            isNew = true
+        ),
+
+        // --- Medical Scoring Engine: MASLD / MASH ---
+        CalculatorSummary(
+            id = "nfs_mash",
+            title = "NAFLD Fibrosis Score (NFS)",
+            category = "Hepatology",
+            description = "Non-invasive score for advanced fibrosis in MASLD/MASH.",
+            formulaSummary = "Age, BMI, Diabetes, AST/ALT, Platelets, Albumin. Score < -1.455 excludes F3-F4 (NPV 93%); > 0.675 rules in F3-F4.",
+            aliases = listOf("NFS", "NAFLD Fibrosis Score", "MASH", "MASLD", "Fatty Liver Fibrosis"),
+            isPopular = true,
+            isNew = true
+        ),
+
+        // --- Medical Scoring Engine: ACLF & ALF ---
+        CalculatorSummary(
+            id = "nacseld_aclf",
+            title = "NACSELD-ACLF Score",
+            category = "Hepatology",
+            description = "Consensus criteria for Acute-on-Chronic Liver Failure.",
+            formulaSummary = "Defined by >= 2 organ failures among: Shock (vasopressors), HE grade 3/4, Dialysis/RRT, Mechanical ventilation.",
+            aliases = listOf("NACSELD", "ACLF", "Acute on Chronic Liver Failure", "Cirrhosis Organ Failure"),
+            isPopular = false,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "kings_college_alf",
+            title = "King's College Criteria for ALF",
+            category = "Hepatology",
+            description = "Prognostic criteria for urgent liver transplant in Acute Liver Failure.",
+            formulaSummary = "Paracetamol (Arterial pH <7.30 or INR>6.5 + Cr>3.4 + HE III/IV) vs Non-Paracetamol (INR>6.5 or 3 of 5 minor criteria).",
+            aliases = listOf("Kings College", "ALF", "Acute Liver Failure", "Liver Transplant Criteria", "Fulminant Hepatic Failure"),
+            isPopular = true,
+            isNew = true
+        ),
+
+        // --- Medical Scoring Engine: Pancreatitis & Cholangitis ---
+        CalculatorSummary(
+            id = "modified_atlanta",
+            title = "Modified Atlanta Classification (Pancreatitis)",
+            category = "Gastroenterology",
+            description = "International consensus severity staging for acute pancreatitis.",
+            formulaSummary = "Mild (no organ failure), Moderately Severe (transient organ failure <48h or local complications), Severe (persistent organ failure >48h).",
+            aliases = listOf("Atlanta", "Modified Atlanta", "Pancreatitis Staging", "Severe Pancreatitis"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "tokyo_tg18",
+            title = "Tokyo Guidelines 2018 (TG18 Cholangitis)",
+            category = "Hepatology",
+            description = "Diagnostic criteria & severity grading for acute cholangitis.",
+            formulaSummary = "Diagnostic: Inflammation (A) + Cholestasis (B) + Imaging (C). Severity Grade I-III dictating urgent biliary drainage via ERCP.",
+            aliases = listOf("Tokyo Guidelines", "Tokyo TG18", "TG18", "TG 18", "Cholangitis", "Acute Cholangitis", "Biliary Drainage", "ERCP Triage"),
+            isPopular = true,
+            isNew = true
+        ),
+
+        // --- Medical Scoring Engine: Upper GI Bleeding ---
+        CalculatorSummary(
+            id = "glasgow_blatchford",
+            title = "Glasgow-Blatchford Score (GBS)",
+            category = "Gastroenterology",
+            description = "Risk assessment & outpatient triage in acute upper GI bleeding.",
+            formulaSummary = "BUN, Hb (by sex), SBP, Pulse >=100, Melena, Syncope, Hepatic/Cardiac disease. Score 0-1 = safe outpatient discharge.",
+            aliases = listOf("GBS", "Glasgow Blatchford", "Upper GI Bleed", "UGIB", "Melena", "Hematemesis"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "aims65",
+            title = "AIMS65 Score (Upper GI Bleed)",
+            category = "Gastroenterology",
+            description = "Bedside mortality and ICU prediction in acute upper GI hemorrhage.",
+            formulaSummary = "Albumin <3.0, INR >1.5, Mental status altered (GCS<15), SBP <=90, Age >65. Score >=2 = high mortality / ICU need.",
+            aliases = listOf("AIMS65", "Upper GI Bleed Mortality", "GI Bleed ICU"),
+            isPopular = false,
+            isNew = true
+        ),
+
+        // --- Medical Scoring Engine: General Medicine & Critical Care ---
+        CalculatorSummary(
+            id = "qsofa_score",
+            title = "qSOFA (Quick Sepsis Score)",
+            category = "Critical Care",
+            description = "Bedside identification of patients at high risk of sepsis mortality.",
+            formulaSummary = "RR >= 22 breaths/min, Altered mental status (GCS < 15), Systolic BP <= 100 mmHg. Score >= 2 = high risk of poor outcome.",
+            aliases = listOf("qSOFA", "Quick SOFA", "Sepsis Screen", "Septic Shock"),
+            isPopular = true,
+            isNew = true
+        ),
+
+        // --- Medical Scoring Engine: Expanded Knowledge Base ---
+        CalculatorSummary(
+            id = "meld_3",
+            title = "MELD 3.0 Score",
+            category = "Hepatology",
+            description = "Updated UNOS/OPTN liver allocation score with female risk correction.",
+            formulaSummary = "Incorporates Bilirubin, INR, Creatinine, Sodium, Albumin, and female sex adjustment to predict 90-day waitlist mortality.",
+            aliases = listOf("MELD 3.0", "MELD 3", "MELD3", "MELD-3", "MELD", "MELD Score", "UNOS MELD 3.0", "Model for End-Stage Liver Disease 3.0", "Liver Allocation"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "cdai_score",
+            title = "CDAI (Crohn's Disease Activity Index)",
+            category = "Gastroenterology",
+            description = "Standard research and clinical index assessing Crohn's disease severity and remission.",
+            formulaSummary = "7-day diary of liquid stools, abdominal pain, wellbeing, extraintestinal symptoms, mass, and hematocrit (<150 remission, >450 severe).",
+            aliases = listOf("CDAI", "Crohn's Disease Activity Index", "Crohn", "CD Activity", "IBD Activity"),
+            isPopular = false,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "ses_cd",
+            title = "SES-CD (Simple Endoscopic Score for Crohn's)",
+            category = "Gastroenterology",
+            description = "Objective endoscopic scoring across 5 bowel segments.",
+            formulaSummary = "Evaluates ulcer size, ulcerated surface, affected surface, and luminal stenosis across 5 ileocolonic segments.",
+            aliases = listOf("SES-CD", "SES CD", "Simple Endoscopic Score", "Crohn Endoscopy", "Mucosal Healing"),
+            isPopular = false,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "uceis_score",
+            title = "UCEIS (Ulcerative Colitis Endoscopic Index)",
+            category = "Gastroenterology",
+            description = "Endoscopic index of mucosal severity in ulcerative colitis.",
+            formulaSummary = "Vascular pattern (0-2), mucosal bleeding (0-3), and erosions & ulcers (0-3). Score >= 7 denotes severe mucosal damage.",
+            aliases = listOf("UCEIS", "Endoscopic Index", "UC Endoscopy", "Mucosal Bleeding", "Colonic Ulcers"),
+            isPopular = false,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "nas_score",
+            title = "NAS (NAFLD / MASH Activity Score)",
+            category = "Hepatology",
+            description = "Histological grading of steatohepatitis activity.",
+            formulaSummary = "Steatosis (0-3), Lobular Inflammation (0-3), and Hepatocyte Ballooning (0-2). NAS >= 5 confirms active MASH/NASH.",
+            aliases = listOf("NAS", "NAS Score", "NAFLD Activity Score", "MASH Histology", "NASH CRN", "Steatohepatitis"),
+            isPopular = false,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "fast_score",
+            title = "FAST Score (FibroScan-AST for at-risk MASH)",
+            category = "Hepatology",
+            description = "Identifies patients with fibrotic nonalcoholic steatohepatitis (NAS >= 4, Fibrosis >= 2).",
+            formulaSummary = "Combines Liver Stiffness Measurement (LSM, kPa), Controlled Attenuation Parameter (CAP, dB/m), and AST (U/L).",
+            aliases = listOf("FAST", "FAST Score", "FibroScan AST", "LSM CAP AST", "At-risk MASH", "MASH Screening"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "clif_sofa",
+            title = "CLIF-SOFA Score (Cirrhosis Organ Failure)",
+            category = "Hepatology",
+            description = "Quantifies organ failures in acute decompensation of cirrhosis.",
+            formulaSummary = "EASL-CLIF sequential organ failure assessment across liver, kidney, brain, coagulation, circulation, and lungs.",
+            aliases = listOf("CLIF-SOFA", "CLIF SOFA", "EASL CLIF", "Cirrhosis Organ Failure", "ACLF Score"),
+            isPopular = false,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "alfsg_clichy",
+            title = "ALFSG Index & Clichy Criteria",
+            category = "Hepatology",
+            description = "Emergency liver transplant indicators in acute liver failure.",
+            formulaSummary = "Evaluates Factor V levels (<20-30%), age, and encephalopathy to identify non-acetaminophen ALF needing urgent transplant.",
+            aliases = listOf("Clichy", "Clichy Criteria", "ALFSG", "Factor V", "Acute Liver Failure Transplant", "Fulminant Hepatic Failure"),
+            isPopular = false,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "apache_ii",
+            title = "APACHE II Score",
+            category = "Critical Care",
+            description = "Physiological severity score estimating ICU admission mortality.",
+            formulaSummary = "12 acute physiological variables + age + chronic health points predicting in-hospital mortality.",
+            aliases = listOf("APACHE", "APACHE II", "APACHE-2", "ICU Mortality", "Physiological Assessment"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "ctsi_balthazar",
+            title = "CTSI (Balthazar CT Severity Index)",
+            category = "Gastroenterology",
+            description = "Radiological staging of acute necrotizing pancreatitis.",
+            formulaSummary = "Balthazar grade A-E (0-4 pts) + pancreatic necrosis percentage (0-6 pts). Total >= 7 = severe necrotizing pancreatitis.",
+            aliases = listOf("CTSI", "Balthazar", "CT Severity Index", "Pancreatic Necrosis", "Pancreatitis CT"),
+            isPopular = false,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "forrest_classification",
+            title = "Forrest Classification (Peptic Ulcer)",
+            category = "Gastroenterology",
+            description = "Endoscopic staging of bleeding peptic ulcers and rebleeding risk.",
+            formulaSummary = "Ia/Ib (Active spurting/oozing), IIa/IIb/IIc (visible vessel, clot, flat spot), III (clean base). Guides endoscopic clipping.",
+            aliases = listOf("Forrest", "Forrest Classification", "Peptic Ulcer Bleed", "Endoscopic Stigmata", "Ulcer Rebleed"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "timi_score",
+            title = "TIMI Risk Score (UA / NSTEMI)",
+            category = "Cardiology",
+            description = "Predicts 14-day mortality, new/recurrent MI, or severe ischemia in ACS.",
+            formulaSummary = "7 risk factors: Age >=65, >=3 CAD risk factors, known CAD stenosis >=50%, ASA in 7d, severe angina, elevated cardiac biomarkers, ST deviation.",
+            aliases = listOf("TIMI", "TIMI Score", "TIMI NSTEMI", "Acute Coronary Syndrome", "NSTEMI Risk", "Chest Pain Risk"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "grace_score",
+            title = "GRACE Risk Score for ACS",
+            category = "Cardiology",
+            description = "In-hospital and 6-month mortality in acute coronary syndrome.",
+            formulaSummary = "Calculates risk from age, heart rate, SBP, creatinine, Killip class, cardiac arrest, ST deviation, and enzymes.",
+            aliases = listOf("GRACE", "GRACE Score", "ACS Risk", "Coronary Syndrome", "Killip Class"),
+            isPopular = false,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "psi_port",
+            title = "PSI / PORT Pneumonia Severity Index",
+            category = "Pulmonology",
+            description = "Risk stratifies community-acquired pneumonia to determine outpatient vs inpatient care.",
+            formulaSummary = "20 demographic, comorbid, physical, and lab variables stratifying into Risk Classes I-V.",
+            aliases = listOf("PSI", "PORT Score", "Pneumonia Severity Index", "PSI Pneumonia", "CAP Triage"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "perc_rule",
+            title = "PERC Rule for Pulmonary Embolism",
+            category = "Pulmonology",
+            description = "Rules out pulmonary embolism in low-risk patients without D-dimer testing.",
+            formulaSummary = "8 criteria: Age <50, HR <100, SpO2 >=95%, no leg swelling, no hemoptysis, no recent surgery, no prior PE/DVT, no hormones.",
+            aliases = listOf("PERC", "PERC Rule", "Pulmonary Embolism Rule Out", "PE Rule Out", "D-dimer Skip"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "kdigo_aki",
+            title = "KDIGO AKI Staging Criteria",
+            category = "Nephrology & Dosing",
+            description = "Defines and stages acute kidney injury by serum creatinine and urine output.",
+            formulaSummary = "Stage 1 (Cr 1.5-1.9x or >=0.3 mg/dL rise), Stage 2 (Cr 2.0-2.9x), Stage 3 (Cr >=3x or >=4.0 mg/dL or RRT).",
+            aliases = listOf("KDIGO", "KDIGO AKI", "AKI Staging", "Acute Kidney Injury", "Urine Output AKI", "Renal Failure Staging"),
+            isPopular = true,
+            isNew = true
         )
     )
 }

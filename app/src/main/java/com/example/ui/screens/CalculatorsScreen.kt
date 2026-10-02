@@ -76,22 +76,77 @@ private fun CalculatorsListView(
 
     val allCalculators = remember { ClinicalCalculatorRegistry.allCalculators }
 
+    val quickScoringPills = remember {
+        listOf(
+            "MELD",
+            "Child-Turcotte-Pugh",
+            "CURB-65",
+            "Wells Criteria",
+            "Lille Model",
+            "FIB-4",
+            "Glasgow-Blatchford",
+            "CHA2DS2-VASc",
+            "GCS",
+            "Tokyo TG18",
+            "King's College",
+            "qSOFA",
+            "APACHE II",
+            "KDIGO AKI"
+        )
+    }
+
     val filteredCalculators = remember(searchQuery, selectedCategory, state.bookmarkedCalculatorIds) {
-        val q = searchQuery.trim().lowercase()
-        allCalculators.filter { calc ->
-            val matchesCategory = when (selectedCategory) {
-                "All" -> true
-                "Favorites" -> state.bookmarkedCalculatorIds.contains(calc.id)
-                else -> calc.category.equals(selectedCategory, ignoreCase = true)
+        val rawQ = searchQuery.trim()
+        val qNormalized = rawQ.lowercase().replace(Regex("[^a-z0-9]"), " ").trim()
+        val queryTokens = qNormalized.split("\\s+".toRegex()).filter { it.isNotBlank() }
+
+        val baseList = if (selectedCategory == "Favorites") {
+            allCalculators.filter { state.bookmarkedCalculatorIds.contains(it.id) }
+        } else if (selectedCategory != "All" && rawQ.isEmpty()) {
+            allCalculators.filter { it.category.equals(selectedCategory, ignoreCase = true) }
+        } else {
+            allCalculators
+        }
+
+        if (queryTokens.isEmpty()) {
+            if (selectedCategory != "All" && selectedCategory != "Favorites") {
+                allCalculators.filter { it.category.equals(selectedCategory, ignoreCase = true) }
+            } else {
+                baseList
             }
-            val matchesQuery = if (q.isEmpty()) true else {
-                calc.title.lowercase().contains(q) ||
-                calc.category.lowercase().contains(q) ||
-                calc.description.lowercase().contains(q) ||
-                calc.formulaSummary.lowercase().contains(q) ||
-                calc.aliases.any { it.lowercase().contains(q) }
+        } else {
+            baseList.mapNotNull { calc ->
+                val titleNorm = calc.title.lowercase().replace(Regex("[^a-z0-9]"), " ")
+                val aliasesNorm = calc.aliases.map { it.lowercase().replace(Regex("[^a-z0-9]"), " ") }
+                val descNorm = calc.description.lowercase().replace(Regex("[^a-z0-9]"), " ")
+                val formulaNorm = calc.formulaSummary.lowercase().replace(Regex("[^a-z0-9]"), " ")
+                val catNorm = calc.category.lowercase().replace(Regex("[^a-z0-9]"), " ")
+
+                // Check exact matches
+                val exactAliasMatch = aliasesNorm.any { it.trim() == qNormalized }
+                val exactTitleMatch = titleNorm.trim() == qNormalized
+                val prefixMatch = titleNorm.trim().startsWith(qNormalized) || aliasesNorm.any { it.trim().startsWith(qNormalized) }
+
+                // Token matching
+                val fullText = "$titleNorm $catNorm $descNorm $formulaNorm ${aliasesNorm.joinToString(" ")}"
+                val allTokensMatch = queryTokens.all { token -> fullText.contains(token) }
+
+                if (exactTitleMatch || exactAliasMatch) {
+                    calc to 100
+                } else if (prefixMatch) {
+                    calc to 80
+                } else if (aliasesNorm.any { queryTokens.all { t -> it.contains(t) } }) {
+                    calc to 60
+                } else if (titleNorm.contains(qNormalized) || queryTokens.all { t -> titleNorm.contains(t) }) {
+                    calc to 40
+                } else if (allTokensMatch) {
+                    calc to 20
+                } else {
+                    null
+                }
             }
-            matchesCategory && matchesQuery
+            .sortedWith(compareByDescending<Pair<CalculatorSummary, Int>> { it.second }.thenBy { it.first.title })
+            .map { it.first }
         }
     }
 
@@ -165,7 +220,7 @@ private fun CalculatorsListView(
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
-            placeholder = { Text("Search calculator (e.g. MELD, Wells, CURB, GCS, eGFR)...") },
+            placeholder = { Text("Search scoring system (e.g. MELD, Child-Turcotte-Pugh, CURB-65)...") },
             leadingIcon = {
                 Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             },
@@ -189,6 +244,59 @@ private fun CalculatorsListView(
             ),
             singleLine = true
         )
+
+        // Quick Find Scoring Pills
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Bolt,
+                        contentDescription = null,
+                        tint = Color(0xFFF59E0B),
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Text("Quick:", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+
+            quickScoringPills.forEach { pill ->
+                val isActive = searchQuery.trim().equals(pill, ignoreCase = true)
+                Surface(
+                    onClick = {
+                        if (isActive) {
+                            searchQuery = ""
+                        } else {
+                            searchQuery = pill
+                            if (selectedCategory != "All") selectedCategory = "All"
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+                ) {
+                    Text(
+                        text = pill,
+                        fontSize = 11.sp,
+                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
+                    )
+                }
+            }
+        }
 
         // Specialty Filter Chips
         Row(
@@ -302,6 +410,53 @@ private fun CalculatorsListView(
             }
         }
 
+        // Search Results Header & Filter Reset
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = "${filteredCalculators.size} Scoring System${if (filteredCalculators.size == 1) "" else "s"}",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (searchQuery.isNotBlank()) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    ) {
+                        Text(
+                            text = "\"$searchQuery\"",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
+
+            if (searchQuery.isNotEmpty() || selectedCategory != "All") {
+                TextButton(
+                    onClick = {
+                        searchQuery = ""
+                        selectedCategory = "All"
+                    },
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
+                    modifier = Modifier.testTag("calculator_search_clear")
+                ) {
+                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(13.dp))
+                    Spacer(Modifier.width(3.dp))
+                    Text("Clear Filter", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
 
         // Calculators List (Cards)
         if (filteredCalculators.isEmpty()) {
@@ -328,12 +483,12 @@ private fun CalculatorsListView(
                             modifier = Modifier.size(36.dp)
                         )
                         Text(
-                            text = if (selectedCategory == "Favorites") "No favorite calculators saved" else "No calculators found",
+                            text = if (selectedCategory == "Favorites") "No favorite calculators saved" else "No matching scoring systems found",
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = if (selectedCategory == "Favorites") "Tap the star icon on any calculator to bookmark it here." else "Try adjusting your search query or specialty filter.",
+                            text = if (selectedCategory == "Favorites") "Tap the star icon on any calculator to bookmark it here." else "Try searching by initials (e.g. MELD, CTP, CURB, GCS) or tap a Quick Find chip above.",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -352,6 +507,7 @@ private fun CalculatorsListView(
                     val isBookmarked = state.bookmarkedCalculatorIds.contains(item.id)
                     CalculatorSummaryCard(
                         summary = item,
+                        searchQuery = searchQuery,
                         isBookmarked = isBookmarked,
                         onBookmarkToggle = { viewModel.toggleBookmarkCalculator(item.id) },
                         onClick = { viewModel.openCalculator(item.id) }
@@ -365,12 +521,23 @@ private fun CalculatorsListView(
 @Composable
 private fun CalculatorSummaryCard(
     summary: CalculatorSummary,
+    searchQuery: String,
     isBookmarked: Boolean,
     onBookmarkToggle: () -> Unit,
     onClick: () -> Unit
 ) {
     val (icon, tintColor) = remember(summary.category) {
         getCategoryVisuals(summary.category)
+    }
+
+    val matchedAlias = remember(summary, searchQuery) {
+        val qNorm = searchQuery.trim().lowercase().replace(Regex("[^a-z0-9]"), " ")
+        if (qNorm.isNotBlank()) {
+            summary.aliases.find { alias ->
+                val aNorm = alias.lowercase().replace(Regex("[^a-z0-9]"), " ")
+                aNorm.contains(qNorm) && !summary.title.lowercase().contains(aNorm)
+            }
+        } else null
     }
 
     Card(
@@ -493,6 +660,33 @@ private fun CalculatorSummaryCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
+
+            if (matchedAlias != null) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = tintColor.copy(alpha = 0.12f),
+                    border = BorderStroke(0.8.dp, tintColor.copy(alpha = 0.35f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = tintColor,
+                            modifier = Modifier.size(11.dp)
+                        )
+                        Text(
+                            text = "Matched: \"$matchedAlias\"",
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = tintColor
+                        )
+                    }
+                }
+            }
 
             // Bottom Row: Formula badge & Calculate Button
             Row(

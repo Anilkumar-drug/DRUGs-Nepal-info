@@ -119,10 +119,18 @@ fun DrugSearchScreen(
                 else -> true
             }
             matchesSpecialty && matchesEra && matchesFacility
-        }
+        }.distinctBy { it.id }
     }
 
-    val totalMatches = effectiveDrugs.size + filteredProtocols.size + filteredCalculators.size
+    val distinctCalculators = remember(filteredCalculators) {
+        filteredCalculators.distinctBy { it.id }
+    }
+
+    val distinctProtocols = remember(filteredProtocols) {
+        filteredProtocols.distinctBy { it.id }
+    }
+
+    val totalMatches = effectiveDrugs.size + distinctProtocols.size + distinctCalculators.size
 
     Column(
         modifier = Modifier
@@ -522,13 +530,7 @@ fun DrugSearchScreen(
                         color = DimsTealPrimary
                     )
                 }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                val instantSuggestions = remember {
                     listOf(
                         Pair("💊 Fexofenadine", "Fexofenadine"),
                         Pair("💊 Cetirizine", "Cetirizine"),
@@ -580,7 +582,17 @@ fun DrugSearchScreen(
                         Pair("📋 Hypertension", "Hypertension"),
                         Pair("🧮 GCS Score", "Glasgow Coma Scale"),
                         Pair("📋 Organophosphate", "Organophosphate")
-                    ).forEach { (displayLabel, queryTerm) ->
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    instantSuggestions.forEach { (displayLabel, queryTerm) ->
                         Surface(
                             onClick = { onSearchChange(queryTerm) },
                             shape = RoundedCornerShape(14.dp),
@@ -979,7 +991,7 @@ fun DrugSearchScreen(
                                         count = filteredCalculators.size
                                     )
                                 }
-                                items(filteredCalculators.distinctBy { it.id }, key = { "calc_${it.id}" }) { calc ->
+                                items(items = distinctCalculators, key = { "calc_${it.id}" }, contentType = { "calc" }) { calc ->
                                     SearchCalculatorCard(
                                         calculator = calc,
                                         onClick = { onCalculatorClick(calc) }
@@ -997,7 +1009,7 @@ fun DrugSearchScreen(
                                         count = filteredProtocols.size
                                     )
                                 }
-                                items(filteredProtocols.distinctBy { it.id }, key = { "proto_${it.id}" }) { proto ->
+                                items(items = distinctProtocols, key = { "proto_${it.id}" }, contentType = { "proto" }) { proto ->
                                     SearchProtocolCard(
                                         protocol = proto,
                                         onClick = { onProtocolClick(proto) }
@@ -1015,7 +1027,7 @@ fun DrugSearchScreen(
                                         count = effectiveDrugs.size
                                     )
                                 }
-                                items(effectiveDrugs.distinctBy { it.id }, key = { "drug_${it.id}" }) { drug ->
+                                items(items = effectiveDrugs, key = { "drug_${it.id}" }, contentType = { "drug" }) { drug ->
                                     DrugCard(
                                         drug = drug,
                                         isBookmarked = bookmarkedDrugIds.contains(drug.id),
@@ -1043,7 +1055,7 @@ fun DrugSearchScreen(
                             verticalArrangement = Arrangement.spacedBy(10.dp),
                             contentPadding = PaddingValues(bottom = 80.dp)
                         ) {
-                            items(filteredCalculators.distinctBy { it.id }, key = { "calc_${it.id}" }) { calc ->
+                            items(items = distinctCalculators, key = { "calc_${it.id}" }, contentType = { "calc" }) { calc ->
                                 SearchCalculatorCard(
                                     calculator = calc,
                                     onClick = { onCalculatorClick(calc) }
@@ -1068,7 +1080,7 @@ fun DrugSearchScreen(
                             verticalArrangement = Arrangement.spacedBy(10.dp),
                             contentPadding = PaddingValues(bottom = 80.dp)
                         ) {
-                            items(filteredProtocols.distinctBy { it.id }, key = { "proto_${it.id}" }) { proto ->
+                            items(items = distinctProtocols, key = { "proto_${it.id}" }, contentType = { "proto" }) { proto ->
                                 SearchProtocolCard(
                                     protocol = proto,
                                     onClick = { onProtocolClick(proto) }
@@ -1093,7 +1105,7 @@ fun DrugSearchScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             contentPadding = PaddingValues(bottom = 80.dp)
                         ) {
-                            items(effectiveDrugs.distinctBy { it.id }, key = { "drug_${it.id}" }) { drug ->
+                            items(items = effectiveDrugs, key = { "drug_${it.id}" }, contentType = { "drug" }) { drug ->
                                 DrugCard(
                                     drug = drug,
                                     isBookmarked = bookmarkedDrugIds.contains(drug.id),
@@ -1162,7 +1174,7 @@ fun DrugSearchScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
-                    items(effectiveDrugs.distinctBy { it.id }, key = { "drug_${it.id}" }) { drug ->
+                    items(items = effectiveDrugs, key = { "drug_${it.id}" }, contentType = { "drug" }) { drug ->
                         DrugCard(
                             drug = drug,
                             isBookmarked = bookmarkedDrugIds.contains(drug.id),
@@ -1297,7 +1309,7 @@ private fun DrugCard(
     onClick: () -> Unit,
     onBookmarkToggle: () -> Unit
 ) {
-    val systemColor = getSystemColor(drug.system)
+    val systemColor = remember(drug.system) { getSystemColor(drug.system) }
 
     Card(
         modifier = Modifier
@@ -1306,8 +1318,8 @@ private fun DrugCard(
             .testTag("drug_card_${drug.id}"),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
-        border = BorderStroke(1.dp, systemColor.copy(alpha = 0.35f))
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, systemColor.copy(alpha = 0.25f))
     ) {
         Column(
             modifier = Modifier
@@ -1522,69 +1534,7 @@ private fun DrugCard(
                 }
             }
 
-            // Brands Strip with Nepal Flag indicator
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = Emerald500.copy(alpha = 0.12f),
-                    border = BorderStroke(1.dp, Emerald500.copy(alpha = 0.3f))
-                ) {
-                    Text(
-                        text = "🇳🇵 Nepal",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Emerald500,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                }
-
-                drug.brandsNepal.take(2).forEach { brand ->
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                    ) {
-                        Text(
-                            text = brand.name,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
-                }
-
-                if (drug.brandsIndia.isNotEmpty()) {
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
-                    ) {
-                        Text(
-                            text = "🇮🇳 ${drug.brandsIndia.first().name}",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
-                }
-
-                val moreCount = (drug.brandsNepal.size - 2).coerceAtLeast(0) + (drug.brandsIndia.size - 1).coerceAtLeast(0)
-                if (moreCount > 0) {
-                    Text(
-                        text = "+$moreCount more",
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

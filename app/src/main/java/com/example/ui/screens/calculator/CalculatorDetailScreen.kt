@@ -211,6 +211,39 @@ fun CalculatorDetailScreen(
                 "iv_infusion" -> IvInfusionInteractiveCard()
                 "snakebite" -> SnakebiteInteractiveCard()
                 "rabies_pep" -> RabiesInteractiveCard()
+                // --- Medical Scoring Engine: Hepatology & GI ---
+                "lille_model" -> LilleInteractiveCard()
+                "abic_score" -> AbicInteractiveCard()
+                "gahs_score" -> GahsInteractiveCard()
+                "leipzig_score" -> LeipzigInteractiveCard()
+                "dhawan_score" -> DhawanInteractiveCard()
+                "hemochromatosis_eval" -> HemochromatosisInteractiveCard()
+                "hbi_crohn" -> HbiInteractiveCard()
+                "partial_mayo", "mayo_dai" -> PartialMayoInteractiveCard()
+                "nfs_mash" -> NfsMashInteractiveCard()
+                "nacseld_aclf" -> NacseldAclfInteractiveCard()
+                "kings_college_alf" -> KingsCollegeInteractiveCard()
+                "modified_atlanta" -> ModifiedAtlantaInteractiveCard()
+                "tokyo_tg18" -> TokyoTg18InteractiveCard()
+                "glasgow_blatchford" -> GlasgowBlatchfordInteractiveCard()
+                "aims65" -> Aims65InteractiveCard()
+                "qsofa_score" -> QsofaInteractiveCard()
+                "meld_3" -> Meld3InteractiveCard()
+                "cdai_score" -> CdaiInteractiveCard()
+                "ses_cd" -> SesCdInteractiveCard()
+                "uceis_score" -> UceisInteractiveCard()
+                "nas_score" -> NasScoreInteractiveCard()
+                "fast_score" -> FastScoreInteractiveCard()
+                "clif_sofa" -> ClifSofaInteractiveCard()
+                "alfsg_clichy" -> AlfsgClichyInteractiveCard()
+                "apache_ii" -> ApacheIIInteractiveCard()
+                "ctsi_balthazar" -> CtsiInteractiveCard()
+                "forrest_classification" -> ForrestInteractiveCard()
+                "timi_score" -> TimiInteractiveCard()
+                "grace_score" -> GraceInteractiveCard()
+                "psi_port" -> PsiPortInteractiveCard()
+                "perc_rule" -> PercRuleInteractiveCard()
+                "kdigo_aki" -> KdigoAkiInteractiveCard()
                 else -> GenericScoreInteractiveCard(title, category, formulaDesc)
             }
         }
@@ -1619,10 +1652,12 @@ fun ResultBanner(
     valueText: String,
     badgeText: String,
     guidance: String,
-    isSafe: Boolean
+    isSafe: Boolean,
+    jsonPayload: String? = null
 ) {
     val borderColor = if (isSafe) Color(0xFF00897B) else Color(0xFFDC2626)
     val bgColor = if (isSafe) Color(0xFF00897B).copy(alpha = 0.08f) else Color(0xFFDC2626).copy(alpha = 0.08f)
+    var showJsonView by remember { mutableStateOf(false) }
 
     Surface(
         shape = RoundedCornerShape(14.dp),
@@ -1646,17 +1681,49 @@ fun ResultBanner(
                     color = borderColor,
                     letterSpacing = 0.5.sp
                 )
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = borderColor.copy(alpha = 0.15f)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Text(
-                        text = badgeText,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = borderColor,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
+                    if (jsonPayload != null) {
+                        Surface(
+                            onClick = { showJsonView = !showJsonView },
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                            border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Code,
+                                    contentDescription = "API JSON",
+                                    modifier = Modifier.size(12.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = if (showJsonView) "Clinical" else "JSON API",
+                                    fontSize = 9.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = borderColor.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = badgeText,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = borderColor,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
                 }
             }
 
@@ -1669,12 +1736,52 @@ fun ResultBanner(
 
             HorizontalDivider(color = borderColor.copy(alpha = 0.2f))
 
-            Text(
-                text = guidance,
-                fontSize = 12.sp,
-                lineHeight = 17.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
-            )
+            if (showJsonView && jsonPayload != null) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Medical Scoring Engine API Output",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF00897B)
+                            )
+                            Text(
+                                text = "JSON",
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Text(
+                            text = jsonPayload,
+                            fontSize = 11.sp,
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            } else {
+                Text(
+                    text = guidance,
+                    fontSize = 12.sp,
+                    lineHeight = 17.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
+                )
+            }
         }
     }
 }

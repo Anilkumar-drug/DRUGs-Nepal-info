@@ -482,8 +482,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                 }
             },
             bottomBar = {
-                val isImeVisible = WindowInsets.isImeVisible
-                if (state.currentScreen != NavigationScreen.CODE_BLUE && !isImeVisible) {
+                if (state.currentScreen != NavigationScreen.CODE_BLUE) {
                     val navBarBg by animateColorAsState(
                         targetValue = when (state.themeMode) {
                             AppThemeMode.PITCH_BLACK -> Color.Black
@@ -575,10 +574,9 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
             AnimatedContent(
                 targetState = state.currentScreen,
                 transitionSpec = {
-                    (fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) +
-                     scaleIn(initialScale = 0.98f, animationSpec = tween(220, easing = FastOutSlowInEasing)))
+                    fadeIn(animationSpec = tween(180, easing = FastOutSlowInEasing))
                         .togetherWith(
-                            fadeOut(animationSpec = tween(150, easing = FastOutLinearInEasing))
+                            fadeOut(animationSpec = tween(120, easing = FastOutLinearInEasing))
                         )
                 },
                 label = "ScreenSwitchTransition"
