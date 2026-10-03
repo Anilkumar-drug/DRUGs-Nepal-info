@@ -169,6 +169,50 @@ fun CalculatorDetailScreen(
                 }
             }
 
+            // Prominent Input Instructions Callout Card (Addresses user feedback on where to put values)
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = DimsTealPrimary.copy(alpha = 0.10f),
+                border = BorderStroke(1.2.dp, DimsTealPrimary.copy(alpha = 0.45f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("calc_patient_value_input_banner")
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = DimsTealPrimary,
+                        modifier = Modifier.size(34.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = "ENTER PATIENT VALUES BELOW",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DimsTealPrimary
+                        )
+                        Text(
+                            text = "Tap any box below to type patient lab values or select options. The score and evidence-based clinical recommendation will update automatically.",
+                            fontSize = 11.5.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+
             // Interactive Calculator Form based on calcId
             when (calcId) {
                 "egfr" -> EgfrInteractiveCard(state, viewModel)
@@ -820,38 +864,78 @@ fun BisapInteractiveCard() {
 
 @Composable
 fun RockallInteractiveCard(isComplete: Boolean) {
-    var ageGroup by remember { mutableIntStateOf(0) } // 0: <60, 1: 60-79, 2: >=80
-    var shock by remember { mutableIntStateOf(0) } // 0: No shock, 1: Tachycardia, 2: Hypotension
-    var comorb by remember { mutableIntStateOf(0) } // 0: None, 2: Major, 3: Renal/Liver failure
-    var stigmata by remember { mutableIntStateOf(0) } // 0: Clean base, 2: Active bleed / visible vessel
+    var age by remember { mutableStateOf("64") }
+    var sbp by remember { mutableStateOf("115") }
+    var hr by remember { mutableStateOf("88") }
+    var comorbidityLevel by remember { mutableIntStateOf(0) } // 0: None, 2: IHD/Heart failure, 3: Renal/Liver failure/Malignancy
+    var endoscopicDiagnosis by remember { mutableIntStateOf(1) } // 0: Mallory-Weiss/normal, 1: Other (ulcer/erosion), 2: Upper GI malignancy
+    var stigmataHemorrhage by remember { mutableIntStateOf(0) } // 0: None/dark spot, 2: Blood in lumen/adherent clot/visible or spurting vessel
 
-    val score = ageGroup + shock + comorb + (if (isComplete) stigmata else 0)
+    val res = remember(age, sbp, hr, comorbidityLevel, isComplete, endoscopicDiagnosis, stigmataHemorrhage) {
+        ExtendedCalculators.calculateRockallScore(
+            age = age.toIntOrNull() ?: 64,
+            systolicBp = sbp.toIntOrNull() ?: 115,
+            heartRate = hr.toIntOrNull() ?: 88,
+            comorbidityLevel = comorbidityLevel,
+            isComplete = isComplete,
+            endoscopicDiagnosis = endoscopicDiagnosis,
+            stigmataHemorrhage = stigmataHemorrhage
+        )
+    }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("Age Group", fontWeight = FontWeight.Bold)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected = ageGroup == 0, onClick = { ageGroup = 0 }, label = { Text("< 60 yr (0)") })
-            FilterChip(selected = ageGroup == 1, onClick = { ageGroup = 1 }, label = { Text("60-79 yr (+1)") })
-            FilterChip(selected = ageGroup == 2, onClick = { ageGroup = 2 }, label = { Text(">= 80 yr (+2)") })
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = age,
+                onValueChange = { age = it },
+                label = { Text("Age (years)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = sbp,
+                onValueChange = { sbp = it },
+                label = { Text("Systolic BP (mmHg)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = hr,
+                onValueChange = { hr = it },
+                label = { Text("Heart Rate (bpm)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
         }
-        Text("Hemodynamic Shock", fontWeight = FontWeight.Bold)
+
+        Text("Major Comorbidity:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected = shock == 0, onClick = { shock = 0 }, label = { Text("No shock (0)") })
-            FilterChip(selected = shock == 1, onClick = { shock = 1 }, label = { Text("HR>100 (+1)") })
-            FilterChip(selected = shock == 2, onClick = { shock = 2 }, label = { Text("SBP<100 (+2)") })
+            FilterChip(selected = comorbidityLevel == 0, onClick = { comorbidityLevel = 0 }, label = { Text("None (0)") })
+            FilterChip(selected = comorbidityLevel == 2, onClick = { comorbidityLevel = 2 }, label = { Text("IHD / Heart Failure (+2)") })
+            FilterChip(selected = comorbidityLevel == 3, onClick = { comorbidityLevel = 3 }, label = { Text("Renal/Liver/Metastatic (+3)") })
         }
-        Text("Comorbidities", fontWeight = FontWeight.Bold)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected = comorb == 0, onClick = { comorb = 0 }, label = { Text("None (0)") })
-            FilterChip(selected = comorb == 2, onClick = { comorb = 2 }, label = { Text("IHD/HF (+2)") })
-            FilterChip(selected = comorb == 3, onClick = { comorb = 3 }, label = { Text("Renal/Liver failure (+3)") })
+
+        if (isComplete) {
+            Text("Endoscopic Diagnosis:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                FilterChip(selected = endoscopicDiagnosis == 0, onClick = { endoscopicDiagnosis = 0 }, label = { Text("Mallory-Weiss / No lesion (0)") })
+                FilterChip(selected = endoscopicDiagnosis == 1, onClick = { endoscopicDiagnosis = 1 }, label = { Text("Peptic Ulcer / Erosions (+1)") })
+                FilterChip(selected = endoscopicDiagnosis == 2, onClick = { endoscopicDiagnosis = 2 }, label = { Text("GI Malignancy (+2)") })
+            }
+
+            Text("Stigmata of Recent Hemorrhage (SRH):", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                FilterChip(selected = stigmataHemorrhage == 0, onClick = { stigmataHemorrhage = 0 }, label = { Text("None / Dark spot only (0)") })
+                FilterChip(selected = stigmataHemorrhage == 2, onClick = { stigmataHemorrhage = 2 }, label = { Text("Blood / Clot / Visible vessel (+2)") })
+            }
         }
+
         ResultBanner(
-            title = if (isComplete) "Complete Rockall Score" else "Pre-Endoscopy Rockall",
-            valueText = "$score Points",
-            badgeText = if (score <= 2) "Low Risk (<5% Mortality)" else "High Risk (Rebleed & Mortality >25%)",
-            guidance = if (score <= 2) "Low risk: Early discharge post-endoscopy reasonable." else "High risk: Inpatient monitoring, high-dose IV PPI infusion (80mg bolus + 8mg/hr).",
-            isSafe = score <= 2
+            title = if (isComplete) "Complete Post-Endoscopy Rockall Score" else "Pre-Endoscopy Rockall Score",
+            valueText = "${res.score} Points • ${res.mortalityRisk}",
+            badgeText = res.riskTier,
+            guidance = "${res.rebleedRisk}\n\nClinical Guidance:\n${res.clinicalGuidance}",
+            isSafe = res.score <= 2
         )
     }
 }
@@ -860,29 +944,81 @@ fun RockallInteractiveCard(isComplete: Boolean) {
 fun OaklandInteractiveCard() {
     var age by remember { mutableStateOf("65") }
     var isMale by remember { mutableStateOf(false) }
-    var hr by remember { mutableStateOf("78") }
-    var sbp by remember { mutableStateOf("125") }
-    var hb by remember { mutableStateOf("11.5") }
+    var prevAdmission by remember { mutableStateOf(false) }
+    var dreBlood by remember { mutableStateOf(false) }
+    var hr by remember { mutableStateOf("76") }
+    var sbp by remember { mutableStateOf("128") }
+    var hb by remember { mutableStateOf("11.8") }
 
-    val ageVal = age.toIntOrNull() ?: 65
-    val sbpVal = sbp.toIntOrNull() ?: 125
-    val hbVal = hb.toDoubleOrNull() ?: 11.5
-
-    // Oakland approximate: safe discharge threshold <= 8 points
-    val score = (if (ageVal > 70) 3 else 1) + (if (isMale) 1 else 0) + (if (sbpVal < 100) 4 else 0) + (if (hbVal < 10) 6 else 1)
+    val res = remember(age, isMale, prevAdmission, dreBlood, hr, sbp, hb) {
+        ExtendedCalculators.calculateOaklandScore(
+            age = age.toIntOrNull() ?: 65,
+            isMale = isMale,
+            prevLgibAdmission = prevAdmission,
+            dreBloodPresent = dreBlood,
+            heartRateBpm = hr.toIntOrNull() ?: 76,
+            systolicBpMmHg = sbp.toIntOrNull() ?: 128,
+            hemoglobinGdL = hb.toDoubleOrNull() ?: 11.8
+        )
+    }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedTextField(value = age, onValueChange = { age = it }, label = { Text("Age") }, modifier = Modifier.weight(1f))
-            OutlinedTextField(value = sbp, onValueChange = { sbp = it }, label = { Text("SBP (mmHg)") }, modifier = Modifier.weight(1f))
-            OutlinedTextField(value = hb, onValueChange = { hb = it }, label = { Text("Hb (g/dL)") }, modifier = Modifier.weight(1f))
+            OutlinedTextField(
+                value = age,
+                onValueChange = { age = it },
+                label = { Text("Age (years)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = sbp,
+                onValueChange = { sbp = it },
+                label = { Text("Systolic BP (mmHg)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = hr,
+                onValueChange = { hr = it },
+                label = { Text("Heart Rate (bpm)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
         }
+
+        OutlinedTextField(
+            value = hb,
+            onValueChange = { hb = it },
+            label = { Text("Hemoglobin (g/dL)") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(
+                selected = isMale,
+                onClick = { isMale = !isMale },
+                label = { Text(if (isMale) "Sex: Male (+1)" else "Sex: Female (0)") }
+            )
+            FilterChip(
+                selected = prevAdmission,
+                onClick = { prevAdmission = !prevAdmission },
+                label = { Text("Prior Lower GI Bleed (+1)") }
+            )
+            FilterChip(
+                selected = dreBlood,
+                onClick = { dreBlood = !dreBlood },
+                label = { Text("DRE: Blood in Stool (+1)") }
+            )
+        }
+
         ResultBanner(
-            title = "Oakland Score (Lower GI Bleed)",
-            valueText = "$score Points",
-            badgeText = if (score <= 8) "Safe Discharge (<= 8)" else "Inpatient Admission Required",
-            guidance = if (score <= 8) "95% probability of safe discharge without blood transfusion, surgery, or repeat bleed." else "Admit for colonoscopy, blood grouping, and observation.",
-            isSafe = score <= 8
+            title = "Oakland Score (Acute Lower GI Bleed)",
+            valueText = "${res.score} / 35 Points",
+            badgeText = res.riskTier,
+            guidance = res.recommendation,
+            isSafe = res.isSafeDischarge
         )
     }
 }
@@ -1077,25 +1213,44 @@ fun HeartInteractiveCard() {
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("History: Highly susp (2) / Mod (1) / Slight (0)", fontSize = 12.sp)
+        Text("History (Suspicion of ACS):", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            (0..2).forEach { num -> FilterChip(selected = history == num, onClick = { history = num }, label = { Text("H: $num") }) }
+            FilterChip(selected = history == 0, onClick = { history = 0 }, label = { Text("Slightly (0)") })
+            FilterChip(selected = history == 1, onClick = { history = 1 }, label = { Text("Moderately (+1)") })
+            FilterChip(selected = history == 2, onClick = { history = 2 }, label = { Text("Highly Suspicious (+2)") })
         }
-        Text("ECG: ST-dep (2) / Non-spec (1) / Normal (0)", fontSize = 12.sp)
+
+        Text("ECG Findings:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            (0..2).forEach { num -> FilterChip(selected = ecg == num, onClick = { ecg = num }, label = { Text("E: $num") }) }
+            FilterChip(selected = ecg == 0, onClick = { ecg = 0 }, label = { Text("Normal (0)") })
+            FilterChip(selected = ecg == 1, onClick = { ecg = 1 }, label = { Text("Non-specific repol (+1)") })
+            FilterChip(selected = ecg == 2, onClick = { ecg = 2 }, label = { Text("ST-depression / BBB (+2)") })
         }
-        Text("Age: >=65 (2) / 45-64 (1) / <45 (0)", fontSize = 12.sp)
+
+        Text("Age Group:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            (0..2).forEach { num -> FilterChip(selected = age == num, onClick = { age = num }, label = { Text("A: $num") }) }
+            FilterChip(selected = age == 0, onClick = { age = 0 }, label = { Text("< 45 yr (0)") })
+            FilterChip(selected = age == 1, onClick = { age = 1 }, label = { Text("45 - 64 yr (+1)") })
+            FilterChip(selected = age == 2, onClick = { age = 2 }, label = { Text(">= 65 yr (+2)") })
         }
-        Text("Troponin: >3x (2) / 1-3x (1) / Normal (0)", fontSize = 12.sp)
+
+        Text("Atherosclerotic Risk Factors (HTN, DM, Smoking, Dyslipidemia, Family Hx, Obesity):", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            (0..2).forEach { num -> FilterChip(selected = trop == num, onClick = { trop = num }, label = { Text("T: $num") }) }
+            FilterChip(selected = risk == 0, onClick = { risk = 0 }, label = { Text("No risk factors (0)") })
+            FilterChip(selected = risk == 1, onClick = { risk = 1 }, label = { Text("1 - 2 Risk factors (+1)") })
+            FilterChip(selected = risk == 2, onClick = { risk = 2 }, label = { Text(">=3 or Atherosclerotic Dz (+2)") })
         }
+
+        Text("Cardiac Troponin Level:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = trop == 0, onClick = { trop = 0 }, label = { Text("<= Normal limit (0)") })
+            FilterChip(selected = trop == 1, onClick = { trop = 1 }, label = { Text("1 - 3× ULN (+1)") })
+            FilterChip(selected = trop == 2, onClick = { trop = 2 }, label = { Text("> 3× ULN (+2)") })
+        }
+
         ResultBanner(
             title = "HEART Score for Chest Pain",
-            valueText = "${res.score} / 10 Points (${res.sixWeekMacePercent}% MACE)",
+            valueText = "${res.score} / 10 Points (${res.sixWeekMacePercent}% 6-week MACE)",
             badgeText = res.riskStratum,
             guidance = res.management,
             isSafe = res.score <= 3
@@ -1229,19 +1384,31 @@ fun WellsDvtInteractiveCard() {
         ExtendedCalculators.calculateWellsDvt(cancer, paralysis, bed, tender, wholeLeg, calf, edema, veins, alt)
     }
 
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Clinical DVT Criteria (Wells):", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected = cancer, onClick = { cancer = !cancer }, label = { Text("Active Cancer") })
-            FilterChip(selected = paralysis, onClick = { paralysis = !paralysis }, label = { Text("Paralysis/Paresis") })
+            FilterChip(selected = cancer, onClick = { cancer = !cancer }, label = { Text("Active Cancer (+1)") })
+            FilterChip(selected = paralysis, onClick = { paralysis = !paralysis }, label = { Text("Paresis / Plaster (+1)") })
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected = tender, onClick = { tender = !tender }, label = { Text("Tenderness along deep veins") })
-            FilterChip(selected = calf, onClick = { calf = !calf }, label = { Text("Calf swelling >3cm") })
+            FilterChip(selected = bed, onClick = { bed = !bed }, label = { Text("Bedridden >3d / Surgery 12w (+1)") })
+            FilterChip(selected = tender, onClick = { tender = !tender }, label = { Text("Deep Vein Tenderness (+1)") })
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected = edema, onClick = { edema = !edema }, label = { Text("Pitting edema") })
-            FilterChip(selected = alt, onClick = { alt = !alt }, label = { Text("Alt diagnosis as likely (-2)") })
+            FilterChip(selected = wholeLeg, onClick = { wholeLeg = !wholeLeg }, label = { Text("Entire Leg Swollen (+1)") })
+            FilterChip(selected = calf, onClick = { calf = !calf }, label = { Text("Calf Swelling >3cm (+1)") })
         }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = edema, onClick = { edema = !edema }, label = { Text("Pitting Edema (+1)") })
+            FilterChip(selected = veins, onClick = { veins = !veins }, label = { Text("Collateral Veins (+1)") })
+        }
+        FilterChip(
+            selected = alt,
+            onClick = { alt = !alt },
+            label = { Text("Alternative Diagnosis as Likely as DVT (-2)") },
+            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = MaterialTheme.colorScheme.errorContainer)
+        )
+
         ResultBanner(
             title = "Wells' Score for DVT",
             valueText = "${res.score} Points",
@@ -1266,19 +1433,22 @@ fun WellsPeInteractiveCard() {
         ExtendedCalculators.calculateWellsPe(dvtSigns, peLikely, hr, surgery, prior, hemoptysis, cancer)
     }
 
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Clinical PE Criteria (Wells):", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected = dvtSigns, onClick = { dvtSigns = !dvtSigns }, label = { Text("Clinical DVT signs (+3)") })
-            FilterChip(selected = peLikely, onClick = { peLikely = !peLikely }, label = { Text("PE #1 diagnosis (+3)") })
+            FilterChip(selected = dvtSigns, onClick = { dvtSigns = !dvtSigns }, label = { Text("Clinical Signs of DVT (+3)") })
+            FilterChip(selected = peLikely, onClick = { peLikely = !peLikely }, label = { Text("PE #1 or Equally Likely (+3)") })
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected = hr, onClick = { hr = !hr }, label = { Text("Heart rate > 100 (+1.5)") })
-            FilterChip(selected = surgery, onClick = { surgery = !surgery }, label = { Text("Surgery/bed 4w (+1.5)") })
+            FilterChip(selected = hr, onClick = { hr = !hr }, label = { Text("Heart Rate > 100 bpm (+1.5)") })
+            FilterChip(selected = surgery, onClick = { surgery = !surgery }, label = { Text("Surgery/Bedridden 4w (+1.5)") })
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = prior, onClick = { prior = !prior }, label = { Text("Prior DVT or PE (+1.5)") })
             FilterChip(selected = hemoptysis, onClick = { hemoptysis = !hemoptysis }, label = { Text("Hemoptysis (+1)") })
-            FilterChip(selected = cancer, onClick = { cancer = !cancer }, label = { Text("Malignancy (+1)") })
         }
+        FilterChip(selected = cancer, onClick = { cancer = !cancer }, label = { Text("Active Malignancy (+1)") })
+
         ResultBanner(
             title = "Wells' Score for Pulmonary Embolism",
             valueText = "${res.score} Points",
@@ -1295,40 +1465,80 @@ fun NewsInteractiveCard() {
     var spo2 by remember { mutableStateOf("96") }
     var onOxygen by remember { mutableStateOf(false) }
     var sbp by remember { mutableStateOf("120") }
-    var hr by remember { mutableStateOf("80") }
+    var hr by remember { mutableStateOf("78") }
     var isAlert by remember { mutableStateOf(true) }
+    var temp by remember { mutableStateOf("37.0") }
 
-    var score = 0
-    val rrVal = rr.toIntOrNull() ?: 18
-    if (rrVal <= 8 || rrVal >= 25) score += 3 else if (rrVal in 21..24) score += 2 else if (rrVal in 9..11) score += 1
-
-    val spo2Val = spo2.toIntOrNull() ?: 96
-    if (spo2Val <= 91) score += 3 else if (spo2Val in 92..93) score += 2 else if (spo2Val in 94..95) score += 1
-    if (onOxygen) score += 2
-    if (!isAlert) score += 3
-
-    val (stratum, action) = when {
-        score == 0 -> "Low Clinical Risk (0 points)" to "Ward-based routine observations every 12 hours."
-        score in 1..4 -> "Low Risk (1-4 points)" to "Inform registered nurse. Frequency of monitoring minimum 4-6 hours."
-        score in 5..6 -> "Medium Risk (5-6 points or single parameter 3)" to "Urgent review by attending doctor / medical emergency team. Minimum hourly monitoring."
-        else -> "High Risk (Score >= 7)" to "CRITICAL EMERGENCY. Emergency assessment by critical care team / ICU transfer readiness."
+    val res = remember(rr, spo2, onOxygen, sbp, hr, isAlert, temp) {
+        ExtendedCalculators.calculateNews2(
+            respirationRate = rr.toIntOrNull() ?: 18,
+            spo2Percent = spo2.toIntOrNull() ?: 96,
+            onOxygen = onOxygen,
+            systolicBp = sbp.toIntOrNull() ?: 120,
+            heartRateBpm = hr.toIntOrNull() ?: 78,
+            isAlert = isAlert,
+            temperatureCelsius = temp.toDoubleOrNull() ?: 37.0
+        )
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedTextField(value = rr, onValueChange = { rr = it }, label = { Text("Resp Rate (/min)") }, modifier = Modifier.weight(1f))
-            OutlinedTextField(value = spo2, onValueChange = { spo2 = it }, label = { Text("SpO2 (%)") }, modifier = Modifier.weight(1f))
+            OutlinedTextField(
+                value = rr,
+                onValueChange = { rr = it },
+                label = { Text("Resp Rate (/min)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = spo2,
+                onValueChange = { spo2 = it },
+                label = { Text("SpO2 (%)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = sbp,
+                onValueChange = { sbp = it },
+                label = { Text("Systolic BP (mmHg)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = hr,
+                onValueChange = { hr = it },
+                label = { Text("Heart Rate (bpm)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = temp,
+                onValueChange = { temp = it },
+                label = { Text("Temp (°C)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected = onOxygen, onClick = { onOxygen = !onOxygen }, label = { Text("Supplemental Oxygen") })
-            FilterChip(selected = !isAlert, onClick = { isAlert = !isAlert }, label = { Text("Altered Consciousness") })
+            FilterChip(
+                selected = onOxygen,
+                onClick = { onOxygen = !onOxygen },
+                label = { Text(if (onOxygen) "Supplemental O₂ (+2)" else "Room Air (0)") }
+            )
+            FilterChip(
+                selected = !isAlert,
+                onClick = { isAlert = !isAlert },
+                label = { Text(if (isAlert) "Consciousness: Alert (0)" else "Altered: CVPU (+3)") }
+            )
         }
         ResultBanner(
-            title = "NEWS2 Score",
-            valueText = "$score Points",
-            badgeText = stratum,
-            guidance = action,
-            isSafe = score <= 4
+            title = "National Early Warning Score (NEWS2)",
+            valueText = "${res.totalScore} / 20 Points • ${res.monitoringFrequency}",
+            badgeText = res.riskCategory,
+            guidance = res.responseLevel,
+            isSafe = res.totalScore <= 4 && !res.hasRedScore
         )
     }
 }
@@ -1342,23 +1552,42 @@ fun GcsInteractiveCard(state: ClinicalUiState, viewModel: ClinicalViewModel) {
     val res = remember(eye, verbal, motor) { ClinicalCalculators.calculateGcs(eye, verbal, motor) }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("Eye Opening (1 - 4)", fontWeight = FontWeight.Bold)
+        Text("Eye Opening Response:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            (1..4).forEach { FilterChip(selected = eye == it, onClick = { eye = it }, label = { Text("E$it") }) }
+            FilterChip(selected = eye == 4, onClick = { eye = 4 }, label = { Text("Spontaneous (4)") })
+            FilterChip(selected = eye == 3, onClick = { eye = 3 }, label = { Text("To Sound (3)") })
+            FilterChip(selected = eye == 2, onClick = { eye = 2 }, label = { Text("To Pressure (2)") })
+            FilterChip(selected = eye == 1, onClick = { eye = 1 }, label = { Text("None (1)") })
         }
-        Text("Verbal Response (1 - 5)", fontWeight = FontWeight.Bold)
+
+        Text("Verbal Response:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            (1..5).forEach { FilterChip(selected = verbal == it, onClick = { verbal = it }, label = { Text("V$it") }) }
+            FilterChip(selected = verbal == 5, onClick = { verbal = 5 }, label = { Text("Oriented (5)") })
+            FilterChip(selected = verbal == 4, onClick = { verbal = 4 }, label = { Text("Confused (4)") })
+            FilterChip(selected = verbal == 3, onClick = { verbal = 3 }, label = { Text("Inappropriate (3)") })
         }
-        Text("Motor Response (1 - 6)", fontWeight = FontWeight.Bold)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            (1..6).forEach { FilterChip(selected = motor == it, onClick = { motor = it }, label = { Text("M$it") }) }
+            FilterChip(selected = verbal == 2, onClick = { verbal = 2 }, label = { Text("Incomprehensible (2)") })
+            FilterChip(selected = verbal == 1, onClick = { verbal = 1 }, label = { Text("None (1)") })
         }
+
+        Text("Motor Response:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = motor == 6, onClick = { motor = 6 }, label = { Text("Obeys (6)") })
+            FilterChip(selected = motor == 5, onClick = { motor = 5 }, label = { Text("Localizing (5)") })
+            FilterChip(selected = motor == 4, onClick = { motor = 4 }, label = { Text("Normal Flexion (4)") })
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = motor == 3, onClick = { motor = 3 }, label = { Text("Abnormal Flexion (3)") })
+            FilterChip(selected = motor == 2, onClick = { motor = 2 }, label = { Text("Extension (2)") })
+            FilterChip(selected = motor == 1, onClick = { motor = 1 }, label = { Text("None (1)") })
+        }
+
         ResultBanner(
-            title = "Glasgow Coma Scale",
-            valueText = "E${res.eyeScore} V${res.verbalScore} M${res.motorScore} = ${res.totalScore} / 15",
+            title = "Glasgow Coma Scale (GCS)",
+            valueText = "E${res.eyeScore} V${res.verbalScore} M${res.motorScore} = ${res.totalScore} / 15 Points",
             badgeText = res.severity,
-            guidance = res.clinicalGuidance,
+            guidance = "${res.clinicalGuidance}\n\nClinical Rule: GCS <= 8 indicates coma; endotracheal intubation strongly indicated for airway protection.",
             isSafe = res.totalScore >= 13
         )
     }
@@ -1379,19 +1608,23 @@ fun StopBangInteractiveCard() {
         ExtendedCalculators.calculateStopBang(snoring, tired, observed, pressure, bmi, age, neck, male)
     }
 
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("STOP-BANG Screening Questions:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected = snoring, onClick = { snoring = !snoring }, label = { Text("Snoring loudly") })
-            FilterChip(selected = tired, onClick = { tired = !tired }, label = { Text("Tired/fatigued") })
+            FilterChip(selected = snoring, onClick = { snoring = !snoring }, label = { Text("Snoring loudly (+1)") })
+            FilterChip(selected = tired, onClick = { tired = !tired }, label = { Text("Tired / fatigued (+1)") })
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected = observed, onClick = { observed = !observed }, label = { Text("Observed stopping breathing") })
-            FilterChip(selected = pressure, onClick = { pressure = !pressure }, label = { Text("High Blood Pressure") })
+            FilterChip(selected = observed, onClick = { observed = !observed }, label = { Text("Observed apnea (+1)") })
+            FilterChip(selected = pressure, onClick = { pressure = !pressure }, label = { Text("Hypertension (+1)") })
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected = bmi, onClick = { bmi = !bmi }, label = { Text("BMI > 35") })
-            FilterChip(selected = age, onClick = { age = !age }, label = { Text("Age > 50") })
-            FilterChip(selected = neck, onClick = { neck = !neck }, label = { Text("Neck > 40cm") })
+            FilterChip(selected = bmi, onClick = { bmi = !bmi }, label = { Text("BMI > 35 kg/m² (+1)") })
+            FilterChip(selected = age, onClick = { age = !age }, label = { Text("Age > 50 yr (+1)") })
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = neck, onClick = { neck = !neck }, label = { Text("Neck > 40 cm (+1)") })
+            FilterChip(selected = male, onClick = { male = !male }, label = { Text("Sex: Male (+1)") })
         }
         ResultBanner(
             title = "STOP-BANG Sleep Apnea Score",
@@ -1409,25 +1642,34 @@ fun CentorInteractiveCard() {
     var nodes by remember { mutableStateOf(true) }
     var fever by remember { mutableStateOf(true) }
     var noCough by remember { mutableStateOf(true) }
-    var ageGroup by remember { mutableIntStateOf(1) } // 0: 3-14, 1: 15-44, 2: >=45
+    var ageGroup by remember { mutableIntStateOf(1) } // 0: 3-14 (+1), 1: 15-44 (0), 2: >=45 (-1)
 
     val res = remember(exudate, nodes, fever, noCough, ageGroup) {
         ExtendedCalculators.calculateCentor(exudate, nodes, fever, noCough, ageGroup)
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Clinical Findings:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected = exudate, onClick = { exudate = !exudate }, label = { Text("Tonsillar exudate") })
-            FilterChip(selected = nodes, onClick = { nodes = !nodes }, label = { Text("Tender cervical nodes") })
+            FilterChip(selected = exudate, onClick = { exudate = !exudate }, label = { Text("Tonsillar exudate (+1)") })
+            FilterChip(selected = nodes, onClick = { nodes = !nodes }, label = { Text("Tender cervical nodes (+1)") })
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected = fever, onClick = { fever = !fever }, label = { Text("Fever history") })
-            FilterChip(selected = noCough, onClick = { noCough = !noCough }, label = { Text("Absence of cough") })
+            FilterChip(selected = fever, onClick = { fever = !fever }, label = { Text("Fever history >38°C (+1)") })
+            FilterChip(selected = noCough, onClick = { noCough = !noCough }, label = { Text("Absence of cough (+1)") })
         }
+
+        Text("Patient Age Group:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = ageGroup == 0, onClick = { ageGroup = 0 }, label = { Text("3 - 14 years (+1)") })
+            FilterChip(selected = ageGroup == 1, onClick = { ageGroup = 1 }, label = { Text("15 - 44 years (0)") })
+            FilterChip(selected = ageGroup == 2, onClick = { ageGroup = 2 }, label = { Text(">= 45 years (-1)") })
+        }
+
         ResultBanner(
             title = "Centor (McIsaac) Score",
-            valueText = "${res.score} Points",
-            badgeText = res.probability,
+            valueText = "${res.score} Points • ${res.probability}",
+            badgeText = if (res.score >= 3) "Antibiotics Warranted" else "Supportive Care",
             guidance = res.treatmentGuidance,
             isSafe = res.score < 2
         )
@@ -1449,7 +1691,13 @@ fun SteroidInteractiveCard() {
                 FilterChip(selected = drug == name, onClick = { drug = name }, label = { Text(name) })
             }
         }
-        OutlinedTextField(value = dose, onValueChange = { dose = it }, label = { Text("Dose (mg)") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = dose,
+            onValueChange = { dose = it },
+            label = { Text("Dose (mg)") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier.fillMaxWidth()
+        )
         ResultBanner(
             title = "Equivalent Corticosteroid Dosing",
             valueText = "${res.doseMg} mg $drug equals:",
@@ -1462,18 +1710,35 @@ fun SteroidInteractiveCard() {
 
 @Composable
 fun Phq9InteractiveCard() {
-    var score by remember { mutableIntStateOf(8) }
-    val res = remember(score) { ExtendedCalculators.calculatePhq9(listOf(score)) }
+    var totalScore by remember { mutableIntStateOf(8) }
+    val res = remember(totalScore) { ExtendedCalculators.calculatePhq9(listOf(totalScore)) }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("Total PHQ-9 Score (0 - 27): $score", fontWeight = FontWeight.Bold)
-        Slider(value = score.toFloat(), onValueChange = { score = it.toInt() }, valueRange = 0f..27f, steps = 26)
+        Text("Total PHQ-9 Score (0 - 27): $totalScore Points", fontWeight = FontWeight.Bold)
+        Slider(
+            value = totalScore.toFloat(),
+            onValueChange = { totalScore = it.toInt() },
+            valueRange = 0f..27f,
+            steps = 26
+        )
+
+        Text("Quick Severity Band Selection:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = totalScore in 0..4, onClick = { totalScore = 2 }, label = { Text("None (0-4)") })
+            FilterChip(selected = totalScore in 5..9, onClick = { totalScore = 7 }, label = { Text("Mild (5-9)") })
+            FilterChip(selected = totalScore in 10..14, onClick = { totalScore = 12 }, label = { Text("Moderate (10-14)") })
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = totalScore in 15..19, onClick = { totalScore = 17 }, label = { Text("Mod Severe (15-19)") })
+            FilterChip(selected = totalScore in 20..27, onClick = { totalScore = 22 }, label = { Text("Severe (20-27)") })
+        }
+
         ResultBanner(
             title = "PHQ-9 Depression Severity",
-            valueText = "$score / 27 Points",
+            valueText = "$totalScore / 27 Points",
             badgeText = res.severity,
-            guidance = res.treatmentRecommendation,
-            isSafe = score < 10
+            guidance = "${res.treatmentRecommendation}\n\nClinical Note: Score >= 10 has 88% sensitivity and 88% specificity for Major Depressive Disorder.",
+            isSafe = totalScore < 10
         )
     }
 }
@@ -1561,9 +1826,36 @@ fun IvInfusionInteractiveCard() {
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedTextField(value = totalMg, onValueChange = { totalMg = it }, label = { Text("Drug (mg)") }, modifier = Modifier.weight(1f))
-            OutlinedTextField(value = bagMl, onValueChange = { bagMl = it }, label = { Text("Bag (mL)") }, modifier = Modifier.weight(1f))
-            OutlinedTextField(value = rateMcg, onValueChange = { rateMcg = it }, label = { Text("Target mcg/kg/min") }, modifier = Modifier.weight(1f))
+            OutlinedTextField(
+                value = totalMg,
+                onValueChange = { totalMg = it },
+                label = { Text("Drug (mg)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = bagMl,
+                onValueChange = { bagMl = it },
+                label = { Text("Bag (mL)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = weight,
+                onValueChange = { weight = it },
+                label = { Text("Patient Weight (kg)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = rateMcg,
+                onValueChange = { rateMcg = it },
+                label = { Text("Target mcg/kg/min") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
         }
         ResultBanner(
             title = "Infusion Pump Rate",

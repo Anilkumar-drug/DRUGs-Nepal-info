@@ -109,6 +109,14 @@ object ComprehensiveSpecialtyDrugsData {
             iconEmoji = "🦴",
             description = "Methotrexate, Hydroxychloroquine, Sulfasalazine, Upadacitinib (JAK1), Tocilizumab, Remibrutinib (BTK inhibitor)",
             clinicalImportance = "From conventional synthetic DMARDs (csDMARDs) to targeted synthetic JAK inhibitors and novel covalent BTK inhibitors."
+        ),
+        SpecialtyCategoryInfo(
+            id = "rare_disease",
+            name = "Rare Diseases & Orphan Therapeutics",
+            tag = "Rare Diseases",
+            iconEmoji = "🧬",
+            description = "Trientine, D-Penicillamine, Riluzole, Edaravone, Risdiplam, Imiglucerase, Agalsidase, Eculizumab, C1-INH, Bosentan, Tafamidis, Pirfenidone, Nintedanib, Trikafta",
+            clinicalImportance = "Enzyme replacements, SMN2 splicing modifiers, C5 complement inhibitors, kinetic stabilizers, and targeted chelators for genetic and rare diseases."
         )
     )
 
@@ -116,7 +124,8 @@ object ComprehensiveSpecialtyDrugsData {
         SpecialtyDrugsCardioMetabolic.drugs +
         SpecialtyDrugsThyroidLipid.drugs +
         SpecialtyDrugsNeuroHeme.drugs +
-        SpecialtyDrugsInfectiousImmunoOnco.drugs
+        SpecialtyDrugsInfectiousImmunoOnco.drugs +
+        RareDiseasesAndSpecialtyClassesData.rareDiseaseAndSpecialtyDrugs
 
     fun getDrugsByCategory(categoryTag: String): List<Drug> {
         return specialtyDrugs.filter { it.therapeuticClassTag.equals(categoryTag, ignoreCase = true) }

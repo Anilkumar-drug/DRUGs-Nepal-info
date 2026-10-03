@@ -276,6 +276,13 @@ fun LeipzigInteractiveCard() {
             FilterChip(selected = urineCu == 2, onClick = { urineCu = 2 }, label = { Text(">2× ULN (+2)") })
         }
 
+        Text("Liver Quantitative Copper (Biopsy):", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(selected = liverCu == 0, onClick = { liverCu = 0 }, label = { Text("Normal / Not done (0)") })
+            FilterChip(selected = liverCu == 1, onClick = { liverCu = 1 }, label = { Text("0.8 - 4.0 µmol/g (+1)") })
+            FilterChip(selected = liverCu == 2, onClick = { liverCu = 2 }, label = { Text("> 4.0 µmol/g (+2)") })
+        }
+
         Text("ATP7B Gene Mutation Analysis:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             FilterChip(selected = atp7b == 0, onClick = { atp7b = 0 }, label = { Text("None (0)") })

@@ -595,4 +595,281 @@ object ExtendedCalculators {
         }
         return HeartResult(total, mace, strat, mgmt)
     }
+
+    // 25. Oakland Score for Acute Lower GI Bleeding (BSG 2019 Guidelines)
+    data class OaklandResult(
+        val score: Int,
+        val riskTier: String,
+        val isSafeDischarge: Boolean,
+        val recommendation: String
+    )
+
+    fun calculateOaklandScore(
+        age: Int,
+        isMale: Boolean,
+        prevLgibAdmission: Boolean,
+        dreBloodPresent: Boolean,
+        heartRateBpm: Int,
+        systolicBpMmHg: Int,
+        hemoglobinGdL: Double
+    ): OaklandResult {
+        var score = 0
+
+        // 1. Age
+        score += when {
+            age < 40 -> 0
+            age in 40..69 -> 1
+            else -> 2
+        }
+
+        // 2. Sex
+        if (isMale) score += 1
+
+        // 3. Previous LGIB admission
+        if (prevLgibAdmission) score += 1
+
+        // 4. Digital rectal exam blood
+        if (dreBloodPresent) score += 1
+
+        // 5. Heart Rate
+        score += when {
+            heartRateBpm < 70 -> 0
+            heartRateBpm in 70..89 -> 1
+            heartRateBpm in 90..109 -> 2
+            else -> 3
+        }
+
+        // 6. Systolic BP
+        score += when {
+            systolicBpMmHg >= 160 -> 0
+            systolicBpMmHg in 130..159 -> 2
+            systolicBpMmHg in 120..129 -> 3
+            systolicBpMmHg in 90..119 -> 4
+            else -> 5
+        }
+
+        // 7. Hemoglobin (g/dL)
+        score += if (isMale) {
+            when {
+                hemoglobinGdL >= 16.0 -> 0
+                hemoglobinGdL >= 13.0 -> 4
+                hemoglobinGdL >= 11.0 -> 8
+                hemoglobinGdL >= 9.0 -> 13
+                hemoglobinGdL >= 7.0 -> 17
+                else -> 22
+            }
+        } else {
+            when {
+                hemoglobinGdL >= 13.0 -> 0
+                hemoglobinGdL >= 11.0 -> 4
+                hemoglobinGdL >= 9.0 -> 8
+                hemoglobinGdL >= 7.0 -> 13
+                else -> 17
+            }
+        }
+
+        val safe = score <= 8
+        val (tier, rec) = if (safe) {
+            "Low Risk / Safe Outpatient Discharge (Score $score <= 8)" to
+                "BSG Guidelines: Patient has a >=95% probability of safe discharge without blood transfusion, therapeutic intervention, or in-hospital death. Outpatient colonoscopy/investigation recommended."
+        } else {
+            "High Risk / Inpatient Admission (Score $score > 8)" to
+                "BSG Guidelines: Inpatient admission warranted for hemodynamic stabilization, blood typing/cross-matching, and urgent diagnostic colonoscopy or CT mesenteric angiography."
+        }
+
+        return OaklandResult(score, tier, safe, rec)
+    }
+
+    // 26. Rockall Score for Upper GI Bleeding (NICE / BSG Guidelines)
+    data class RockallResult(
+        val score: Int,
+        val isComplete: Boolean,
+        val riskTier: String,
+        val mortalityRisk: String,
+        val rebleedRisk: String,
+        val clinicalGuidance: String
+    )
+
+    fun calculateRockallScore(
+        age: Int,
+        systolicBp: Int,
+        heartRate: Int,
+        comorbidityLevel: Int, // 0: None, 2: IHD/Heart failure/major, 3: Renal/Liver failure/Malignancy
+        isComplete: Boolean,
+        endoscopicDiagnosis: Int = 1, // 0: Mallory-Weiss/normal, 1: Other (ulcer/erosion), 2: Upper GI malignancy
+        stigmataHemorrhage: Int = 0 // 0: None/dark spot, 2: Blood in lumen/adherent clot/visible or spurting vessel
+    ): RockallResult {
+        var score = 0
+        // Age
+        score += when {
+            age < 60 -> 0
+            age in 60..79 -> 1
+            else -> 2
+        }
+        // Shock
+        score += when {
+            systolicBp < 100 -> 2
+            heartRate >= 100 -> 1
+            else -> 0
+        }
+        // Comorbidities
+        score += comorbidityLevel.coerceIn(0, 3)
+
+        if (isComplete) {
+            score += endoscopicDiagnosis.coerceIn(0, 2)
+            score += stigmataHemorrhage.coerceIn(0, 2)
+        }
+
+        val (tier, mort, rebleed, guide) = if (!isComplete) {
+            when {
+                score <= 1 -> Quadruple(
+                    "Low Risk (Pre-Endoscopy Score $score)",
+                    "< 2% Mortality",
+                    "Low rebleed risk",
+                    "Early planned endoscopy during routine daytime list. Hemodynamically stable."
+                )
+                score in 2..3 -> Quadruple(
+                    "Moderate Risk (Pre-Endoscopy Score $score)",
+                    "~5 - 10% Mortality",
+                    "Moderate rebleed risk",
+                    "Urgent fluid resuscitation, IV access, and endoscopy within 24 hours of presentation."
+                )
+                else -> Quadruple(
+                    "High Risk (Pre-Endoscopy Score $score)",
+                    "> 20 - 40% High Mortality",
+                    "Very high early rebleed risk",
+                    "Aggressive resuscitation with blood products, IV high-dose PPI bolus, emergency endoscopy within 12 hours, ICU alert."
+                )
+            }
+        } else {
+            when {
+                score <= 2 -> Quadruple(
+                    "Low Risk (Complete Score $score)",
+                    "0.1 - 2% Mortality",
+                    "4.3% Rebleed Risk",
+                    "Safe for early hospital discharge and outpatient oral PPI therapy."
+                )
+                score in 3..4 -> Quadruple(
+                    "Moderate Risk (Complete Score $score)",
+                    "3 - 10% Mortality",
+                    "14% Rebleed Risk",
+                    "Inpatient ward monitoring for at least 48 hours with standard PPI therapy."
+                )
+                else -> Quadruple(
+                    "High Risk (Complete Score $score >= 5)",
+                    "17 - 40% High Mortality",
+                    "25 - 40% Rebleed Risk",
+                    "High-dose continuous IV PPI infusion (80mg bolus + 8mg/hr for 72h). Close monitoring in HDU/ICU. Surgical/interventional radiology standby."
+                )
+            }
+        }
+
+        return RockallResult(score, isComplete, tier, mort, rebleed, guide)
+    }
+
+    // 27. Royal College of Physicians (RCP) NEWS2 Score
+    data class News2Result(
+        val totalScore: Int,
+        val riskCategory: String,
+        val responseLevel: String,
+        val monitoringFrequency: String,
+        val hasRedScore: Boolean
+    )
+
+    fun calculateNews2(
+        respirationRate: Int,
+        spo2Percent: Int,
+        onOxygen: Boolean,
+        systolicBp: Int,
+        heartRateBpm: Int,
+        isAlert: Boolean,
+        temperatureCelsius: Double
+    ): News2Result {
+        var score = 0
+        var hasRed = false
+
+        // 1. Respiration Rate
+        val rrPoints = when {
+            respirationRate <= 8 || respirationRate >= 25 -> 3
+            respirationRate in 21..24 -> 2
+            respirationRate in 9..11 -> 1
+            else -> 0
+        }
+        if (rrPoints == 3) hasRed = true
+        score += rrPoints
+
+        // 2. SpO2
+        val spo2Points = when {
+            spo2Percent <= 91 -> 3
+            spo2Percent in 92..93 -> 2
+            spo2Percent in 94..95 -> 1
+            else -> 0
+        }
+        if (spo2Points == 3) hasRed = true
+        score += spo2Points
+
+        // 3. Supplemental Oxygen
+        if (onOxygen) score += 2
+
+        // 4. Systolic Blood Pressure
+        val sbpPoints = when {
+            systolicBp <= 90 || systolicBp >= 220 -> 3
+            systolicBp in 91..100 -> 2
+            systolicBp in 101..110 -> 1
+            else -> 0
+        }
+        if (sbpPoints == 3) hasRed = true
+        score += sbpPoints
+
+        // 5. Pulse / Heart Rate
+        val hrPoints = when {
+            heartRateBpm <= 40 || heartRateBpm >= 131 -> 3
+            heartRateBpm in 111..130 -> 2
+            heartRateBpm in 41..50 || heartRateBpm in 91..110 -> 1
+            else -> 0
+        }
+        if (hrPoints == 3) hasRed = true
+        score += hrPoints
+
+        // 6. Consciousness (AVPU)
+        if (!isAlert) {
+            score += 3
+            hasRed = true
+        }
+
+        // 7. Temperature
+        val tempPoints = when {
+            temperatureCelsius <= 35.0 -> 3
+            temperatureCelsius in 35.1..36.0 || temperatureCelsius in 38.1..39.0 -> 1
+            temperatureCelsius >= 39.1 -> 2
+            else -> 0
+        }
+        if (tempPoints == 3) hasRed = true
+        score += tempPoints
+
+        val (cat, resp, freq) = when {
+            score >= 7 -> Triple(
+                "High Clinical Risk (Total Score >= 7)",
+                "EMERGENCY RESPONSE: Immediate urgent clinical assessment by Medical Emergency Team (MET) / Intensive Care Team. Continuous vital signs monitoring and transfer to HDU/ICU.",
+                "Continuous monitoring of vital signs"
+            )
+            score in 5..6 || hasRed -> Triple(
+                if (hasRed) "Medium Clinical Risk (Single parameter = 3 RED)" else "Medium Clinical Risk (Score 5 - 6)",
+                "URGENT RESPONSE: Urgent review by attending medical officer or rapid response team within 30 minutes. Evaluate escalation to critical care.",
+                "Minimum hourly monitoring"
+            )
+            score in 1..4 -> Triple(
+                "Low Clinical Risk (Score 1 - 4)",
+                "WARD RESPONSE: Inform registered nurse for clinical assessment. Review pain relief, fluids, and medications.",
+                "Minimum 4 to 6-hourly monitoring"
+            )
+            else -> Triple(
+                "Low Clinical Risk (Score 0)",
+                "ROUTINE CARE: Standard ward observation and continuous clinical care.",
+                "Minimum 12-hourly monitoring"
+            )
+        }
+
+        return News2Result(score, cat, resp, freq, hasRed)
+    }
 }

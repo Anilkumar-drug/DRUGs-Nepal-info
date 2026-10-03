@@ -20,7 +20,8 @@ object ClinicalRepository {
         "Musculoskeletal & Analgesics",
         "Renal & Genitourinary",
         "Dermatology",
-        "Emergency & Critical Care"
+        "Emergency & Critical Care",
+        "Rare Diseases & Orphan Therapeutics"
     )
 
     val allCalculators: List<CalculatorSummary> = com.example.data.calculator.ClinicalCalculatorRegistry.allCalculators
@@ -1109,7 +1110,7 @@ object ClinicalRepository {
         )
     )
 
-    val drugs: List<Drug> = (baseDrugs + AdditionalDrugsData.additionalDrugs + ExpandedDrugsData.expandedDrugs + ComprehensiveSpecialtyDrugsData.specialtyDrugs + HepatologyDrugsData.hepatologyDrugs + AnesthesiologyDrugsData.anesthesiaDrugs + OutpatientAllergyAndEssentialDrugsData.outpatientDrugs + ExpandedSpecialtyFormularyData.expandedSpecialtyDrugs + EmergencyCardioMetabolicDrugsData.emergencyCardioDrugs + SpecialtyDrugsCardioMetabolic.drugs + SpecialtyDrugsNeuroHeme.drugs + SpecialtyDrugsThyroidLipid.drugs + SpecialtyDrugsInfectiousImmunoOnco.drugs + SuggestedClinicalDrugsData.suggestedDrugs + SuggestedAdvancedClinicalDrugsData.drugs + Top100PharmacopoeiaDrugsData.drugs).distinctBy { it.id }
+    val drugs: List<Drug> = (baseDrugs + AdditionalDrugsData.additionalDrugs + ExpandedDrugsData.expandedDrugs + ComprehensiveSpecialtyDrugsData.specialtyDrugs + HepatologyDrugsData.hepatologyDrugs + AnesthesiologyDrugsData.anesthesiaDrugs + OutpatientAllergyAndEssentialDrugsData.outpatientDrugs + ExpandedSpecialtyFormularyData.expandedSpecialtyDrugs + EmergencyCardioMetabolicDrugsData.emergencyCardioDrugs + SpecialtyDrugsCardioMetabolic.drugs + SpecialtyDrugsNeuroHeme.drugs + SpecialtyDrugsThyroidLipid.drugs + SpecialtyDrugsInfectiousImmunoOnco.drugs + SuggestedClinicalDrugsData.suggestedDrugs + SuggestedAdvancedClinicalDrugsData.drugs + Top100PharmacopoeiaDrugsData.drugs + CuttingEdgeClinicalDrugsData.cuttingEdgeDrugs).distinctBy { it.id }
 
     val diseaseProtocols: List<DiseaseProtocol> = (DiseaseProtocolsData.allProtocols + HepatologyPancreasProtocolsData.protocols + AnesthesiologyProtocolsData.protocols + NepalNationalGuidelinesData.nationalProtocols).distinctBy { it.id }
 

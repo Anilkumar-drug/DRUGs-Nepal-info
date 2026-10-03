@@ -199,6 +199,80 @@ fun DrugSearchScreen(
             }
         }
 
+        // Quick Action Bar Directly Below Top Taskbar (News and Interact Buttons)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 2.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Surface(
+                onClick = onOpenInteractionChecker,
+                shape = RoundedCornerShape(12.dp),
+                color = Red500.copy(alpha = 0.15f),
+                border = BorderStroke(1.2.dp, Red500.copy(alpha = 0.5f)),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .testTag("below_taskbar_interact_button")
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CompareArrows,
+                        contentDescription = "Drug Interactions Checker",
+                        tint = Red500,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Interact (DDI)",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Red500
+                    )
+                }
+            }
+
+            Surface(
+                onClick = onOpenMedicalNews,
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFF0284C7).copy(alpha = 0.15f),
+                border = BorderStroke(1.2.dp, Color(0xFF0284C7).copy(alpha = 0.5f)),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .testTag("below_taskbar_news_button")
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Feed,
+                        contentDescription = "Guideline News (ESC, EASL, WHO, CDC)",
+                        tint = Color(0xFF0284C7),
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "News & Guidelines",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0284C7)
+                    )
+                }
+            }
+        }
+
         // Active Indication Search Banner (if user specifically switched to INDICATION mode)
         if (searchMode == SearchMode.INDICATION && !isSearchActive) {
             Surface(
@@ -500,6 +574,31 @@ fun DrugSearchScreen(
                         accentColor = Color(0xFF38BDF8),
                         modifier = Modifier.weight(1f),
                         onClick = onOpenAbgSolver
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ClinicalSuiteCard(
+                        title = "INTERACTIONS",
+                        subtitle = "Multi-Drug Safety",
+                        badge = "SAFETY",
+                        icon = Icons.Default.CompareArrows,
+                        accentColor = Red500,
+                        modifier = Modifier.weight(1f),
+                        onClick = onOpenInteractionChecker
+                    )
+
+                    ClinicalSuiteCard(
+                        title = "GUIDELINE NEWS",
+                        subtitle = "EASL, ESC, WHO, CDC",
+                        badge = "2024-26",
+                        icon = Icons.Default.Feed,
+                        accentColor = Color(0xFF0284C7),
+                        modifier = Modifier.weight(1f),
+                        onClick = onOpenMedicalNews
                     )
                 }
             }

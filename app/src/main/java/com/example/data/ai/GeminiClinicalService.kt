@@ -4,6 +4,7 @@ import com.example.BuildConfig
 import com.example.data.model.GroundingSource
 import com.example.data.model.MedicalNewsFetchResult
 import com.example.data.model.MedicalNewsItem
+import com.example.data.repository.ClinicalGuidelinesNewsData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -332,9 +333,9 @@ object GeminiClinicalService {
         if (hasValidKey) {
             try {
                 val promptText = if (category == "All") {
-                    "Provide a comprehensive, authoritative briefing on the latest medical news, disease outbreak reports (Dengue, Cholera, Japanese Encephalitis, Scrub Typhus, Rabies, Snakebite), DDA (Department of Drug Administration) drug alerts and recalls, Ministry of Health (MOHP) clinical directives, and WHO Nepal updates for Nepal in 2025-2026. For each item provide: TITLE, CATEGORY (Outbreak Alert / DDA Drug Recall / Clinical Guideline / Vaccine & Maternal), SOURCE (e.g. EDCD Nepal, DDA, WHO Nepal), SUMMARY, and CLINICAL PRACTICE TAKEAWAY for doctors."
+                    "Provide a comprehensive, authoritative briefing on the latest clinical practice guidelines and medical updates from major international societies (ESC for Heart Failure and Hypertension, EASL & AASLD for MASLD/MASH, APASL for ACLF & Hepatitis B, ACG for Pancreatitis, ESGE, WHO, CDC, ASA for Stroke & Anesthesia) and Nepal national directives (EDCD, DDA) for 2024-2026. For each item provide: TITLE, CATEGORY (e.g. ESC (Cardiology), EASL & AASLD (Hepatology), APASL (Asia-Pacific), ACG & ESGE (Gastroenterology), WHO & CDC, ASA (Stroke & Anesthesia), Outbreak Alert, DDA Drug Recall), SOURCE, SUMMARY, and ACTIONABLE CLINICAL PRACTICE TAKEAWAY for doctors."
                 } else {
-                    "Provide authoritative recent updates and clinical guidance regarding '$category' in Nepal (EDCD, DDA, MOHP, WHO Nepal) for 2025-2026 with TITLE, CATEGORY, SOURCE, SUMMARY, and CLINICAL PRACTICE TAKEAWAY."
+                    "Provide the latest authoritative clinical practice guideline recommendations and recent updates regarding '$category' (including ESC for Heart failure, EASL, AASLD, APASL, WHO, CDC, ESGE, ACG, ASA, or EDCD/DDA) for 2024-2026 with TITLE, CATEGORY, SOURCE, SUMMARY, and ACTIONABLE CLINICAL TAKEAWAY for physicians."
                 }
 
                 val jsonBody = JSONObject().apply {
@@ -357,7 +358,7 @@ object GeminiClinicalService {
 
                     val sysContent = JSONObject().apply {
                         val partsArr = JSONArray().apply {
-                            put(JSONObject().put("text", "You are an expert clinical epidemiologist and drug regulatory reporter for healthcare practitioners in Nepal. Use Google Search grounding to retrieve real, recent medical events, disease outbreaks, DDA drug regulatory actions, and EDCD surveillance in Nepal."))
+                            put(JSONObject().put("text", "You are an expert clinical pharmacologist, epidemiologist, and medical guideline specialist. Use Google Search grounding to retrieve real, latest authoritative clinical practice guidelines from EASL, AASLD, APASL, WHO, CDC, ESGE, ESC (including ESC Heart Failure, ESC Hypertension, ESC Atrial Fibrillation), ASA, ACG, as well as Nepal national directives."))
                         }
                         put("parts", partsArr)
                     }
@@ -432,19 +433,28 @@ object GeminiClinicalService {
             }
         }
 
-        // Return curated Nepal medical news fallback
+        // Return curated international guidelines & national clinical news
+        val allCuratedNewsAndGuidelines = ClinicalGuidelinesNewsData.guidelines + curatedNepalMedicalNews
         val filteredCurated = if (category == "All") {
-            curatedNepalMedicalNews
+            allCuratedNewsAndGuidelines
         } else {
-            curatedNepalMedicalNews.filter { it.category.contains(category, ignoreCase = true) }
+            val catPrefix = category.split("(")[0].trim()
+            val tokens = category.replace(Regex("[^a-zA-Z0-9 ]"), " ").split("\\s+".toRegex()).filter { it.isNotBlank() }
+            allCuratedNewsAndGuidelines.filter { item ->
+                item.category.contains(catPrefix, ignoreCase = true) ||
+                item.category.contains(category, ignoreCase = true) ||
+                item.source.contains(catPrefix, ignoreCase = true) ||
+                item.title.contains(catPrefix, ignoreCase = true) ||
+                tokens.any { t -> t.length > 2 && (item.category.contains(t, ignoreCase = true) || item.title.contains(t, ignoreCase = true) || item.source.contains(t, ignoreCase = true)) }
+            }
         }
 
-        val allSources = curatedNepalMedicalNews.flatMap { it.webSources }.distinctBy { it.url }
-        val allQueries = curatedNepalMedicalNews.flatMap { it.searchQueries }.distinct()
+        val allSources = allCuratedNewsAndGuidelines.flatMap { it.webSources }.distinctBy { it.url }
+        val allQueries = allCuratedNewsAndGuidelines.flatMap { it.searchQueries }.distinct()
 
         return@withContext MedicalNewsFetchResult(
             items = filteredCurated,
-            rawText = "Curated Nepal Clinical Surveillance and DDA Drug Notices",
+            rawText = "Evidence-based Clinical Guidelines (ESC, EASL, AASLD, APASL, ACG, ESGE, WHO, CDC, ASA) and National Alerts",
             searchQueries = allQueries,
             sources = allSources,
             isLiveGrounding = false

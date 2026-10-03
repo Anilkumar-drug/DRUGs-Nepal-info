@@ -58,13 +58,51 @@ fun MedicalNewsScreen(
     val context = LocalContext.current
     var searchFilterText by remember { mutableStateOf("") }
     val categories = remember {
-        listOf("All", "Outbreak Alert", "DDA Drug Recall", "Clinical Guideline", "Vaccine & Maternal")
+        listOf(
+            "All",
+            "ESC (Cardiology & HF)",
+            "EASL & AASLD (Hepatology)",
+            "APASL (Asia-Pacific Liver)",
+            "ACG & ESGE (Gastroenterology)",
+            "WHO & CDC (Global & STIs)",
+            "ASA (Stroke & Anesthesia)",
+            "Outbreak Alert",
+            "DDA Drug Recall"
+        )
+    }
+
+    val guidelineShortcuts = remember {
+        listOf(
+            Pair("❤️ ESC Heart Failure (GDMT)", "Heart Failure"),
+            Pair("🫀 ESC Hypertension (120-129)", "Hypertension"),
+            Pair("⚡ ESC Atrial Fibrillation (AF-CARE)", "Atrial Fibrillation"),
+            Pair("🫁 EASL MASH (Resmetirom)", "MASLD"),
+            Pair("🩺 AASLD Portal HTN & Varices", "Portal Hypertension"),
+            Pair("🔬 APASL ACLF & Hep B", "ACLF"),
+            Pair("🧪 ACG Pancreatitis (WATERFALL)", "Pancreatitis"),
+            Pair("🩸 ESGE Upper GI Bleed (GBS)", "Upper GI"),
+            Pair("🔬 ESGE Colorectal Polyps", "Polypectomy"),
+            Pair("🌐 WHO Hepatitis B (Tenofovir)", "Hepatitis B"),
+            Pair("🛡️ WHO AWaRe Stewardship", "AWaRe"),
+            Pair("💊 CDC Doxy-PEP (STIs)", "Doxy-PEP"),
+            Pair("🫁 CDC Latent TB (3HP/4R)", "Tuberculosis"),
+            Pair("🧠 AHA/ASA Stroke (TNK)", "Stroke"),
+            Pair("💉 ASA Surgery Fasting & GLP-1", "GLP-1"),
+            Pair("🚨 ASA Difficult Airway", "Difficult Airway"),
+            Pair("🌿 EASL Wilson Disease (Leipzig)", "Wilson")
+        )
     }
 
     val filteredList = remember(state.medicalNewsList, state.newsCategoryFilter, searchFilterText) {
         state.medicalNewsList.filter { item ->
             val matchesCategory = if (state.newsCategoryFilter == "All") true
-            else item.category.contains(state.newsCategoryFilter, ignoreCase = true)
+            else {
+                val catPrefix = state.newsCategoryFilter.split("(")[0].trim()
+                item.category.contains(catPrefix, ignoreCase = true) ||
+                item.category.contains(state.newsCategoryFilter, ignoreCase = true) ||
+                item.source.contains(catPrefix, ignoreCase = true) ||
+                item.title.contains(catPrefix, ignoreCase = true)
+            }
 
             val q = searchFilterText.trim().lowercase()
             val matchesSearch = if (q.isEmpty()) true
@@ -72,7 +110,8 @@ fun MedicalNewsScreen(
                 item.title.lowercase().contains(q) ||
                 item.summary.lowercase().contains(q) ||
                 item.clinicalTakeaway.lowercase().contains(q) ||
-                item.source.lowercase().contains(q)
+                item.source.lowercase().contains(q) ||
+                item.category.lowercase().contains(q)
             }
             matchesCategory && matchesSearch
         }
@@ -265,6 +304,70 @@ fun MedicalNewsScreen(
                             shape = RoundedCornerShape(20.dp),
                             modifier = Modifier.testTag("news_filter_${cat.lowercase().replace(" ", "_")}")
                         )
+                    }
+                }
+
+                // Major Society Guidelines Quick Shortcuts Row
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Latest Society Guidelines (ESC, EASL, AASLD, APASL, WHO, CDC, ESGE, ASA, ACG):",
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        if (searchFilterText.isNotBlank()) {
+                            Text(
+                                text = "Clear",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Red500,
+                                modifier = Modifier.clickable { searchFilterText = "" }
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        guidelineShortcuts.forEach { (label, query) ->
+                            val isSelected = searchFilterText.equals(query, ignoreCase = true)
+                            Surface(
+                                onClick = {
+                                    if (isSelected) {
+                                        searchFilterText = ""
+                                    } else {
+                                        searchFilterText = query
+                                        if (state.newsCategoryFilter != "All") {
+                                            viewModel.setNewsCategoryFilter("All")
+                                        }
+                                    }
+                                },
+                                shape = RoundedCornerShape(14.dp),
+                                color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                                modifier = Modifier.testTag("guideline_pill_${query.lowercase().replace(" ", "_")}")
+                            ) {
+                                Text(
+                                    text = label,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }

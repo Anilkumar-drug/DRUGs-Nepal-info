@@ -42,7 +42,7 @@ enum class NavigationScreen(val title: String) {
     GEMINI("Gemini AI Assistant"),
     SETTINGS("App Settings"),
     COMPANIES("Pharmaceutical Companies"),
-    MEDICAL_NEWS("Nepal Medical News & Alerts"),
+    MEDICAL_NEWS("Clinical Guidelines & Medical News"),
     CODE_BLUE("Emergency Resuscitation & Code Blue"),
     ANTIMICROBIAL_STEWARDSHIP("Antimicrobial & Stewardship Guide"),
     IV_COMPATIBILITY("IV Dilution & Y-Site Compatibility"),
