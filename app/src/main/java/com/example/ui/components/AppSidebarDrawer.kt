@@ -84,6 +84,9 @@ fun AppSidebarDrawer(
     doctorName: String,
     doctorDegree: String,
     doctorCouncilNo: String,
+    doctorCollege: String = "",
+    doctorMobile: String = "",
+    doctorPhotoAvatar: String = "👨‍⚕️",
     themeMode: AppThemeMode = AppThemeMode.PITCH_BLACK,
     onThemeChange: (AppThemeMode) -> Unit = {},
     onClose: () -> Unit,
@@ -96,6 +99,7 @@ fun AppSidebarDrawer(
     onSavedClick: () -> Unit = {},
     onPharmacologyClick: () -> Unit = {},
     onMedicalNewsClick: () -> Unit = {},
+    onCriticalCareClick: () -> Unit = {},
     onCodeBlueClick: () -> Unit = {},
     onAntimicrobialClick: () -> Unit = {},
     onIvCompatibilityClick: () -> Unit = {},
@@ -247,24 +251,21 @@ fun AppSidebarDrawer(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = Color(0xFFE11D48),
-                                    modifier = Modifier.size(36.dp)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            imageVector = Icons.Default.Person,
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                }
+                                DoctorAvatarView(
+                                    avatarString = if (isLoggedIn) doctorPhotoAvatar else "👨‍⚕️",
+                                    sizeDp = 38,
+                                    fontSizeSp = 20
+                                )
 
                                 Column(modifier = Modifier.weight(1f)) {
+                                    val displayName = when {
+                                        !isLoggedIn -> "User Sign In / Profile"
+                                        doctorName.isNotBlank() -> if (doctorName.startsWith("Dr.", ignoreCase = true)) doctorName else "Dr. $doctorName"
+                                        doctorMobile.isNotBlank() -> "Dr. ($doctorMobile)"
+                                        else -> "Dr. Clinician (Logged In)"
+                                    }
                                     Text(
-                                        text = if (isLoggedIn && doctorName.isNotBlank()) "Dr. $doctorName" else "User Sign In / Profile",
+                                        text = displayName,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White,
@@ -275,10 +276,12 @@ fun AppSidebarDrawer(
                                         text = if (isLoggedIn) {
                                             listOfNotNull(
                                                 doctorDegree.ifBlank { null },
-                                                if (doctorCouncilNo.isNotBlank()) "NMC: $doctorCouncilNo" else null
-                                            ).joinToString(" • ").ifBlank { "Logged in Prescriber" }
+                                                doctorCollege.ifBlank { null },
+                                                if (doctorCouncilNo.isNotBlank()) "NMC: $doctorCouncilNo" else null,
+                                                doctorMobile.ifBlank { null }
+                                            ).joinToString(" • ").ifBlank { "Verified Prescriber" }
                                         } else {
-                                            "Sync calculations, saved drugs..."
+                                            "Tap to add College, Mobile & Photo"
                                         },
                                         fontSize = 10.sp,
                                         color = Color(0xFFFDA4AF),
@@ -318,6 +321,19 @@ fun AppSidebarDrawer(
                                 .padding(horizontal = 14.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            // 00. Critical Care & Emergency Quick Dashboard (STAT Priority)
+                            SidebarItemCard(
+                                icon = Icons.Default.WarningAmber,
+                                iconColor = Color(0xFFEF4444),
+                                iconBg = Color(0xFFEF4444).copy(alpha = 0.25f),
+                                title = "CRITICAL CARE & EMERGENCY",
+                                subtitle = "Instant Toxicology, Antidote Doses, Resuscitation & Vasopressors",
+                                badge = "STAT ICU/ER",
+                                badgeColor = Color(0xFFEF4444),
+                                onClick = onCriticalCareClick,
+                                testTag = "sidebar_critical_care_item"
+                            )
+
                             // 0. Emergency Code Blue & Resuscitation Fast Mode (Top priority)
                             SidebarItemCard(
                                 icon = Icons.Default.ElectricBolt,

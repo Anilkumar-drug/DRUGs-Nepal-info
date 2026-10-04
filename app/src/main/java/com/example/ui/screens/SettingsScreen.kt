@@ -395,10 +395,13 @@ fun SettingsScreen(
             isLoggedIn = state.isLoggedIn,
             initialName = state.doctorName,
             initialDegree = state.doctorDegree,
+            initialCollege = state.doctorCollege,
             initialCouncilNo = state.doctorCouncilNo,
+            initialMobile = state.doctorMobile,
+            initialAvatar = state.doctorPhotoAvatar,
             onDismissRequest = { showEditProfileDialog = false },
-            onSave = { name, degree, councilNo ->
-                viewModel.loginOrUpdateProfile(name, degree, councilNo)
+            onSave = { name, degree, college, councilNo, mobile, avatar ->
+                viewModel.loginOrUpdateProfile(name, degree, college, councilNo, mobile, avatar)
                 showEditProfileDialog = false
             },
             onLogout = {

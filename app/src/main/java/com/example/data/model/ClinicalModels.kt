@@ -97,3 +97,14 @@ data class CompanyProfile(
     val country: String,
     val products: List<CompanyDrugBrand>
 )
+
+data class PrescribedMedication(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val drugName: String,
+    val dosageForm: String = "Tab",
+    val strength: String = "",
+    val frequency: String = "1-0-1",
+    val timing: String = "After Food (खानापछि)",
+    val duration: String = "5 days",
+    val instructions: String = ""
+)

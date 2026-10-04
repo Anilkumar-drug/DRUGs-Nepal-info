@@ -43,6 +43,7 @@ import com.example.data.model.MessageSender
 import com.example.ui.theme.*
 import com.example.viewmodel.ClinicalUiState
 import com.example.viewmodel.ClinicalViewModel
+import com.example.viewmodel.NavigationScreen
 
 @Composable
 fun GeminiChatScreen(
@@ -60,11 +61,29 @@ fun GeminiChatScreen(
     }
 
     val categories = remember {
-        listOf("⚡ Emergency", "🐍 Toxicology", "📋 Guidelines", "🔍 Interactions", "⚖️ Renal/Dosing", "🧬 MOA Guide")
+        listOf("💊 Drug Dosing", "🏥 Disease Treatment", "⚡ Emergency", "🐍 Toxicology", "📋 Guidelines", "🔍 Interactions", "⚖️ Renal/Dosing", "🧬 MOA Guide")
     }
 
     val categoryPrompts = remember {
         mapOf(
+            "💊 Drug Dosing" to listOf(
+                "Paracetamol pediatric dose mg/kg and interval",
+                "Metformin adult dose, max limits & renal cutoffs",
+                "Azithromycin typhoid vs respiratory dose",
+                "Atorvastatin high vs moderate intensity dosing",
+                "Ceftriaxone adult & pediatric meningitis dose",
+                "Amoxicillin-Clavulanate dose in children",
+                "Doxycycline dose for scrub typhus & acne"
+            ),
+            "🏥 Disease Treatment" to listOf(
+                "Dengue fever warning signs & fluid protocol",
+                "Acute STEMI initial emergency management",
+                "Sepsis hour-1 bundle & noradrenaline protocol",
+                "Acute severe asthma hospital management",
+                "Cirrhosis with ascites & SBP treatment",
+                "Spontaneous Bacterial Peritonitis (SBP) prophylaxis",
+                "Type 2 Diabetes ADA/EASD dual-therapy algorithm"
+            ),
             "⚡ Emergency" to listOf(
                 "Anaphylaxis Epinephrine Dosing (WAO/EAACI)",
                 "ACLS Pulseless VT/VF Algorithm & Amiodarone",
@@ -347,7 +366,15 @@ fun GeminiChatScreen(
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             items(state.chatMessages, key = { it.id }) { msg ->
-                ChatBubble(msg, onGoogleSearch = { query -> launchGoogleSearch(context, query) }, onPubMedSearch = { query -> launchPubMedSearch(context, query) })
+                ChatBubble(
+                    message = msg,
+                    onSearchInApp = { query ->
+                        viewModel.updateSearchQuery(query)
+                        viewModel.navigateTo(NavigationScreen.SEARCH)
+                    },
+                    onGoogleSearch = { query -> launchGoogleSearch(context, query) },
+                    onPubMedSearch = { query -> launchPubMedSearch(context, query) }
+                )
             }
 
             if (state.isAiThinking) {
@@ -395,18 +422,66 @@ fun GeminiChatScreen(
             }
         }
 
-        // Input Bar with Direct "Search Google in Chrome" Button
+        // Quick Search Action Pills for Current Typed Query
+        if (state.aiInputText.isNotBlank()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    onClick = {
+                        viewModel.updateSearchQuery(state.aiInputText)
+                        viewModel.navigateTo(NavigationScreen.SEARCH)
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    color = Emerald600.copy(alpha = 0.2f),
+                    border = BorderStroke(0.8.dp, Emerald400)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(Icons.Default.Medication, contentDescription = null, tint = Emerald400, modifier = Modifier.size(12.dp))
+                        Text("Search in App 🔍", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Emerald400)
+                    }
+                }
+
+                Surface(
+                    onClick = {
+                        launchGoogleSearch(context, state.aiInputText)
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color(0xFF0284C7).copy(alpha = 0.2f),
+                    border = BorderStroke(0.8.dp, Color(0xFF38BDF8))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(Icons.Default.TravelExplore, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(12.dp))
+                        Text("Search in Chrome ↗", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF7DD3FC))
+                    }
+                }
+            }
+        }
+
+        // Input Bar with Direct "Search in App" and "Search Google in Chrome" Buttons
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 80.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
                 value = state.aiInputText,
                 onValueChange = { viewModel.updateAiInput(it) },
-                placeholder = { Text("Ask clinical pharmacology query...", fontSize = 13.sp) },
+                placeholder = { Text("Ask any disease, drug, dose...", fontSize = 12.5.sp) },
                 modifier = Modifier
                     .weight(1f)
                     .testTag("gemini_chat_input"),
@@ -426,24 +501,46 @@ fun GeminiChatScreen(
                 })
             )
 
+            // Direct "Search in App" Button
+            IconButton(
+                onClick = {
+                    val query = if (state.aiInputText.isNotBlank()) state.aiInputText else ""
+                    viewModel.updateSearchQuery(query)
+                    viewModel.navigateTo(NavigationScreen.SEARCH)
+                },
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(Emerald600.copy(alpha = 0.25f))
+                    .border(1.dp, Emerald400, CircleShape)
+                    .testTag("search_app_from_copilot_button")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Medication,
+                    contentDescription = "Search in App",
+                    tint = Emerald400,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
             // Direct "Search on Google in Chrome" Action Button
             IconButton(
                 onClick = {
-                    val query = if (state.aiInputText.isNotBlank()) state.aiInputText else "pharmacology drug interaction guidelines"
+                    val query = if (state.aiInputText.isNotBlank()) state.aiInputText else "clinical pharmacology guidelines Nepal"
                     launchGoogleSearch(context, query)
                 },
                 modifier = Modifier
-                    .size(46.dp)
+                    .size(42.dp)
                     .clip(CircleShape)
                     .background(Color(0xFF0F766E).copy(alpha = 0.35f))
-                    .border(1.2.dp, Color(0xFF14B8A6), CircleShape)
+                    .border(1.dp, Color(0xFF14B8A6), CircleShape)
                     .testTag("google_search_chrome_button")
             ) {
                 Icon(
                     imageVector = Icons.Default.TravelExplore,
                     contentDescription = "Search Google in Chrome",
                     tint = Color(0xFF2DD4BF),
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
 
@@ -452,7 +549,7 @@ fun GeminiChatScreen(
                 onClick = { viewModel.sendAiMessage() },
                 enabled = state.aiInputText.isNotBlank() && !state.isAiThinking,
                 modifier = Modifier
-                    .size(46.dp)
+                    .size(42.dp)
                     .clip(CircleShape)
                     .background(if (state.aiInputText.isNotBlank()) Indigo600 else MaterialTheme.colorScheme.surfaceVariant)
                     .testTag("gemini_send_button")
@@ -460,7 +557,8 @@ fun GeminiChatScreen(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Send,
                     contentDescription = "Send Query",
-                    tint = if (state.aiInputText.isNotBlank()) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = if (state.aiInputText.isNotBlank()) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
@@ -470,6 +568,7 @@ fun GeminiChatScreen(
 @Composable
 private fun ChatBubble(
     message: ChatMessage,
+    onSearchInApp: (String) -> Unit,
     onGoogleSearch: (String) -> Unit,
     onPubMedSearch: (String) -> Unit
 ) {
@@ -527,21 +626,47 @@ private fun ChatBubble(
                 if (!isUser) {
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Action Toolbar: Google Search in Chrome + PubMed + Copy
+                    // Action Toolbar: Search in App + Google Search in Chrome + PubMed + Copy
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // Direct Search in App button
+                        FilledTonalButton(
+                            onClick = { onSearchInApp(searchQueryForGoogle) },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = Emerald600.copy(alpha = 0.22f),
+                                contentColor = Emerald400
+                            ),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
+                            modifier = Modifier
+                                .height(28.dp)
+                                .testTag("bubble_search_in_app_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Medication,
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = "App 🔍",
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
                         // Direct Chrome Google Search button
                         FilledTonalButton(
                             onClick = { onGoogleSearch(searchQueryForGoogle) },
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = Color(0xFF0284C7).copy(alpha = 0.25f),
+                                containerColor = Color(0xFF0284C7).copy(alpha = 0.22f),
                                 contentColor = Color(0xFF38BDF8)
                             ),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
                             modifier = Modifier
                                 .height(28.dp)
                                 .testTag("bubble_google_search_button")
@@ -549,12 +674,12 @@ private fun ChatBubble(
                             Icon(
                                 imageVector = Icons.Default.TravelExplore,
                                 contentDescription = null,
-                                modifier = Modifier.size(13.dp)
+                                modifier = Modifier.size(12.dp)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
                             Text(
-                                text = "Google (Chrome) ↗",
-                                fontSize = 10.sp,
+                                text = "Chrome ↗",
+                                fontSize = 9.5.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }

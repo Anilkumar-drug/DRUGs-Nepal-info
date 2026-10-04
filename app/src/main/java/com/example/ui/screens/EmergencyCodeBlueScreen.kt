@@ -29,7 +29,8 @@ import java.util.Locale
 
 @Composable
 fun EmergencyCodeBlueScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onOpenCriticalCare: (() -> Unit)? = null
 ) {
     var isTimerRunning by remember { mutableStateOf(false) }
     var totalSecondsElapsed by remember { mutableStateOf(0) }

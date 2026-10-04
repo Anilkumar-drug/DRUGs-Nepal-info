@@ -227,6 +227,7 @@ fun CalculatorDetailScreen(
                 "fib4" -> Fib4InteractiveCard()
                 "apri" -> ApriInteractiveCard()
                 "r_factor" -> RFactorInteractiveCard()
+                "vocal_penn" -> VocalPennInteractiveCard()
                 "maddrey" -> MaddreyInteractiveCard()
                 "ranson" -> RansonInteractiveCard()
                 "bisap" -> BisapInteractiveCard()
@@ -2170,6 +2171,265 @@ fun ResultBanner(
                     fontSize = 12.sp,
                     lineHeight = 17.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun VocalPennInteractiveCard() {
+    var age by remember { mutableStateOf("58") }
+    var albumin by remember { mutableStateOf("3.1") }
+    var bilirubin by remember { mutableStateOf("1.8") }
+    var platelets by remember { mutableStateOf("85") }
+    var bmi by remember { mutableStateOf("26.4") }
+    var asaClass by remember { mutableIntStateOf(3) } // 1, 3, 4
+    var selectedCategory by remember { mutableStateOf("Cholecystectomy") }
+    var isEmergency by remember { mutableStateOf(false) }
+
+    val categories = remember {
+        listOf(
+            "Cholecystectomy",
+            "Abdominal Wall / Hernia",
+            "Major Abdominal / Colorectal",
+            "Orthopedic",
+            "Vascular",
+            "Cardiac",
+            "Other Minor"
+        )
+    }
+
+    val res = remember(age, albumin, bilirubin, platelets, bmi, asaClass, selectedCategory, isEmergency) {
+        ExtendedCalculators.calculateVocalPennScore(
+            age = age.toIntOrNull() ?: 58,
+            albumin = albumin.toDoubleOrNull() ?: 3.1,
+            bilirubin = bilirubin.toDoubleOrNull() ?: 1.8,
+            platelets = platelets.toDoubleOrNull() ?: 85.0,
+            bmi = bmi.toDoubleOrNull() ?: 26.4,
+            asaClass = asaClass,
+            surgicalCategory = selectedCategory,
+            isEmergency = isEmergency
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Lab Inputs Row 1: Age, Albumin, Bilirubin
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedTextField(
+                value = age,
+                onValueChange = { age = it },
+                label = { Text("Age (yr)", fontSize = 11.sp) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = albumin,
+                onValueChange = { albumin = it },
+                label = { Text("Albumin (g/dL)", fontSize = 11.sp) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = bilirubin,
+                onValueChange = { bilirubin = it },
+                label = { Text("Bilirubin (mg/dL)", fontSize = 11.sp) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        // Lab Inputs Row 2: Platelets, BMI
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedTextField(
+                value = platelets,
+                onValueChange = { platelets = it },
+                label = { Text("Platelets (10³/μL)", fontSize = 11.sp) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = bmi,
+                onValueChange = { bmi = it },
+                label = { Text("BMI (kg/m²)", fontSize = 11.sp) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        // ASA Physical Status
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = "ASA Physical Status:",
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                FilterChip(
+                    selected = asaClass == 2,
+                    onClick = { asaClass = 2 },
+                    label = { Text("ASA I - II (Mild/Compensated)") }
+                )
+                FilterChip(
+                    selected = asaClass == 3,
+                    onClick = { asaClass = 3 },
+                    label = { Text("ASA III (Severe Systemic)") }
+                )
+                FilterChip(
+                    selected = asaClass == 4,
+                    onClick = { asaClass = 4 },
+                    label = { Text("ASA IV - V (Life Threatening)") }
+                )
+            }
+        }
+
+        // Surgical Category
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = "Surgical Category & Complexity:",
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                categories.forEach { cat ->
+                    FilterChip(
+                        selected = selectedCategory == cat,
+                        onClick = { selectedCategory = cat },
+                        label = { Text(cat, fontSize = 11.sp) }
+                    )
+                }
+            }
+        }
+
+        // Emergency vs Elective Toggle
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "Emergency / Urgent Surgery",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isEmergency) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = if (isEmergency) "Non-elective emergent procedure (~2.6x risk)" else "Planned elective procedure",
+                    fontSize = 10.5.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = isEmergency,
+                onCheckedChange = { isEmergency = it }
+            )
+        }
+
+        // Result Card
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = Color(res.riskColorHex).copy(alpha = 0.12f),
+            border = BorderStroke(1.2.dp, Color(res.riskColorHex)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "30-DAY MORTALITY",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${res.thirtyDayMortalityPercent}%",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color(res.riskColorHex)
+                        )
+                    }
+
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "90-DAY MORTALITY",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${res.ninetyDayMortalityPercent}%",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(res.riskColorHex)
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color(res.riskColorHex).copy(alpha = 0.2f)
+                ) {
+                    Text(
+                        text = res.riskCategory,
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(res.riskColorHex),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+
+                HorizontalDivider(color = Color(res.riskColorHex).copy(alpha = 0.3f))
+
+                Text(
+                    text = "Clinical Recommendation:",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = res.recommendations,
+                    fontSize = 11.5.sp,
+                    lineHeight = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
+                )
+
+                Text(
+                    text = "Pre-operative Optimization Checklist:",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = res.surgicalOptimization,
+                    fontSize = 11.5.sp,
+                    lineHeight = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

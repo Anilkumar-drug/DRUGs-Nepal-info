@@ -78,6 +78,7 @@ private fun CalculatorsListView(
 
     val quickScoringPills = remember {
         listOf(
+            "VOCAL-Penn",
             "MELD",
             "Child-Turcotte-Pugh",
             "CURB-65",
@@ -103,14 +104,14 @@ private fun CalculatorsListView(
         val baseList = if (selectedCategory == "Favorites") {
             allCalculators.filter { state.bookmarkedCalculatorIds.contains(it.id) }
         } else if (selectedCategory != "All" && rawQ.isEmpty()) {
-            allCalculators.filter { it.category.equals(selectedCategory, ignoreCase = true) }
+            allCalculators.filter { it.category.contains(selectedCategory, ignoreCase = true) }
         } else {
             allCalculators
         }
 
         if (queryTokens.isEmpty()) {
             if (selectedCategory != "All" && selectedCategory != "Favorites") {
-                allCalculators.filter { it.category.equals(selectedCategory, ignoreCase = true) }
+                allCalculators.filter { it.category.contains(selectedCategory, ignoreCase = true) }
             } else {
                 baseList
             }
@@ -390,10 +391,10 @@ private fun CalculatorsListView(
             }
 
             Surface(
-                onClick = { viewModel.navigateTo(com.example.viewmodel.NavigationScreen.CODE_BLUE) },
+                onClick = { viewModel.navigateTo(com.example.viewmodel.NavigationScreen.CRITICAL_CARE) },
                 shape = RoundedCornerShape(12.dp),
-                color = Red500.copy(alpha = 0.12f),
-                border = BorderStroke(1.2.dp, Red500.copy(alpha = 0.5f)),
+                color = Red500.copy(alpha = 0.16f),
+                border = BorderStroke(1.2.dp, Red500),
                 modifier = Modifier.weight(1f)
             ) {
                 Row(
@@ -401,10 +402,10 @@ private fun CalculatorsListView(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Icon(Icons.Default.ElectricBolt, contentDescription = null, tint = Red400, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Bolt, contentDescription = null, tint = Red400, modifier = Modifier.size(18.dp))
                     Column {
-                        Text("Code Blue & Resus", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Red400)
-                        Text("ACLS Timer & Tape", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Critical Care / ER", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Red400)
+                        Text("Tox, Antidotes, ACLS", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }

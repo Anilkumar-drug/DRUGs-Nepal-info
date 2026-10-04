@@ -140,6 +140,20 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                 activeColor = MedicalBlue500
             ),
             NavItem(
+                screen = NavigationScreen.DISEASE,
+                label = "Indication",
+                selectedIcon = Icons.Filled.Healing,
+                unselectedIcon = Icons.Outlined.Healing,
+                activeColor = Color(0xFF0D9488)
+            ),
+            NavItem(
+                screen = NavigationScreen.SYSTEM,
+                label = "System",
+                selectedIcon = Icons.Filled.AccountTree,
+                unselectedIcon = Icons.Outlined.AccountTree,
+                activeColor = Color(0xFF6366F1)
+            ),
+            NavItem(
                 screen = NavigationScreen.INTERACTION,
                 label = "Interact",
                 selectedIcon = Icons.AutoMirrored.Filled.CompareArrows,
@@ -166,13 +180,6 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                 selectedIcon = Icons.Filled.Bookmark,
                 unselectedIcon = Icons.Outlined.BookmarkBorder,
                 activeColor = Color(0xFFF59E0B)
-            ),
-            NavItem(
-                screen = NavigationScreen.GEMINI,
-                label = "AI Copilot",
-                selectedIcon = Icons.Filled.AutoAwesome,
-                unselectedIcon = Icons.Outlined.AutoAwesome,
-                activeColor = SparkleViolet
             )
         )
     }
@@ -188,6 +195,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
             topBar = {
                 val isDedicatedScreen = state.currentScreen in listOf(
                     NavigationScreen.CODE_BLUE,
+                    NavigationScreen.CRITICAL_CARE,
                     NavigationScreen.ANESTHESIOLOGY,
                     NavigationScreen.ABG_ELECTROLYTE_SOLVER,
                     NavigationScreen.IV_COMPATIBILITY,
@@ -403,12 +411,86 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                     )
                                 }
                             }
+
+                            // AI Copilot Button beside Brand/Generic Switch in Above Taskbar
+                            val isAiActive = state.currentScreen == NavigationScreen.GEMINI
+                            val aiBtnBgColor by animateColorAsState(
+                                targetValue = if (isAiActive) SparkleViolet.copy(alpha = 0.35f) else SparkleViolet.copy(alpha = 0.15f),
+                                label = "aiBtnBg"
+                            )
+                            val aiBtnBorderColor by animateColorAsState(
+                                targetValue = if (isAiActive) Color(0xFFC084FC) else SparkleViolet.copy(alpha = 0.6f),
+                                label = "aiBtnBorder"
+                            )
+                            Surface(
+                                onClick = {
+                                    viewModel.navigateTo(NavigationScreen.GEMINI)
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                color = aiBtnBgColor,
+                                border = BorderStroke(1.2.dp, aiBtnBorderColor),
+                                modifier = Modifier
+                                    .height(38.dp)
+                                    .testTag("top_ai_copilot_button")
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = "AI Copilot",
+                                        tint = if (isAiActive) Color(0xFFE9D5FF) else Color(0xFFC084FC),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = "Copilot",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isAiActive) Color(0xFFE9D5FF) else Color(0xFFC084FC)
+                                    )
+                                }
+                            }
+
+                            // Critical Care & Emergency STAT Button
+                            val isCriticalActive = state.currentScreen == NavigationScreen.CRITICAL_CARE
+                            Surface(
+                                onClick = {
+                                    viewModel.navigateTo(NavigationScreen.CRITICAL_CARE)
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isCriticalActive) Color(0xFFEF4444) else Color(0xFFEF4444).copy(alpha = 0.2f),
+                                border = BorderStroke(1.2.dp, if (isCriticalActive) Color(0xFFFCA5A5) else Color(0xFFEF4444).copy(alpha = 0.6f)),
+                                modifier = Modifier
+                                    .height(38.dp)
+                                    .testTag("top_critical_care_sos_button")
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Bolt,
+                                        contentDescription = "Critical Care & Emergency",
+                                        tint = if (isCriticalActive) Color.White else Color(0xFFEF4444),
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                    Text(
+                                        text = "ER/ICU",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = if (isCriticalActive) Color.White else Color(0xFFEF4444)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             },
             bottomBar = {
-                if (state.currentScreen != NavigationScreen.CODE_BLUE) {
+                if (state.currentScreen != NavigationScreen.CODE_BLUE && state.currentScreen != NavigationScreen.CRITICAL_CARE) {
                     val navBarBg by animateColorAsState(
                         targetValue = when (state.themeMode) {
                             AppThemeMode.PITCH_BLACK -> Color.Black
@@ -540,6 +622,9 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                         onOpenMedicalNews = {
                             viewModel.navigateTo(NavigationScreen.MEDICAL_NEWS)
                         },
+                        onOpenCriticalCare = {
+                            viewModel.navigateTo(NavigationScreen.CRITICAL_CARE)
+                        },
                         onOpenCodeBlue = {
                             viewModel.navigateTo(NavigationScreen.CODE_BLUE)
                         },
@@ -625,6 +710,16 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                         onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
                     )
 
+                    NavigationScreen.CRITICAL_CARE -> CriticalCareEmergencyScreen(
+                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) },
+                        onNavigateToToxicology = { viewModel.navigateTo(NavigationScreen.ANTIDOTE) },
+                        onNavigateToCodeBlue = { viewModel.navigateTo(NavigationScreen.CODE_BLUE) },
+                        onNavigateToAbg = { viewModel.navigateTo(NavigationScreen.ABG_ELECTROLYTE_SOLVER) },
+                        onNavigateToAnesthesia = { viewModel.navigateTo(NavigationScreen.ANESTHESIOLOGY) },
+                        onNavigateToIvCompat = { viewModel.navigateTo(NavigationScreen.IV_COMPATIBILITY) },
+                        onNavigateToInteractions = { viewModel.navigateTo(NavigationScreen.INTERACTION) }
+                    )
+
                     NavigationScreen.ANTIMICROBIAL_STEWARDSHIP -> AntimicrobialStewardshipScreen(
                         onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) },
                         onConsultAi = { viewModel.startAiChatWithPrompt(it) }
@@ -671,10 +766,13 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                     isLoggedIn = state.isLoggedIn,
                     initialName = state.doctorName,
                     initialDegree = state.doctorDegree,
+                    initialCollege = state.doctorCollege,
                     initialCouncilNo = state.doctorCouncilNo,
+                    initialMobile = state.doctorMobile,
+                    initialAvatar = state.doctorPhotoAvatar,
                     onDismissRequest = { viewModel.closeLoginDialog() },
-                    onSave = { name, degree, councilNo ->
-                        viewModel.loginOrUpdateProfile(name, degree, councilNo)
+                    onSave = { name, degree, college, councilNo, mobile, avatar ->
+                        viewModel.loginOrUpdateProfile(name, degree, college, councilNo, mobile, avatar)
                     },
                     onLogout = {
                         viewModel.logout()
@@ -691,6 +789,9 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
         doctorName = state.doctorName,
         doctorDegree = state.doctorDegree,
         doctorCouncilNo = state.doctorCouncilNo,
+        doctorCollege = state.doctorCollege,
+        doctorMobile = state.doctorMobile,
+        doctorPhotoAvatar = state.doctorPhotoAvatar,
         themeMode = state.themeMode,
         onThemeChange = { viewModel.setThemeMode(it) },
         onClose = { viewModel.closeSidebar() },
@@ -730,6 +831,10 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
         onPharmacologyClick = {
             viewModel.closeSidebar()
             viewModel.navigateTo(NavigationScreen.PHARMACOLOGY_GUIDE)
+        },
+        onCriticalCareClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.CRITICAL_CARE)
         },
         onCodeBlueClick = {
             viewModel.closeSidebar()

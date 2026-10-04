@@ -218,23 +218,30 @@ fun MedicalNewsScreen(
                     )
 
                     FilledTonalButton(
-                        onClick = { viewModel.fetchMedicalNews(forceRefresh = true) },
+                        onClick = {
+                            viewModel.fetchMedicalNews(forceRefresh = true)
+                            Toast.makeText(context, "Checking latest medical guidelines & alerts...", Toast.LENGTH_SHORT).show()
+                        },
                         enabled = !state.isNewsLoading,
                         shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                        modifier = Modifier.height(34.dp).testTag("news_refresh_button")
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.height(36.dp).testTag("news_refresh_button")
                     ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Refresh News",
                             modifier = Modifier
-                                .size(15.dp)
+                                .size(16.dp)
                                 .rotate(if (state.isNewsLoading) rotation else 0f)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
                         Text(
-                            text = if (state.isNewsLoading) "Fetching..." else "Live Update",
-                            fontSize = 11.sp,
+                            text = if (state.isNewsLoading) "Updating..." else "Refresh",
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -484,6 +491,62 @@ fun MedicalNewsScreen(
                 contentPadding = PaddingValues(14.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                item {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                        border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AccessTime,
+                                    contentDescription = null,
+                                    tint = Emerald400,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Column {
+                                    Text(
+                                        text = "Clinical Guidelines & Directives",
+                                        fontSize = 11.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "EASL, AASLD, ESC, APASL, WHO, CDC, ESGE & Nepal",
+                                        fontSize = 10.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            FilledTonalButton(
+                                onClick = {
+                                    viewModel.fetchMedicalNews(forceRefresh = true)
+                                    Toast.makeText(context, "Checking latest clinical guidelines...", Toast.LENGTH_SHORT).show()
+                                },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.height(30.dp)
+                            ) {
+                                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(13.dp))
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text("Refresh", fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+
                 items(filteredList, key = { it.id }) { newsItem ->
                     MedicalNewsCard(
                         item = newsItem,

@@ -48,7 +48,8 @@ enum class NavigationScreen(val title: String) {
     IV_COMPATIBILITY("IV Dilution & Y-Site Compatibility"),
     RENAL_ADJUSTER("Renal Dose Auto-Calculator"),
     ABG_ELECTROLYTE_SOLVER("ABG & Electrolyte Disturbance Solver"),
-    ANESTHESIOLOGY("Anesthesiology & Perioperative")
+    ANESTHESIOLOGY("Anesthesiology & Perioperative"),
+    CRITICAL_CARE("Critical Care & Emergency Dashboard")
 }
 
 enum class SearchMode(val title: String) {
@@ -99,7 +100,10 @@ data class ClinicalUiState(
     val isLoggedIn: Boolean = false,
     val doctorName: String = "",
     val doctorDegree: String = "",
+    val doctorCollege: String = "",
     val doctorCouncilNo: String = "",
+    val doctorMobile: String = "",
+    val doctorPhotoAvatar: String = "👨‍⚕️",
     val isLoginDialogOpen: Boolean = false,
     val isSidebarOpen: Boolean = false,
     val isCompaniesModalOpen: Boolean = false,
@@ -189,6 +193,7 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
 
     private val appDb: AppDatabase = AppDatabase.getInstance(application.applicationContext)
     private val savedItemRepository: SavedItemRepository = SavedItemRepository(appDb.savedItemDao())
+    private val profilePrefs = application.getSharedPreferences("practitioner_profile_prefs", android.content.Context.MODE_PRIVATE)
 
     private var searchJob: Job? = null
 
@@ -220,6 +225,29 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
     }
 
     init {
+        // Load saved practitioner profile from SharedPreferences
+        val savedLoggedIn = profilePrefs.getBoolean("is_logged_in", false)
+        val savedName = profilePrefs.getString("doc_name", "") ?: ""
+        val savedDegree = profilePrefs.getString("doc_degree", "") ?: ""
+        val savedCollege = profilePrefs.getString("doc_college", "") ?: ""
+        val savedCouncil = profilePrefs.getString("doc_council", "") ?: ""
+        val savedMobile = profilePrefs.getString("doc_mobile", "") ?: ""
+        val savedAvatar = profilePrefs.getString("doc_avatar", "👨‍⚕️") ?: "👨‍⚕️"
+
+        if (savedLoggedIn) {
+            _uiState.update {
+                it.copy(
+                    isLoggedIn = true,
+                    doctorName = savedName,
+                    doctorDegree = savedDegree,
+                    doctorCollege = savedCollege,
+                    doctorCouncilNo = savedCouncil,
+                    doctorMobile = savedMobile,
+                    doctorPhotoAvatar = savedAvatar
+                )
+            }
+        }
+
         // Initialize precomputed drug list
         _uiState.value = _uiState.value.copy(
             filteredDrugs = filterDrugs(
@@ -801,24 +829,60 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
         _uiState.value = _uiState.value.copy(isLoginDialogOpen = false)
     }
 
-    fun loginOrUpdateProfile(name: String, degree: String, councilNo: String) {
-        _uiState.value = _uiState.value.copy(
-            isLoggedIn = true,
-            doctorName = name.trim(),
-            doctorDegree = degree.trim(),
-            doctorCouncilNo = councilNo.trim(),
-            isLoginDialogOpen = false
-        )
+    fun loginOrUpdateProfile(
+        name: String,
+        degree: String,
+        college: String = "",
+        councilNo: String = "",
+        mobile: String = "",
+        avatar: String = "👨‍⚕️"
+    ) {
+        val trimmedName = name.trim()
+        val trimmedDegree = degree.trim()
+        val trimmedCollege = college.trim()
+        val trimmedCouncil = councilNo.trim()
+        val trimmedMobile = mobile.trim()
+        val trimmedAvatar = avatar.trim().ifBlank { "👨‍⚕️" }
+
+        profilePrefs.edit().apply {
+            putBoolean("is_logged_in", true)
+            putString("doc_name", trimmedName)
+            putString("doc_degree", trimmedDegree)
+            putString("doc_college", trimmedCollege)
+            putString("doc_council", trimmedCouncil)
+            putString("doc_mobile", trimmedMobile)
+            putString("doc_avatar", trimmedAvatar)
+            apply()
+        }
+
+        _uiState.update {
+            it.copy(
+                isLoggedIn = true,
+                doctorName = trimmedName,
+                doctorDegree = trimmedDegree,
+                doctorCollege = trimmedCollege,
+                doctorCouncilNo = trimmedCouncil,
+                doctorMobile = trimmedMobile,
+                doctorPhotoAvatar = trimmedAvatar,
+                isLoginDialogOpen = false
+            )
+        }
     }
 
     fun logout() {
-        _uiState.value = _uiState.value.copy(
-            isLoggedIn = false,
-            doctorName = "",
-            doctorDegree = "",
-            doctorCouncilNo = "",
-            isLoginDialogOpen = false
-        )
+        profilePrefs.edit().clear().apply()
+        _uiState.update {
+            it.copy(
+                isLoggedIn = false,
+                doctorName = "",
+                doctorDegree = "",
+                doctorCollege = "",
+                doctorCouncilNo = "",
+                doctorMobile = "",
+                doctorPhotoAvatar = "👨‍⚕️",
+                isLoginDialogOpen = false
+            )
+        }
     }
 
     // Sidebar Drawer Controls

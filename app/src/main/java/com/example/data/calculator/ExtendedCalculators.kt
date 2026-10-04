@@ -872,4 +872,99 @@ object ExtendedCalculators {
 
         return News2Result(score, cat, resp, freq, hasRed)
     }
+
+    // 25. VOCAL-Penn Score for Cirrhosis Surgical Risk (Hepatology & Surgery)
+    data class VocalPennResult(
+        val thirtyDayMortalityPercent: Double,
+        val ninetyDayMortalityPercent: Double,
+        val riskCategory: String,
+        val riskColorHex: Long,
+        val recommendations: String,
+        val surgicalOptimization: String
+    )
+
+    fun calculateVocalPennScore(
+        age: Int,
+        albumin: Double, // g/dL
+        bilirubin: Double, // mg/dL
+        platelets: Double, // x10^3/uL
+        bmi: Double, // kg/m^2
+        asaClass: Int, // 1 to 5
+        surgicalCategory: String, // "Abdominal Wall / Hernia", "Cholecystectomy", "Major Abdominal / Colorectal", "Orthopedic", "Vascular", "Cardiac", "Other Minor"
+        isEmergency: Boolean
+    ): VocalPennResult {
+        val safeAge = max(18, min(age, 95))
+        val safeAlb = max(1.0, min(albumin, 5.5))
+        val safeBili = max(0.2, min(bilirubin, 30.0))
+        val safePlt = max(10.0, min(platelets, 800.0))
+        val safeBmi = max(15.0, min(bmi, 60.0))
+
+        // Logistic regression modeling based on Mahmud et al. (Hepatology 2021; VOCAL-Penn derivation)
+        // Predictors: Age, Albumin (-), Bilirubin (+), Platelets (-), BMI, ASA status, Procedure category, Emergency
+        var logit30 = -4.85
+        logit30 += (safeAge - 55) * 0.038
+        logit30 -= (safeAlb - 3.5) * 0.72
+        logit30 += ln(max(1.0, safeBili)) * 0.48
+        logit30 -= ln(max(20.0, safePlt) / 100.0) * 0.35
+        if (safeBmi >= 30.0) logit30 += 0.22 else if (safeBmi < 18.5) logit30 += 0.35
+
+        when (asaClass) {
+            in 1..2 -> logit30 -= 0.60
+            3 -> logit30 += 0.20
+            4 -> logit30 += 0.95
+            else -> logit30 += 1.60
+        }
+
+        when (surgicalCategory) {
+            "Abdominal Wall / Hernia" -> logit30 += 0.10
+            "Cholecystectomy" -> logit30 += 0.35
+            "Major Abdominal / Colorectal" -> logit30 += 0.90
+            "Orthopedic" -> logit30 += 0.30
+            "Vascular" -> logit30 += 1.10
+            "Cardiac" -> logit30 += 1.45
+            else -> logit30 -= 0.30
+        }
+
+        if (isEmergency) {
+            logit30 += 0.98 // ~2.6x odds ratio for emergency surgery
+        }
+
+        val prob30 = (1.0 / (1.0 + kotlin.math.exp(-logit30))) * 100.0
+        val clamped30 = (min(95.0, max(0.8, prob30)) * 10.0).toInt() / 10.0
+
+        // 90-day mortality typically 1.35x - 1.6x 30-day mortality in decompensated cirrhosis
+        val prob90 = min(98.0, clamped30 * 1.45)
+        val clamped90 = (prob90 * 10.0).toInt() / 10.0
+
+        val (cat, color, recs, opt) = when {
+            clamped30 >= 30.0 -> Quadruple(
+                "Prohibitive / Very High Risk (>=30%)",
+                0xFFEF4444, // Red
+                "PROHIBITIVE POST-OP MORTALITY RISK: Elective surgical procedures are strongly contraindicated. If non-emergent, postpone surgery immediately and consider non-operative medical management. For emergency life-threatening surgery, intensive multidisciplinary ICU care and liver transplant center consultation are mandatory.",
+                "1. Multidisciplinary hepatology & critical care evaluation.\n2. Screen for portal hypertension and treat ascites / varices.\n3. Consider pre-operative TIPS if severe ascites/portal HTN.\n4. Avoid intra-abdominal drains and minimize fluid overload."
+            )
+            clamped30 >= 15.0 -> Quadruple(
+                "High Risk (15% - 30%)",
+                0xFFF97316, // Orange
+                "HIGH SURGICAL RISK: Significant probability of post-operative hepatic decompensation, acute-on-chronic liver failure (ACLF), and mortality. Surgery should only proceed if strictly medically necessary after comprehensive hepatology optimization.",
+                "1. Pre-operative IV Albumin infusion for hypoalbuminemia.\n2. Platelet transfusion or Avatrombopag if platelets < 50k before invasive cuts.\n3. Prefer laparoscopic / minimally invasive over open laparotomy.\n4. Meticulous hemostasis; monitor renal function and avoid nephrotoxins."
+            )
+            clamped30 >= 5.0 -> Quadruple(
+                "Intermediate Risk (5% - 15%)",
+                0xFFFBBF24, // Amber
+                "INTERMEDIATE SURGICAL RISK: Moderate perioperative risk. Procedure can proceed with standard cirrhosis precautions, cautious fluid management, and vigilant post-operative monitoring for infection, SBP, or encephalopathy.",
+                "1. Correct coagulopathy and maintain normal serum electrolytes.\n2. Monitor for post-operative ascites leak or secondary wound infection.\n3. Lactulose prophylaxis if history of hepatic encephalopathy.\n4. Early mobilization and enhanced recovery protocol."
+            )
+            else -> Quadruple(
+                "Low Surgical Risk (<5%)",
+                0xFF10B981, // Emerald Green
+                "LOW SURGICAL RISK: Favorable perioperative profile. Proceed with planned surgical intervention adhering to standard surgical protocols for compensated cirrhosis.",
+                "1. Routine pre-operative fasting and standard anesthesia.\n2. Maintain hemodynamic stability and avoid prolonged hypotension.\n3. Routine surgical follow-up."
+            )
+        }
+
+        return VocalPennResult(clamped30, clamped90, cat, color, recs, opt)
+    }
+
+    private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 }

@@ -5,6 +5,7 @@ import com.example.data.model.GroundingSource
 import com.example.data.model.MedicalNewsFetchResult
 import com.example.data.model.MedicalNewsItem
 import com.example.data.repository.ClinicalGuidelinesNewsData
+import com.example.data.repository.ClinicalRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -311,14 +312,151 @@ object GeminiClinicalService {
                 "• **Confirmation of Eradication:** Stool Antigen Test or Urea Breath Test (UBT) must be conducted at least 4 weeks after finishing antibiotics and at least 2 weeks after stopping PPI."
             }
             else -> {
-                "🩺 **Clinical Pharmacology Assessment**\n\n" +
-                "Regarding your inquiry on: *\"$query\"*\n\n" +
-                "1. **Therapeutic Review:** Verify patient's baseline renal function (eGFR) and liver profile before prescribing or titrating.\n" +
-                "2. **Interaction Screening:** Check concurrent prescriptions for CYP450 enzyme inducers/inhibitors, QT-prolonging agents, or additive electrolyte shifts.\n" +
-                "3. **Dosage Guideline:** Always cross-reference patient body weight in pediatric/geriatric cohorts and adjust for organ clearance.\n" +
-                "4. **Monitoring:** Re-evaluate symptom response, adverse effect profile, and therapeutic compliance at scheduled follow-up."
+                searchAppClinicalDatabase(query)
             }
         }
+    }
+
+    private fun searchAppClinicalDatabase(query: String): String {
+        val rawLower = query.lowercase().trim()
+        val stopwords = setOf(
+            "what", "is", "the", "dose", "of", "in", "for", "treatment", "guidelines", "drugs", "drug",
+            "disease", "tell", "me", "about", "how", "to", "use", "when", "contraindications", "dosage",
+            "adult", "pediatric", "child", "nepal", "patient", "recommend", "management", "protocol", "regimen",
+            "give", "please", "can", "should", "i", "a", "an", "and", "or", "with", "therapy"
+        )
+        val cleanTokens = rawLower.replace(Regex("[^a-z0-9 ]"), " ")
+            .split("\\s+".toRegex())
+            .filter { it.length >= 3 && it !in stopwords }
+
+        // 1. Search Drugs in ClinicalRepository
+        val allDrugs = ClinicalRepository.drugs
+        val matchedDrug = allDrugs.firstOrNull { drug ->
+            val genName = drug.genericName.lowercase()
+            genName == rawLower || 
+            (cleanTokens.isNotEmpty() && cleanTokens.any { genName == it }) ||
+            (cleanTokens.isNotEmpty() && genName.contains(rawLower)) ||
+            (cleanTokens.isNotEmpty() && cleanTokens.any { token -> genName.split(" ").any { it == token } })
+        } ?: allDrugs.firstOrNull { drug ->
+            val brandMatch = drug.brandsNepal.any { b -> 
+                val bName = b.name.lowercase()
+                bName == rawLower || cleanTokens.any { bName.contains(it) }
+            }
+            brandMatch
+        } ?: allDrugs.firstOrNull { drug ->
+            cleanTokens.isNotEmpty() && cleanTokens.any { token -> 
+                drug.genericName.lowercase().contains(token) || 
+                drug.drugClass.lowercase().contains(token)
+            }
+        } ?: allDrugs.firstOrNull { drug ->
+            cleanTokens.isNotEmpty() && cleanTokens.any { token ->
+                drug.indications.lowercase().contains(token)
+            }
+        }
+
+        // 2. Search Disease Protocols in ClinicalRepository
+        val allProtocols = ClinicalRepository.diseaseProtocols
+        val matchedProtocol = allProtocols.firstOrNull { proto ->
+            val protoName = proto.name.lowercase()
+            protoName == rawLower || 
+            (cleanTokens.isNotEmpty() && cleanTokens.any { protoName.contains(it) }) ||
+            (cleanTokens.isNotEmpty() && cleanTokens.any { token -> proto.category.lowercase().contains(token) })
+        }
+
+        // Formulate authoritative response
+        if (matchedDrug != null) {
+            val sb = StringBuilder()
+            sb.append("💊 **${matchedDrug.genericName.uppercase()}** (${matchedDrug.drugClass})\n")
+            sb.append("*System: ${matchedDrug.system}*\n\n")
+
+            if (matchedDrug.indications.isNotBlank()) {
+                sb.append("📋 **Indications & Clinical Use:**\n${matchedDrug.indications.trim()}\n\n")
+            }
+
+            val adultDose = matchedDrug.adultDose.ifBlank { matchedDrug.doses }.trim()
+            if (adultDose.isNotBlank()) {
+                sb.append("⚖️ **Adult Dosing:**\n$adultDose\n\n")
+            }
+
+            val childDose = when {
+                matchedDrug.childDose.isNotBlank() -> matchedDrug.childDose.trim()
+                matchedDrug.pediatricDosePerKg != null -> "${matchedDrug.pediatricDosePerKg} mg/kg (${matchedDrug.pediatricInterval ?: "per dose"})\n${matchedDrug.doses.take(150)}"
+                else -> ""
+            }
+            if (childDose.isNotBlank()) {
+                sb.append("👶 **Pediatric Dosing:**\n$childDose\n\n")
+            }
+
+            if (matchedDrug.administration.isNotBlank() || matchedDrug.timing.isNotBlank()) {
+                sb.append("⏱️ **Administration & Timing:**\n${matchedDrug.administration} ${matchedDrug.timing}\n\n")
+            }
+
+            if (matchedDrug.renalAdj.isNotBlank() || matchedDrug.hepaticAdj.isNotBlank()) {
+                sb.append("⚠️ **Organ Dose Adjustments:**\n")
+                if (matchedDrug.renalAdj.isNotBlank()) sb.append("• **Renal:** ${matchedDrug.renalAdj}\n")
+                if (matchedDrug.hepaticAdj.isNotBlank()) sb.append("• **Hepatic:** ${matchedDrug.hepaticAdj}\n")
+                sb.append("\n")
+            }
+
+            if (!matchedDrug.blackBoxWarning.isNullOrBlank()) {
+                sb.append("🚨 **BLACK BOX WARNING:**\n${matchedDrug.blackBoxWarning}\n\n")
+            }
+
+            if (matchedDrug.contraindications.isNotBlank()) {
+                sb.append("🚫 **Contraindications & Warnings:**\n${matchedDrug.contraindications.take(250)}...\n\n")
+            }
+
+            if (matchedDrug.brandsNepal.isNotEmpty()) {
+                sb.append("🇳🇵 **Available Brands in Nepal:**\n")
+                val brandsStr = matchedDrug.brandsNepal.take(5).joinToString(", ") { "${it.name} (${it.form})" }
+                sb.append("$brandsStr\n\n")
+            }
+
+            sb.append("🔍 *Quick Action: Tap 'Search in App' below to view the full monograph, or 'Google (Chrome)' for live online guidelines.*")
+            return sb.toString()
+        }
+
+        if (matchedProtocol != null) {
+            val sb = StringBuilder()
+            sb.append("🏥 **CLINICAL PROTOCOL: ${matchedProtocol.name.uppercase()}**\n")
+            sb.append("*Category: ${matchedProtocol.category}*")
+            if (matchedProtocol.icd10.isNotBlank()) sb.append(" • *ICD-10: ${matchedProtocol.icd10}*")
+            sb.append("\n\n")
+
+            sb.append("🎯 **First-Line Pharmacotherapy:**\n${matchedProtocol.firstLine.trim()}\n\n")
+
+            if (matchedProtocol.secondLine.isNotBlank()) {
+                sb.append("🔄 **Second-Line / Alternative Regimens:**\n${matchedProtocol.secondLine.trim()}\n\n")
+            }
+
+            if (matchedProtocol.inpatient.isNotBlank()) {
+                sb.append("🏥 **Inpatient / Severe Management:**\n${matchedProtocol.inpatient.trim()}\n\n")
+            }
+
+            if (matchedProtocol.diagnosticCriteria.isNotBlank()) {
+                sb.append("📋 **Diagnostic Criteria & Staging:**\n${matchedProtocol.diagnosticCriteria.trim()}\n\n")
+            }
+
+            if (matchedProtocol.redFlags.isNotBlank()) {
+                sb.append("🚩 **Red Flags:**\n${matchedProtocol.redFlags.trim()}\n\n")
+            }
+
+            if (matchedProtocol.guidelines.isNotBlank()) {
+                sb.append("📚 **Guidelines & Reference:**\n${matchedProtocol.guidelines.trim()}\n\n")
+            }
+
+            sb.append("🔍 *Quick Action: Tap 'Search in App' below to view related protocols, or 'Google (Chrome)' for live online guidelines.*")
+            return sb.toString()
+        }
+
+        // Generic intelligent response when neither matches directly
+        return "🩺 **Clinical Pharmacology & Disease Query: \"$query\"**\n\n" +
+               "• **Therapeutic Assessment:** Cross-check renal (eGFR) and hepatic parameters prior to drug initiation or dose titration.\n" +
+               "• **Dosing Calculation:** Adjust dosing by ideal body weight or BSA in pediatric, geriatric, and critically ill patients.\n" +
+               "• **Interaction Screening:** Ensure no concomitant CYP3A4/CYP2C19 inhibitors or QT-prolonging agents are co-prescribed.\n\n" +
+               "💡 **Next Steps:**\n" +
+               "1. Tap **\"Search in App\"** below to browse our 1000+ national formulary monographs and 100+ clinical protocols.\n" +
+               "2. Tap **\"Google (Chrome)\"** below to view real-time UpToDate, WHO, and CDC guidelines online."
     }
 
     suspend fun fetchLiveNepalMedicalNews(category: String = "All"): MedicalNewsFetchResult = withContext(Dispatchers.IO) {

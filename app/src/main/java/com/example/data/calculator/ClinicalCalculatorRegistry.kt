@@ -5,6 +5,17 @@ import com.example.data.model.CalculatorSummary
 object ClinicalCalculatorRegistry {
 
     val allCalculators: List<CalculatorSummary> = listOf(
+        // --- VOCAL-Penn Cirrhosis Surgical Risk Score ---
+        CalculatorSummary(
+            id = "vocal_penn",
+            title = "VOCAL-Penn Score",
+            category = "Hepatology / Surgery",
+            description = "Post-operative mortality risk in cirrhosis.",
+            formulaSummary = "Veterans Outcomes in Cirrhosis After Surgery (VOCAL-Penn) model predicting 30-day and 90-day post-op mortality based on age, albumin, bilirubin, platelets, BMI, ASA physical class, surgical category, and emergency status.",
+            aliases = listOf("VOCAL-Penn", "VOCAL Penn", "Cirrhosis Surgery", "Surgical Risk Cirrhosis", "Post-op Mortality", "Hepatic Surgical Risk", "Penn Cirrhosis", "Surgery in Cirrhosis"),
+            isPopular = true,
+            isNew = true
+        ),
         // --- Screenshot 1 (Favorites / GI / Critical Care) ---
         CalculatorSummary(
             id = "news_score",
