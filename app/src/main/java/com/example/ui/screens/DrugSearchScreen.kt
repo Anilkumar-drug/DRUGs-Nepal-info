@@ -79,7 +79,8 @@ fun DrugSearchScreen(
     onOpenCodeBlue: () -> Unit = {},
     onOpenAnesthesiology: () -> Unit = {},
     onOpenAntimicrobial: () -> Unit = {},
-    onOpenAbgSolver: () -> Unit = {}
+    onOpenAbgSolver: () -> Unit = {},
+    onOpenIvCompatibility: () -> Unit = {}
 ) {
     var showHistoryDialog by remember { mutableStateOf(false) }
 
@@ -141,49 +142,39 @@ fun DrugSearchScreen(
     ) {
         Spacer(modifier = Modifier.height(2.dp))
 
-        // Global Search Scope & Capability Banner
-        Surface(
-            shape = RoundedCornerShape(10.dp),
-            color = DimsTealPrimary.copy(alpha = 0.08f),
-            border = BorderStroke(1.dp, DimsTealPrimary.copy(alpha = 0.25f)),
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("global_search_scope_indicator")
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+        // Global Search Scope & Results Indicator (shown when actively searching)
+        if (isSearchActive) {
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = DimsTealPrimary.copy(alpha = 0.08f),
+                border = BorderStroke(1.dp, DimsTealPrimary.copy(alpha = 0.25f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("global_search_scope_indicator")
             ) {
                 Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Public,
-                        contentDescription = null,
-                        tint = DimsTealPrimary,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Text(
-                        text = "Global Search",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = DimsTealPrimary
-                    )
-                    Text(
-                        text = "•",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                    )
-                    Text(
-                        text = "Drugs • Protocols • Calculators",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = DimsTealPrimary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = "Search Results",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DimsTealPrimary
+                        )
+                    }
 
-                if (isSearchActive) {
                     Surface(
                         shape = RoundedCornerShape(6.dp),
                         color = DimsTealPrimary.copy(alpha = 0.2f)
@@ -196,113 +187,6 @@ fun DrugSearchScreen(
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
-                }
-            }
-        }
-
-        // Quick Action Bar Directly Below Top Taskbar (Critical Care / News / Interact Buttons)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 2.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Surface(
-                onClick = onOpenCriticalCare,
-                shape = RoundedCornerShape(12.dp),
-                color = Color(0xFFEF4444).copy(alpha = 0.2f),
-                border = BorderStroke(1.2.dp, Color(0xFFEF4444)),
-                modifier = Modifier
-                    .weight(1.1f)
-                    .height(40.dp)
-                    .testTag("below_taskbar_critical_care_button")
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Bolt,
-                        contentDescription = "Critical Care & Emergency",
-                        tint = Color(0xFFEF4444),
-                        modifier = Modifier.size(17.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "🚨 Critical Care",
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Black,
-                        color = Color(0xFFEF4444)
-                    )
-                }
-            }
-
-            Surface(
-                onClick = onOpenInteractionChecker,
-                shape = RoundedCornerShape(12.dp),
-                color = Red500.copy(alpha = 0.15f),
-                border = BorderStroke(1.2.dp, Red500.copy(alpha = 0.5f)),
-                modifier = Modifier
-                    .weight(0.95f)
-                    .height(40.dp)
-                    .testTag("below_taskbar_interact_button")
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CompareArrows,
-                        contentDescription = "Drug Interactions Checker",
-                        tint = Red500,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Interact",
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Red500
-                    )
-                }
-            }
-
-            Surface(
-                onClick = onOpenMedicalNews,
-                shape = RoundedCornerShape(12.dp),
-                color = Color(0xFF0284C7).copy(alpha = 0.15f),
-                border = BorderStroke(1.2.dp, Color(0xFF0284C7).copy(alpha = 0.5f)),
-                modifier = Modifier
-                    .weight(0.95f)
-                    .height(40.dp)
-                    .testTag("below_taskbar_news_button")
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Feed,
-                        contentDescription = "Guideline News",
-                        tint = Color(0xFF0284C7),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "News",
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0284C7)
-                    )
                 }
             }
         }
@@ -527,7 +411,7 @@ fun DrugSearchScreen(
         } else {
             // WHEN SEARCH IS BLANK: Show Instant Search Suggestions & Home Dashboard Elements
 
-            // Clinical Practice Suites Quick Deck
+            // Clinical Practice Suites Quick Deck (Non-redundant specialized clinical tools)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -555,34 +439,9 @@ fun DrugSearchScreen(
                         )
                     }
                     Text(
-                        text = "Instant OR & ICU Access",
+                        text = "Instant OR & Clinical Tools",
                         fontSize = 10.5.sp,
                         color = DimsTealPrimary
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    ClinicalSuiteCard(
-                        title = "CRITICAL CARE",
-                        subtitle = "Tox, Antidotes & Resus",
-                        badge = "STAT ICU",
-                        icon = Icons.Default.WarningAmber,
-                        accentColor = Color(0xFFEF4444),
-                        modifier = Modifier.weight(1f),
-                        onClick = onOpenCriticalCare
-                    )
-
-                    ClinicalSuiteCard(
-                        title = "CODE BLUE",
-                        subtitle = "CPR & ACLS Arrest",
-                        badge = "STAT",
-                        icon = Icons.Default.Bolt,
-                        accentColor = Red500,
-                        modifier = Modifier.weight(1f),
-                        onClick = onOpenCodeBlue
                     )
                 }
 
@@ -626,21 +485,6 @@ fun DrugSearchScreen(
                     )
 
                     ClinicalSuiteCard(
-                        title = "ABG SOLVER",
-                        subtitle = "Acid-Base & Deficits",
-                        badge = "ICU",
-                        icon = Icons.Default.Science,
-                        accentColor = Color(0xFF38BDF8),
-                        modifier = Modifier.weight(1f),
-                        onClick = onOpenAbgSolver
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    ClinicalSuiteCard(
                         title = "INTERACTIONS",
                         subtitle = "Multi-Drug Safety",
                         badge = "SAFETY",
@@ -648,16 +492,6 @@ fun DrugSearchScreen(
                         accentColor = Red500,
                         modifier = Modifier.weight(1f),
                         onClick = onOpenInteractionChecker
-                    )
-
-                    ClinicalSuiteCard(
-                        title = "GUIDELINE NEWS",
-                        subtitle = "EASL, ESC, WHO, CDC",
-                        badge = "2024-26",
-                        icon = Icons.Default.Feed,
-                        accentColor = Color(0xFF0284C7),
-                        modifier = Modifier.weight(1f),
-                        onClick = onOpenMedicalNews
                     )
                 }
             }

@@ -141,7 +141,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
             ),
             NavItem(
                 screen = NavigationScreen.SYSTEM,
-                label = "System",
+                label = "By System",
                 selectedIcon = Icons.Filled.AccountTree,
                 unselectedIcon = Icons.Outlined.AccountTree,
                 activeColor = Color(0xFF6366F1)
