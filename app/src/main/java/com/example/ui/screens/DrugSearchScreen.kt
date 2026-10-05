@@ -98,29 +98,14 @@ fun DrugSearchScreen(
     val isSearchActive = searchQuery.isNotBlank()
 
     var selectedSpecialtyTag by remember { mutableStateOf<String?>(null) }
-    var selectedEraFilter by remember { mutableStateOf<String>("All") }
-    var selectedFacilityLevelFilter by remember { mutableStateOf<String>("All Levels") }
 
-    val effectiveDrugs = remember(filteredDrugs, selectedSpecialtyTag, selectedEraFilter, selectedFacilityLevelFilter) {
+    val effectiveDrugs = remember(filteredDrugs, selectedSpecialtyTag) {
         filteredDrugs.filter { drug ->
-            val matchesSpecialty = if (selectedSpecialtyTag == null) true else {
+            if (selectedSpecialtyTag == null) true else {
                 drug.therapeuticClassTag.contains(selectedSpecialtyTag!!, ignoreCase = true) ||
                 drug.drugClass.contains(selectedSpecialtyTag!!, ignoreCase = true) ||
                 drug.indications.contains(selectedSpecialtyTag!!, ignoreCase = true)
             }
-            val matchesEra = when (selectedEraFilter) {
-                "Older" -> drug.isOlderMedication
-                "Newer" -> drug.isNewerMedication
-                "Research" -> drug.isUnderResearch
-                else -> true
-            }
-            val matchesFacility = when (selectedFacilityLevelFilter) {
-                "🏥 Health Post / PHC (Free)" -> drug.isFreeHealthPostDrug || drug.resolvedNeml.contains("Health Post", ignoreCase = true)
-                "🏥 District Hospital" -> drug.resolvedNeml.contains("Secondary", ignoreCase = true) || drug.resolvedNeml.contains("District", ignoreCase = true)
-                "🏥 Tertiary Hospital" -> drug.resolvedNeml.contains("Tertiary", ignoreCase = true) || drug.isUnderResearch || drug.isNewerMedication
-                else -> true
-            }
-            matchesSpecialty && matchesEra && matchesFacility
         }.distinctBy { it.id }
     }
 
@@ -751,12 +736,12 @@ fun DrugSearchScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Specialty Classes (Older • Newer • Research)",
+                        text = "Specialty Classes",
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = DimsTealPrimary
                     )
-                    if (selectedSpecialtyTag != null || selectedEraFilter != "All") {
+                    if (selectedSpecialtyTag != null) {
                         Text(
                             text = "Reset Filter",
                             fontSize = 11.sp,
@@ -764,7 +749,6 @@ fun DrugSearchScreen(
                             color = MaterialTheme.colorScheme.error,
                             modifier = Modifier.clickable {
                                 selectedSpecialtyTag = null
-                                selectedEraFilter = "All"
                             }
                         )
                     }
@@ -813,74 +797,6 @@ fun DrugSearchScreen(
                             shape = RoundedCornerShape(14.dp),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = DimsTealPrimary,
-                                selectedLabelColor = Color.White
-                            )
-                        )
-                    }
-                }
-
-                // Era / Generation Timeline Selector (Older, Newer, Under Research)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    listOf(
-                        Triple("All", "All Generations", null),
-                        Triple("Older", "🏛️ Older / Classical", Color(0xFF475569)),
-                        Triple("Newer", "⚡ Newer / Modern Standard", Color(0xFF0284C7)),
-                        Triple("Research", "🧪 Under Research / Pipeline", Color(0xFFD97706))
-                    ).forEach { (eraKey, eraLabel, eraColor) ->
-                        val isEraSelected = selectedEraFilter == eraKey
-                        FilterChip(
-                            selected = isEraSelected,
-                            onClick = { selectedEraFilter = eraKey },
-                            label = {
-                                Text(
-                                    text = eraLabel,
-                                    fontSize = 11.sp,
-                                    fontWeight = if (isEraSelected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = eraColor ?: DimsTealPrimary,
-                                selectedLabelColor = Color.White
-                            )
-                        )
-                    }
-                }
-
-                // 3. NEML Health Facility Level Tier Selector
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    listOf(
-                        "All Levels",
-                        "🏥 Health Post / PHC (Free)",
-                        "🏥 District Hospital",
-                        "🏥 Tertiary Hospital"
-                    ).forEach { facilityLabel ->
-                        val isFacSelected = selectedFacilityLevelFilter == facilityLabel
-                        FilterChip(
-                            selected = isFacSelected,
-                            onClick = { selectedFacilityLevelFilter = facilityLabel },
-                            label = {
-                                Text(
-                                    text = facilityLabel,
-                                    fontSize = 11.sp,
-                                    fontWeight = if (isFacSelected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Color(0xFF047857),
                                 selectedLabelColor = Color.White
                             )
                         )
