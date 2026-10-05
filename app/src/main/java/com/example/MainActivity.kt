@@ -140,13 +140,6 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                 activeColor = MedicalBlue500
             ),
             NavItem(
-                screen = NavigationScreen.DISEASE,
-                label = "Indication",
-                selectedIcon = Icons.Filled.Healing,
-                unselectedIcon = Icons.Outlined.Healing,
-                activeColor = Color(0xFF0D9488)
-            ),
-            NavItem(
                 screen = NavigationScreen.SYSTEM,
                 label = "System",
                 selectedIcon = Icons.Filled.AccountTree,
@@ -154,11 +147,25 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                 activeColor = Color(0xFF6366F1)
             ),
             NavItem(
-                screen = NavigationScreen.INTERACTION,
-                label = "Interact",
-                selectedIcon = Icons.AutoMirrored.Filled.CompareArrows,
-                unselectedIcon = Icons.AutoMirrored.Filled.CompareArrows,
-                activeColor = Red500
+                screen = NavigationScreen.CRITICAL_CARE,
+                label = "ER / ICU",
+                selectedIcon = Icons.Filled.Bolt,
+                unselectedIcon = Icons.Outlined.Bolt,
+                activeColor = Color(0xFFEF4444)
+            ),
+            NavItem(
+                screen = NavigationScreen.DISEASE,
+                label = "Protocols",
+                selectedIcon = Icons.Filled.Healing,
+                unselectedIcon = Icons.Outlined.Healing,
+                activeColor = Color(0xFF0D9488)
+            ),
+            NavItem(
+                screen = NavigationScreen.CALCULATOR,
+                label = "Calculators",
+                selectedIcon = Icons.Filled.Calculate,
+                unselectedIcon = Icons.Outlined.Calculate,
+                activeColor = Amber500
             ),
             NavItem(
                 screen = NavigationScreen.MEDICAL_NEWS,
@@ -166,20 +173,6 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                 selectedIcon = Icons.AutoMirrored.Filled.Feed,
                 unselectedIcon = Icons.AutoMirrored.Filled.Feed,
                 activeColor = Color(0xFF0284C7)
-            ),
-            NavItem(
-                screen = NavigationScreen.CALCULATOR,
-                label = "Cal",
-                selectedIcon = Icons.Filled.Calculate,
-                unselectedIcon = Icons.Outlined.Calculate,
-                activeColor = Amber500
-            ),
-            NavItem(
-                screen = NavigationScreen.SAVED,
-                label = "Saved",
-                selectedIcon = Icons.Filled.Bookmark,
-                unselectedIcon = Icons.Outlined.BookmarkBorder,
-                activeColor = Color(0xFFF59E0B)
             )
         )
     }
@@ -452,45 +445,12 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                     )
                                 }
                             }
-
-                            // Critical Care & Emergency STAT Button
-                            val isCriticalActive = state.currentScreen == NavigationScreen.CRITICAL_CARE
-                            Surface(
-                                onClick = {
-                                    viewModel.navigateTo(NavigationScreen.CRITICAL_CARE)
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (isCriticalActive) Color(0xFFEF4444) else Color(0xFFEF4444).copy(alpha = 0.2f),
-                                border = BorderStroke(1.2.dp, if (isCriticalActive) Color(0xFFFCA5A5) else Color(0xFFEF4444).copy(alpha = 0.6f)),
-                                modifier = Modifier
-                                    .height(38.dp)
-                                    .testTag("top_critical_care_sos_button")
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    modifier = Modifier.padding(horizontal = 8.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Bolt,
-                                        contentDescription = "Critical Care & Emergency",
-                                        tint = if (isCriticalActive) Color.White else Color(0xFFEF4444),
-                                        modifier = Modifier.size(15.dp)
-                                    )
-                                    Text(
-                                        text = "ER/ICU",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Black,
-                                        color = if (isCriticalActive) Color.White else Color(0xFFEF4444)
-                                    )
-                                }
-                            }
                         }
                     }
                 }
             },
             bottomBar = {
-                if (state.currentScreen != NavigationScreen.CODE_BLUE && state.currentScreen != NavigationScreen.CRITICAL_CARE) {
+                if (state.currentScreen != NavigationScreen.CODE_BLUE) {
                     val navBarBg by animateColorAsState(
                         targetValue = when (state.themeMode) {
                             AppThemeMode.PITCH_BLACK -> Color.Black
@@ -677,7 +637,8 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                     NavigationScreen.ANTIDOTE -> AntidoteToxicologyScreen(
                         onAntidoteClick = { antidote ->
                             viewModel.addRecentSearch(antidote.poison)
-                        }
+                        },
+                        onOpenCriticalCare = { viewModel.navigateTo(NavigationScreen.CRITICAL_CARE) }
                     )
 
                     NavigationScreen.CALCULATOR -> CalculatorsScreen(
@@ -707,7 +668,8 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                     )
 
                     NavigationScreen.CODE_BLUE -> EmergencyCodeBlueScreen(
-                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) },
+                        onOpenCriticalCare = { viewModel.navigateTo(NavigationScreen.CRITICAL_CARE) }
                     )
 
                     NavigationScreen.CRITICAL_CARE -> CriticalCareEmergencyScreen(

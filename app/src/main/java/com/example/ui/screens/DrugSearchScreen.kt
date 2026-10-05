@@ -1692,6 +1692,38 @@ private fun DrugCard(
                 }
             }
 
+            // Nepal Brands Preview
+            if (drug.brandsNepal.isNotEmpty()) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color(0xFF0284C7).copy(alpha = 0.08f),
+                    border = BorderStroke(0.8.dp, Color(0xFF0284C7).copy(alpha = 0.25f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "🇳🇵 Nepal Brands:",
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0284C7)
+                        )
+                        Text(
+                            text = drug.brandsNepal.take(4).joinToString(", ") { "${it.name} (${it.form})" },
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
 
             Row(

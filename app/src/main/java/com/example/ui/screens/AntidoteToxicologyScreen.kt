@@ -33,7 +33,8 @@ private enum class ToxicologyTab(val label: String) {
 
 @Composable
 fun AntidoteToxicologyScreen(
-    onAntidoteClick: ((Antidote) -> Unit)? = null
+    onAntidoteClick: ((Antidote) -> Unit)? = null,
+    onOpenCriticalCare: (() -> Unit)? = null
 ) {
     var selectedTab by remember { mutableStateOf(ToxicologyTab.ANTIDOTES) }
     var searchQuery by remember { mutableStateOf("") }
@@ -71,7 +72,7 @@ fun AntidoteToxicologyScreen(
                     tint = Red400,
                     modifier = Modifier.size(28.dp)
                 )
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Emergency Toxicology & Rural Ingestions",
                         style = MaterialTheme.typography.titleMedium,
@@ -84,6 +85,23 @@ fun AntidoteToxicologyScreen(
                         fontSize = 11.sp,
                         color = Color(0xFFFCA5A5)
                     )
+                }
+
+                if (onOpenCriticalCare != null) {
+                    FilledTonalButton(
+                        onClick = onOpenCriticalCare,
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = Red600,
+                            contentColor = Color.White
+                        ),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.height(30.dp)
+                    ) {
+                        Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(13.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text("ER/ICU", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                    }
                 }
             }
         }
