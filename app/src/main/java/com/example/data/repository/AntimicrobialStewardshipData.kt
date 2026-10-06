@@ -117,6 +117,54 @@ object AntimicrobialStewardshipData {
             commonPathogens = "Streptococcus pyogenes (Group A Strep), Staphylococcus aureus (MSSA/MRSA), mixed anaerobes",
             clinicalPearls = "In necrotizing fasciitis, antibiotics are secondary to IMMEDIATE radical surgical debridement. Pain out of proportion to physical exam findings is the earliest hallmark.",
             redFlags = "Crepitus, skin anesthesia, bullae with dishwater fluid, rapid margin progression, systemic toxicity."
+        ),
+        SyndromicRegimen(
+            id = "syn_diabetic_foot",
+            syndrome = "Diabetic Foot Infection (Mild vs Moderate / Severe Limb-Threatening)",
+            category = "SSTI",
+            setting = "Outpatient vs Inpatient Surgical Ward",
+            preferredFirstLine = "Mild / Superficial: Amoxicillin-Clavulanate 875/125 mg PO BID OR Cephalexin 500 mg QID x 1-2 weeks. Moderate / Deep Tissue / Osteomyelitis: Piperacillin-Tazobactam 4.5 g IV q8h OR Cefoperazone-Sulbactam 1.5-3 g IV q12h + Vancomycin 15-20 mg/kg q12h.",
+            alternativeRegimen = "Ciprofloxacin 500 mg BID + Clindamycin 300 mg QID (oral outpatient); Meropenem 1 g IV q8h + Teicoplanin 400 mg OD (inpatient severe).",
+            typicalDuration = "Soft tissue: 1-2 weeks; Chronic Osteomyelitis with probe-to-bone: 4-6 weeks (or 1-2 weeks if radical bone resection).",
+            commonPathogens = "Polymicrobial: S. aureus (MSSA/MRSA), Streptococcus, Enterobacterales (E. coli, Klebsiella), Pseudomonas aeruginosa, Bacteroides fragilis",
+            clinicalPearls = "Probe-to-bone test (palpating hard bone with a sterile metal probe at base of ulcer) has positive predictive value >89% for underlying osteomyelitis. Wound surface swabs are misleading; obtain deep curettage or bone biopsy after cleansing.",
+            redFlags = "Systemic SIRS/sepsis, ascending cellulitis >2 cm from ulcer edge, gas in soft tissues on X-ray, necrotizing tissue, absent distal pulses (critical limb ischemia)."
+        ),
+        SyndromicRegimen(
+            id = "syn_intra_abdominal",
+            syndrome = "Intra-Abdominal Sepsis & Secondary Peritonitis (Perforated Viscus / Appendicitis)",
+            category = "Gastrointestinal",
+            setting = "Emergency & Surgical Inpatient",
+            preferredFirstLine = "Community-Acquired Mild/Moderate: Ceftriaxone 1-2 g IV OD + Metronidazole 500 mg IV q8h OR Ciprofloxacin 400 mg IV q12h + Metronidazole. High-Risk / Healthcare-Associated: Piperacillin-Tazobactam 4.5 g IV q6-8h OR Meropenem 1 g IV q8h.",
+            alternativeRegimen = "Cefoperazone-Sulbactam 1.5-3 g IV q12h + Metronidazole 500 mg IV q8h.",
+            typicalDuration = "4 to 7 days after successful source control (laparotomy / laparoscopic appendectomy / perforation repair).",
+            commonPathogens = "Enterobacterales (E. coli, Klebsiella), Bacteroides fragilis and other anaerobes, Enterococci, Streptococci",
+            clinicalPearls = "Antibiotics without source control (surgical drainage/repair) will fail. In community-acquired appendicitis with clean appendectomy, post-op antibiotics can be safely stopped within 24 hours.",
+            redFlags = "Board-like abdominal rigidity, free air under diaphragm on erect chest X-ray, hemodynamic instability, oliguria."
+        ),
+        SyndromicRegimen(
+            id = "syn_endocarditis",
+            syndrome = "Infective Endocarditis (Native Valve vs Prosthetic Valve Empiric)",
+            category = "Sepsis & Critical Care",
+            setting = "Cardiology & Inpatient ICU",
+            preferredFirstLine = "Native Valve Subacute: Ampicillin-Sulbactam 3 g IV q6h (or Ceftriaxone 2 g IV OD) + Gentamicin 3 mg/kg IV OD. Native Valve Acute Sepsis / IVDU: Vancomycin 15-20 mg/kg IV q12h + Cefepime 2 g IV q8h. Prosthetic Valve (<1 year post-op): Vancomycin + Gentamicin + Rifampin 300-600 mg PO/IV BID (Rifampin penetrates foreign material biofilm).",
+            alternativeRegimen = "Daptomycin 8-10 mg/kg IV once daily (if Vancomycin MIC >1.5 or severe renal impairment).",
+            typicalDuration = "Native valve: 4 to 6 weeks; Prosthetic valve: Minimum 6 weeks.",
+            commonPathogens = "Staphylococcus aureus (most common acute), Viridans streptococci (subacute native), Enterococcus faecalis, Coagulase-negative staphylococci (prosthetic), HACEK group",
+            clinicalPearls = "Obtain 3 sets of blood cultures from separate venipuncture sites with ≥30 minutes between first and last BEFORE starting empiric antibiotics. Order urgent transesophageal echocardiogram (TEE).",
+            redFlags = "New aortic or mitral regurgitation murmur, heart failure (pulmonary edema), conduction block on ECG (suggests aortic root abscess), septic embolic stroke."
+        ),
+        SyndromicRegimen(
+            id = "syn_cholangitis",
+            syndrome = "Acute Cholangitis (Tokyo Guidelines 2018 - Charcot's Triad)",
+            category = "Gastrointestinal",
+            setting = "Emergency & Inpatient Gastroenterology",
+            preferredFirstLine = "Ceftriaxone 1-2 g IV OD + Metronidazole 500 mg IV q8h OR Piperacillin-Tazobactam 4.5 g IV q8h (covers enterococci and biliary pseudomonas).",
+            alternativeRegimen = "Cefoperazone-Sulbactam 1.5-3 g IV q12h OR Meropenem 1 g IV q8h (in septic shock).",
+            typicalDuration = "4 to 7 days after successful biliary decompression.",
+            commonPathogens = "E. coli, Klebsiella pneumoniae, Enterococcus species, Enterobacter, Bacteroides fragilis",
+            clinicalPearls = "Biliary decompression (urgent ERCP with biliary stenting / sphincterotomy) within 24-48 hours is life-saving; antibiotics alone cannot penetrate obstructed biliary tree without drainage.",
+            redFlags = "Reynolds' Pentad: Charcot's triad (fever, jaundice, RUQ pain) PLUS hypotension and altered mental status (indicates suppurative acute obstructive cholangitis requiring EMERGENCY ERCP decompression within 6 hours)."
         )
     )
 

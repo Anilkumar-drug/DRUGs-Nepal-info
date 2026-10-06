@@ -107,6 +107,8 @@ fun AppSidebarDrawer(
     onAbgSolverClick: () -> Unit = {},
     onHepatologyClick: () -> Unit = {},
     onAnesthesiologyClick: () -> Unit = {},
+    onSurgicalPreOpClick: () -> Unit = {},
+    onLabValuesClick: () -> Unit = {},
     onInteractionsClick: () -> Unit,
     onAntidotesClick: () -> Unit,
     onSettingsClick: () -> Unit
@@ -423,6 +425,32 @@ fun AppSidebarDrawer(
                                 badgeColor = Color(0xFFA855F7),
                                 onClick = onAnesthesiologyClick,
                                 testTag = "sidebar_anesthesiology_item"
+                            )
+
+                            // 0h. Surgical Pre-Operative Drug Clearance & Bridge
+                            SidebarItemCard(
+                                icon = Icons.Default.ContentCut,
+                                iconColor = Color(0xFF6366F1),
+                                iconBg = Color(0xFF6366F1).copy(alpha = 0.15f),
+                                title = "SURGICAL PRE-OP CLEARANCE",
+                                subtitle = "DOACs, Warfarin, Antiplatelets, SGLT2i, Steroid stress dosing",
+                                badge = "PRE-OP",
+                                badgeColor = Color(0xFF6366F1),
+                                onClick = onSurgicalPreOpClick,
+                                testTag = "sidebar_surgical_preop_item"
+                            )
+
+                            // 0i. Critical Lab Panic Values & Diagnostic Ratios
+                            SidebarItemCard(
+                                icon = Icons.Default.Biotech,
+                                iconColor = Color(0xFFEF4444),
+                                iconBg = Color(0xFFEF4444).copy(alpha = 0.15f),
+                                title = "LAB PANIC VALUES & RATIOS",
+                                subtitle = "K/Na/Hb/pH panic action checklists, SAAG, Light's, FeNa",
+                                badge = "LAB VALUES",
+                                badgeColor = Color(0xFFEF4444),
+                                onClick = onLabValuesClick,
+                                testTag = "sidebar_lab_values_item"
                             )
 
                             // 0. Nepal Medical News & Clinical Updates (Live Search Grounding)

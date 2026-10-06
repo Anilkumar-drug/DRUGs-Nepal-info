@@ -80,7 +80,9 @@ fun DrugSearchScreen(
     onOpenAnesthesiology: () -> Unit = {},
     onOpenAntimicrobial: () -> Unit = {},
     onOpenAbgSolver: () -> Unit = {},
-    onOpenIvCompatibility: () -> Unit = {}
+    onOpenIvCompatibility: () -> Unit = {},
+    onOpenSurgicalPreOp: () -> Unit = {},
+    onOpenLabValues: () -> Unit = {}
 ) {
     var showHistoryDialog by remember { mutableStateOf(false) }
 
@@ -477,6 +479,31 @@ fun DrugSearchScreen(
                         accentColor = Red500,
                         modifier = Modifier.weight(1f),
                         onClick = onOpenInteractionChecker
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ClinicalSuiteCard(
+                        title = "SURGICAL PRE-OP",
+                        subtitle = "Drug Clearance & Bridge",
+                        badge = "PRE-OP",
+                        icon = Icons.Default.ContentCut,
+                        accentColor = Color(0xFF6366F1),
+                        modifier = Modifier.weight(1f),
+                        onClick = onOpenSurgicalPreOp
+                    )
+
+                    ClinicalSuiteCard(
+                        title = "LAB VALUES",
+                        subtitle = "Panic Values & Ratios",
+                        badge = "LABS",
+                        icon = Icons.Default.Biotech,
+                        accentColor = Red500,
+                        modifier = Modifier.weight(1f),
+                        onClick = onOpenLabValues
                     )
                 }
             }

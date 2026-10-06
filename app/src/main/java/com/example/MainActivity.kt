@@ -596,6 +596,12 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                         },
                         onOpenAbgSolver = {
                             viewModel.navigateTo(NavigationScreen.ABG_ELECTROLYTE_SOLVER)
+                        },
+                        onOpenSurgicalPreOp = {
+                            viewModel.navigateTo(NavigationScreen.SURGICAL_PREOP)
+                        },
+                        onOpenLabValues = {
+                            viewModel.navigateTo(NavigationScreen.LAB_VALUES)
                         }
                     )
 
@@ -703,6 +709,14 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                         onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) },
                         onDrugClick = { viewModel.openDrug(it) },
                         onProtocolClick = { viewModel.openProtocolFromSearch(it) }
+                    )
+
+                    NavigationScreen.SURGICAL_PREOP -> SurgicalPreOpScreen(
+                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                    )
+
+                    NavigationScreen.LAB_VALUES -> LabValuesReferenceScreen(
+                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
                     )
                 }
             }
@@ -825,6 +839,14 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
         onAnesthesiologyClick = {
             viewModel.closeSidebar()
             viewModel.navigateTo(NavigationScreen.ANESTHESIOLOGY)
+        },
+        onSurgicalPreOpClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.SURGICAL_PREOP)
+        },
+        onLabValuesClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.LAB_VALUES)
         },
         onInteractionsClick = {
             viewModel.closeSidebar()

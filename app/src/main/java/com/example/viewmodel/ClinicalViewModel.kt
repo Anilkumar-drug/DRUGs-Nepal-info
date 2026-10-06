@@ -49,7 +49,9 @@ enum class NavigationScreen(val title: String) {
     RENAL_ADJUSTER("Renal Dose Auto-Calculator"),
     ABG_ELECTROLYTE_SOLVER("ABG & Electrolyte Disturbance Solver"),
     ANESTHESIOLOGY("Anesthesiology & Perioperative"),
-    CRITICAL_CARE("Critical Care & Emergency Dashboard")
+    CRITICAL_CARE("Critical Care & Emergency Dashboard"),
+    SURGICAL_PREOP("Surgical Pre-Op Drug Clearance & Bridge"),
+    LAB_VALUES("Critical Lab Values & Diagnostic Ratios")
 }
 
 enum class SearchMode(val title: String) {
