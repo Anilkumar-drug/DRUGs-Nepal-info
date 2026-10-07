@@ -44,6 +44,8 @@ import com.example.ui.theme.*
 @Composable
 fun DiseaseProtocolsScreen(
     selectedProtocol: DiseaseProtocol? = null,
+    activeTab: Int = 1,
+    onTabChange: ((Int) -> Unit)? = null,
     bookmarkedProtocolIds: Set<String> = emptySet(),
     onBookmarkToggle: ((String) -> Unit)? = null,
     onProtocolClick: ((DiseaseProtocol) -> Unit)? = null,
@@ -52,8 +54,6 @@ fun DiseaseProtocolsScreen(
     onConsultAiForIndication: ((String) -> Unit)? = null,
     onBackToSearch: (() -> Unit)? = null
 ) {
-    var activeTab by remember { mutableIntStateOf(0) } // 0 = A-Z Indications (Incepta), 1 = Protocols
-
     if (selectedProtocol != null) {
         ProtocolDetailScreen(
             protocol = selectedProtocol,
@@ -70,20 +70,23 @@ fun DiseaseProtocolsScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 TabRow(
-                    selectedTabIndex = activeTab,
+                    selectedTabIndex = activeTab.coerceIn(0, 1),
                     containerColor = DimsTealDark,
                     contentColor = Color.White,
                     indicator = { tabPositions ->
-                        TabRowDefaults.SecondaryIndicator(
-                            Modifier.tabIndicatorOffset(tabPositions[activeTab]),
-                            color = DimsYellowMascot,
-                            height = 3.dp
-                        )
+                        val safeIndex = activeTab.coerceIn(0, 1)
+                        if (safeIndex < tabPositions.size) {
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier.tabIndicatorOffset(tabPositions[safeIndex]),
+                                color = DimsYellowMascot,
+                                height = 3.dp
+                            )
+                        }
                     }
                 ) {
                     Tab(
                         selected = activeTab == 0,
-                        onClick = { activeTab = 0 },
+                        onClick = { onTabChange?.invoke(0) },
                         text = {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -106,7 +109,7 @@ fun DiseaseProtocolsScreen(
                     )
                     Tab(
                         selected = activeTab == 1,
-                        onClick = { activeTab = 1 },
+                        onClick = { onTabChange?.invoke(1) },
                         text = {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,

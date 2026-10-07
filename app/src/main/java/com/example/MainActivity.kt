@@ -493,7 +493,22 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
 
                                 NavigationBarItem(
                                     selected = isSelected,
-                                    onClick = { viewModel.navigateTo(item.screen) },
+                                    onClick = {
+                                        if (state.currentScreen == item.screen) {
+                                            if (item.screen == NavigationScreen.DISEASE) {
+                                                viewModel.closeProtocol()
+                                                viewModel.setDiseaseTab(1)
+                                            } else if (item.screen == NavigationScreen.CALCULATOR) {
+                                                viewModel.closeCalculator()
+                                            }
+                                        } else {
+                                            if (item.screen == NavigationScreen.DISEASE) {
+                                                viewModel.closeProtocol()
+                                                viewModel.setDiseaseTab(1)
+                                            }
+                                            viewModel.navigateTo(item.screen)
+                                        }
+                                    },
                                     icon = {
                                         Box(
                                             contentAlignment = Alignment.Center,
@@ -574,6 +589,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                         onOpenPharmacologyReview = { viewModel.navigateTo(NavigationScreen.PHARMACOLOGY_GUIDE) },
                         onOpenIndicationDirectory = {
                             viewModel.closeProtocol()
+                            viewModel.setDiseaseTab(0)
                             viewModel.navigateTo(NavigationScreen.DISEASE)
                         },
                         onOpenInteractionChecker = {
@@ -628,6 +644,8 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
 
                     NavigationScreen.DISEASE -> DiseaseProtocolsScreen(
                         selectedProtocol = state.selectedProtocol,
+                        activeTab = state.diseaseTab,
+                        onTabChange = { viewModel.setDiseaseTab(it) },
                         bookmarkedProtocolIds = state.bookmarkedProtocolIds,
                         onBookmarkToggle = { viewModel.toggleBookmarkProtocol(it) },
                         onProtocolClick = { protocol ->
@@ -786,6 +804,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
         onDrugsByIndicationClick = {
             viewModel.closeSidebar()
             viewModel.closeProtocol()
+            viewModel.setDiseaseTab(0)
             viewModel.navigateTo(NavigationScreen.DISEASE)
         },
         onDrugsBySystemClick = {
@@ -834,6 +853,8 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
         },
         onHepatologyClick = {
             viewModel.closeSidebar()
+            viewModel.closeProtocol()
+            viewModel.setDiseaseTab(1)
             viewModel.navigateTo(NavigationScreen.DISEASE)
         },
         onAnesthesiologyClick = {

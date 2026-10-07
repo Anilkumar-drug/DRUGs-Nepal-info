@@ -82,6 +82,7 @@ data class ClinicalUiState(
     val selectedDrug: Drug? = null,
     val isDrugModalOpen: Boolean = false,
     val selectedProtocol: DiseaseProtocol? = null,
+    val diseaseTab: Int = 1, // 0 = A-Z Indications, 1 = Clinical Protocols
     val selectedCalculatorId: String? = null,
     val recentSearches: List<String> = listOf(
         "Moxclave 625", "Dolo-650", "Pantocid 40", "Azithromycin", "Amlodipine"
@@ -385,15 +386,19 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
         _uiState.update {
             it.copy(
                 currentScreen = screen,
-                selectedProtocol = if (screen == NavigationScreen.DISEASE) null else it.selectedProtocol,
-                selectedCalculatorId = if (screen == NavigationScreen.CALCULATOR) null else it.selectedCalculatorId,
+                selectedProtocol = if (screen != NavigationScreen.DISEASE) null else it.selectedProtocol,
+                selectedCalculatorId = if (screen != NavigationScreen.CALCULATOR) null else it.selectedCalculatorId,
                 isDrugModalOpen = if (screen == NavigationScreen.SEARCH) false else it.isDrugModalOpen
             )
         }
     }
 
     fun openProtocol(protocol: DiseaseProtocol) {
-        _uiState.update { it.copy(selectedProtocol = protocol) }
+        _uiState.update { it.copy(selectedProtocol = protocol, diseaseTab = 1) }
+    }
+
+    fun setDiseaseTab(tab: Int) {
+        _uiState.update { it.copy(diseaseTab = tab) }
     }
 
     fun closeProtocol() {
@@ -466,14 +471,24 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
             navigateTo(NavigationScreen.RENAL_ADJUSTER)
             return
         }
-        openCalculator(calcId)
-        navigateTo(NavigationScreen.CALCULATOR)
+        _uiState.update {
+            it.copy(
+                currentScreen = NavigationScreen.CALCULATOR,
+                selectedCalculatorId = calcId,
+                activeCalcTab = calcId
+            )
+        }
     }
 
     fun openProtocolFromSearch(protocol: DiseaseProtocol) {
         addRecentSearch(protocol.name)
-        openProtocol(protocol)
-        navigateTo(NavigationScreen.DISEASE)
+        _uiState.update {
+            it.copy(
+                currentScreen = NavigationScreen.DISEASE,
+                selectedProtocol = protocol,
+                diseaseTab = 1
+            )
+        }
     }
 
     fun setFilter(filter: DrugFilterType) {
