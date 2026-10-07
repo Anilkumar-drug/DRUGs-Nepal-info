@@ -121,16 +121,16 @@ fun DrugSearchScreen(
 
     val totalMatches = effectiveDrugs.size + distinctProtocols.size + distinctCalculators.size
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Spacer(modifier = Modifier.height(2.dp))
+    if (isSearchActive) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Spacer(modifier = Modifier.height(2.dp))
 
-        // Global Search Scope & Results Indicator (shown when actively searching)
-        if (isSearchActive) {
+            // Global Search Scope & Results Indicator (shown when actively searching)
             Surface(
                 shape = RoundedCornerShape(10.dp),
                 color = DimsTealPrimary.copy(alpha = 0.08f),
@@ -176,123 +176,53 @@ fun DrugSearchScreen(
                     }
                 }
             }
-        }
 
-        // Active Indication Search Banner (if user specifically switched to INDICATION mode)
-        if (searchMode == SearchMode.INDICATION && !isSearchActive) {
-            Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = Color(0xFF0284C7).copy(alpha = 0.15f),
-                border = BorderStroke(1.dp, Color(0xFF38BDF8).copy(alpha = 0.4f)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("indication_search_active_banner")
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+            // System Filter Indicator (if active)
+            if (selectedSystemFilter != null) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Emerald500.copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, Emerald500.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Hub,
-                            contentDescription = null,
-                            tint = Color(0xFF38BDF8),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = "Searching by Indication",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF38BDF8)
-                        )
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        FilledTonalButton(
-                            onClick = onOpenIndicationDirectory,
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                            modifier = Modifier.height(28.dp),
-                            colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = Color(0xFF0284C7).copy(alpha = 0.35f),
-                                contentColor = Color(0xFF38BDF8)
-                            )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Text(
-                                text = "Directory →",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
+                            Icon(
+                                imageVector = Icons.Default.FilterAlt,
+                                contentDescription = null,
+                                tint = Emerald500,
+                                modifier = Modifier.size(16.dp)
                             )
-                        }
-                        TextButton(
-                            onClick = { onSearchModeChange(SearchMode.BRAND) },
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
-                            modifier = Modifier.height(28.dp)
-                        ) {
                             Text(
-                                text = "Reset",
-                                fontSize = 11.sp,
+                                text = "Filtered by: $selectedSystemFilter",
+                                style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Slate200
+                                color = Emerald500
+                            )
+                        }
+                        IconButton(
+                            onClick = onClearSystemFilter,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear system filter",
+                                tint = Emerald500,
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                     }
                 }
             }
-        }
 
-        // System Filter Indicator (if active)
-        if (selectedSystemFilter != null) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = Emerald500.copy(alpha = 0.15f),
-                border = BorderStroke(1.dp, Emerald500.copy(alpha = 0.4f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FilterAlt,
-                            contentDescription = null,
-                            tint = Emerald500,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = "Filtered by: $selectedSystemFilter",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Emerald500
-                        )
-                    }
-                    IconButton(
-                        onClick = onClearSystemFilter,
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Clear system filter",
-                            tint = Emerald500,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-            }
-        }
-
-        // WHEN USER IS ACTIVELY SEARCHING: Show Category Tabs (All / Drugs / Protocols / Calculators)
-        if (isSearchActive) {
+            // WHEN USER IS ACTIVELY SEARCHING: Show Category Tabs (All / Drugs / Protocols / Calculators)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -395,512 +325,8 @@ fun DrugSearchScreen(
                     fontWeight = FontWeight.Medium
                 )
             }
-        } else {
-            // WHEN SEARCH IS BLANK: Show Instant Search Suggestions & Home Dashboard Elements
 
-            // Clinical Practice Suites Quick Deck (Non-redundant specialized clinical tools)
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("clinical_practice_suites_section"),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.MedicalServices,
-                            contentDescription = null,
-                            tint = DimsTealPrimary,
-                            modifier = Modifier.size(15.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Specialized Clinical Suites",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Text(
-                        text = "Instant OR & Clinical Tools",
-                        fontSize = 10.5.sp,
-                        color = DimsTealPrimary
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    ClinicalSuiteCard(
-                        title = "ANESTHESIA",
-                        subtitle = "24 Drugs & Dose Calc",
-                        badge = "OT SUITE",
-                        icon = Icons.Default.MedicalServices,
-                        accentColor = Color(0xFFA855F7),
-                        modifier = Modifier.weight(1f),
-                        onClick = onOpenAnesthesiology
-                    )
-
-                    ClinicalSuiteCard(
-                        title = "ABG SOLVER",
-                        subtitle = "Acid-Base & Deficits",
-                        badge = "ICU",
-                        icon = Icons.Default.Science,
-                        accentColor = Color(0xFF38BDF8),
-                        modifier = Modifier.weight(1f),
-                        onClick = onOpenAbgSolver
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    ClinicalSuiteCard(
-                        title = "STEWARDSHIP",
-                        subtitle = "AWaRe & Sepsis Rx",
-                        badge = "EMR",
-                        icon = Icons.Default.Shield,
-                        accentColor = Emerald500,
-                        modifier = Modifier.weight(1f),
-                        onClick = onOpenAntimicrobial
-                    )
-
-                    ClinicalSuiteCard(
-                        title = "INTERACTIONS",
-                        subtitle = "Multi-Drug Safety",
-                        badge = "SAFETY",
-                        icon = Icons.Default.CompareArrows,
-                        accentColor = Red500,
-                        modifier = Modifier.weight(1f),
-                        onClick = onOpenInteractionChecker
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    ClinicalSuiteCard(
-                        title = "SURGICAL PRE-OP",
-                        subtitle = "Drug Clearance & Bridge",
-                        badge = "PRE-OP",
-                        icon = Icons.Default.ContentCut,
-                        accentColor = Color(0xFF6366F1),
-                        modifier = Modifier.weight(1f),
-                        onClick = onOpenSurgicalPreOp
-                    )
-
-                    ClinicalSuiteCard(
-                        title = "LAB VALUES",
-                        subtitle = "Panic Values & Ratios",
-                        badge = "LABS",
-                        icon = Icons.Default.Biotech,
-                        accentColor = Red500,
-                        modifier = Modifier.weight(1f),
-                        onClick = onOpenLabValues
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Instant Search Recommendation Chips
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("instant_search_suggestions_section"),
-                verticalArrangement = Arrangement.spacedBy(5.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Instant Search Suggestions",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                    )
-                    Text(
-                        text = "Drugs • Protocols • Calculators",
-                        fontSize = 10.sp,
-                        color = DimsTealPrimary
-                    )
-                }
-                val instantSuggestions = remember {
-                    listOf(
-                        Pair("💊 Fexofenadine", "Fexofenadine"),
-                        Pair("💊 Cetirizine", "Cetirizine"),
-                        Pair("💊 Montelukast", "Montelukast"),
-                        Pair("💊 Aceclofenac", "Aceclofenac"),
-                        Pair("🩸 Clopidogrel", "Clopidogrel"),
-                        Pair("💧 Jeevan Jal (ORS)", "Oral Rehydration"),
-                        Pair("👶 Zinc Sulfate", "Zinc Sulfate"),
-                        Pair("🦴 Vitamin D3", "Cholecalciferol"),
-                        Pair("🧴 Clobetasol", "Clobetasol"),
-                        Pair("🩹 Fusidic Acid", "Fusidic Acid"),
-                        Pair("🍄 Clotrimazole", "Clotrimazole"),
-                        Pair("💊 Torsemide", "Torsemide"),
-                        Pair("💊 Chlorthalidone", "Chlorthalidone"),
-                        Pair("🧠 Sertraline", "Sertraline"),
-                        Pair("🧠 Olanzapine", "Olanzapine"),
-                        Pair("👂 Betahistine", "Betahistine"),
-                        Pair("🦵 Baclofen", "Baclofen"),
-                        Pair("🩸 Trapic-MF", "Tranexamic"),
-                        Pair("🤰 Progesterone", "Progesterone"),
-                        Pair("🦠 Permethrin", "Permethrin"),
-                        Pair("🚽 Nitrofurantoin", "Nitrofurantoin"),
-                        Pair("💉 Propofol", "Propofol"),
-                        Pair("💉 Ketamine", "Ketamine"),
-                        Pair("💉 Succinylcholine", "Succinylcholine"),
-                        Pair("🚨 LAST & MH", "Malignant Hyperthermia"),
-                        Pair("📋 Hep B (CHB)", "Chronic Hepatitis B"),
-                        Pair("📋 Hep C (CHC)", "Chronic Hepatitis C"),
-                        Pair("📋 SBP & Albumin", "Spontaneous Bacterial Peritonitis"),
-                        Pair("📋 EV Bleeding", "Variceal Bleeding"),
-                        Pair("📋 Acute Pancreatitis", "Acute Pancreatitis"),
-                        Pair("📋 Chronic Pancreatitis", "Chronic Pancreatitis"),
-                        Pair("📋 Wilson Disease", "Wilson Disease"),
-                        Pair("💊 Entecavir", "Entecavir"),
-                        Pair("💊 Sofosbuvir", "Sofosbuvir"),
-                        Pair("💊 Creon", "Pancreatin"),
-                        Pair("💊 UDCA", "Ursodeoxycholic"),
-                        Pair("💊 Terlipressin", "Terlipressin"),
-                        Pair("💊 Tofacitinib", "Tofacitinib"),
-                        Pair("💊 Amoxicillin", "Amoxicillin"),
-                        Pair("💊 Methotrexate", "Methotrexate"),
-                        Pair("📋 CAP Pneumonia", "Pneumonia"),
-                        Pair("🧮 eGFR (CrCl)", "eGFR"),
-                        Pair("💊 Dapagliflozin", "Dapagliflozin"),
-                        Pair("📋 Asthma Protocol", "Asthma"),
-                        Pair("🧮 CURB-65", "CURB-65"),
-                        Pair("💊 Pantocid 40", "Pantocid"),
-                        Pair("🧮 Child-Pugh", "Child-Pugh"),
-                        Pair("📋 Hypertension", "Hypertension"),
-                        Pair("🧮 GCS Score", "Glasgow Coma Scale"),
-                        Pair("📋 Organophosphate", "Organophosphate")
-                    )
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    instantSuggestions.forEach { (displayLabel, queryTerm) ->
-                        Surface(
-                            onClick = { onSearchChange(queryTerm) },
-                            shape = RoundedCornerShape(14.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-                            modifier = Modifier.testTag("suggestion_${queryTerm.lowercase().replace(" ", "_")}")
-                        ) {
-                            Text(
-                                text = displayLabel,
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Recent Searches section
-            if (effectiveRecentSearches.isNotEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("recent_searches_section"),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.History,
-                                contentDescription = null,
-                                tint = DimsTealPrimary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = "Recent Searches",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Text(
-                            text = "Quick navigation",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        effectiveRecentSearches.take(5).forEachIndexed { idx, item ->
-                            Surface(
-                                onClick = { onSearchChange(item) },
-                                shape = RoundedCornerShape(16.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                                border = BorderStroke(1.dp, DimsTealPrimary.copy(alpha = 0.35f)),
-                                modifier = Modifier.testTag("recent_search_chip_$idx")
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Search,
-                                        contentDescription = null,
-                                        tint = DimsTealPrimary,
-                                        modifier = Modifier.size(13.dp)
-                                    )
-                                    Text(
-                                        text = item,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Quick Filter Tags (Nepal, India, Black Box, Bookmarks)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                DrugFilterType.values().forEach { filterType ->
-                    val isSelected = activeFilter == filterType && selectedSystemFilter == null
-                    val filterIcon = when (filterType) {
-                        DrugFilterType.ALL -> Icons.Default.GridView
-                        DrugFilterType.NEPAL -> Icons.Default.Flag
-                        DrugFilterType.INDIA -> Icons.Default.LocalHospital
-                        DrugFilterType.DDA_SCHEDULE_KA -> Icons.Default.Lock
-                        DrugFilterType.FREE_HEALTH_POST -> Icons.Default.MedicalServices
-                        DrugFilterType.EMPTY_STOMACH -> Icons.Default.AccessTime
-                        DrugFilterType.WITH_MEALS -> Icons.Default.Restaurant
-                        DrugFilterType.BLACK_BOX -> Icons.Default.Warning
-                        DrugFilterType.BOOKMARKS -> Icons.Default.Bookmark
-                    }
-
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { onFilterChange(filterType) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = filterIcon,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = if (isSelected) Color.White else if (filterType == DrugFilterType.BLACK_BOX) Red500 else DimsTealPrimary
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = filterType.label,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 12.sp
-                            )
-                        },
-                        shape = RoundedCornerShape(18.dp),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = if (filterType == DrugFilterType.BLACK_BOX) Red600 else DimsTealPrimary,
-                            selectedLabelColor = Color.White,
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            labelColor = if (filterType == DrugFilterType.BLACK_BOX) Red400 else MaterialTheme.colorScheme.onSurface
-                        ),
-                        border = BorderStroke(
-                            1.dp,
-                            if (isSelected) Color.Transparent
-                            else if (filterType == DrugFilterType.BLACK_BOX) Red500.copy(alpha = 0.5f)
-                            else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
-                        ),
-                        modifier = Modifier.testTag("filter_${filterType.name.lowercase()}")
-                    )
-                }
-            }
-
-            // 12 Specialty Therapeutic Classes (Requested by user: Older, Newer, Under Research)
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("specialty_classes_selector"),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Specialty Classes",
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = DimsTealPrimary
-                    )
-                    if (selectedSpecialtyTag != null) {
-                        Text(
-                            text = "Reset Filter",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.clickable {
-                                selectedSpecialtyTag = null
-                            }
-                        )
-                    }
-                }
-
-                // Horizontal Carousel of 12 Specialty Classes
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val isAllSelected = selectedSpecialtyTag == null
-                    FilterChip(
-                        selected = isAllSelected,
-                        onClick = { selectedSpecialtyTag = null },
-                        label = {
-                            Text(
-                                text = "All Classes (12)",
-                                fontSize = 11.5.sp,
-                                fontWeight = if (isAllSelected) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = DimsTealPrimary,
-                            selectedLabelColor = Color.White
-                        )
-                    )
-
-                    ComprehensiveSpecialtyDrugsData.categories.forEach { cat ->
-                        val isCatSelected = selectedSpecialtyTag == cat.tag
-                        FilterChip(
-                            selected = isCatSelected,
-                            onClick = {
-                                selectedSpecialtyTag = if (isCatSelected) null else cat.tag
-                            },
-                            label = {
-                                Text(
-                                    text = "${cat.iconEmoji} ${cat.tag}",
-                                    fontSize = 11.5.sp,
-                                    fontWeight = if (isCatSelected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            },
-                            shape = RoundedCornerShape(14.dp),
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = DimsTealPrimary,
-                                selectedLabelColor = Color.White
-                            )
-                        )
-                    }
-                }
-
-                // Active Specialty Details Banner
-                if (selectedSpecialtyTag != null) {
-                    val activeCat = ComprehensiveSpecialtyDrugsData.categories.find { it.tag == selectedSpecialtyTag }
-                    if (activeCat != null) {
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = DimsTealPrimary.copy(alpha = 0.08f),
-                            border = BorderStroke(1.dp, DimsTealPrimary.copy(alpha = 0.3f)),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(10.dp),
-                                verticalArrangement = Arrangement.spacedBy(3.dp)
-                            ) {
-                                Text(
-                                    text = "${activeCat.iconEmoji} ${activeCat.name}",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
-                                    color = DimsTealPrimary
-                                )
-                                Text(
-                                    text = activeCat.clinicalImportance,
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = "Includes: ${activeCat.description}",
-                                    fontSize = 10.5.sp,
-                                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Results Header for default drug list
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "${effectiveDrugs.size} drugs in database",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.TouchApp,
-                        contentDescription = null,
-                        tint = DimsTealPrimary,
-                        modifier = Modifier.size(13.dp)
-                    )
-                    Text(
-                        text = "Tap card for full monograph",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = DimsTealPrimary,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-        }
-
-        // RESULTS LIST (Global Search Results or Default Drug List)
-        if (isSearchActive) {
+            // RESULTS LIST (Global Search Results)
             when (globalSearchTab) {
                 GlobalSearchTab.ALL -> {
                     if (totalMatches == 0) {
@@ -1052,71 +478,535 @@ fun DrugSearchScreen(
                     }
                 }
             }
-        } else {
-            // Default drug list when search query is empty
-            if (effectiveDrugs.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-                        modifier = Modifier.fillMaxWidth(0.9f)
+        }
+    } else {
+        // HOME SCREEN (search query is empty):
+        // UNIFIED SCROLLABLE FEED - EVERYTHING SCROLLS NATURALLY
+        // The suites area is horizontally scrollable and vertically scrollable with the whole page,
+        // so doctors can scroll freely and easily view the entire 611 drugs list on the home page!
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .testTag("home_screen_scrollable_container"),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(top = 4.dp, bottom = 84.dp)
+        ) {
+            // Active Indication Search Banner (if user specifically switched to INDICATION mode)
+            if (searchMode == SearchMode.INDICATION) {
+                item(key = "home_indication_search_banner") {
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = Color(0xFF0284C7).copy(alpha = 0.15f),
+                        border = BorderStroke(1.dp, Color(0xFF38BDF8).copy(alpha = 0.4f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("indication_search_active_banner")
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(10.dp),
-                            modifier = Modifier.padding(24.dp)
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                modifier = Modifier.size(56.dp)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Default.SearchOff,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(28.dp),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                Icon(
+                                    imageVector = Icons.Default.Hub,
+                                    contentDescription = null,
+                                    tint = Color(0xFF38BDF8),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = "Searching by Indication",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF38BDF8)
+                                )
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                FilledTonalButton(
+                                    onClick = onOpenIndicationDirectory,
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                    modifier = Modifier.height(28.dp),
+                                    colors = ButtonDefaults.filledTonalButtonColors(
+                                        containerColor = Color(0xFF0284C7).copy(alpha = 0.35f),
+                                        contentColor = Color(0xFF38BDF8)
+                                    )
+                                ) {
+                                    Text(
+                                        text = "Directory →",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                TextButton(
+                                    onClick = { onSearchModeChange(SearchMode.BRAND) },
+                                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
+                                    modifier = Modifier.height(28.dp)
+                                ) {
+                                    Text(
+                                        text = "Reset",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Slate200
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+            }
+
+            // System Filter Indicator (if active)
+            if (selectedSystemFilter != null) {
+                item(key = "home_system_filter_indicator") {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Emerald500.copy(alpha = 0.15f),
+                        border = BorderStroke(1.dp, Emerald500.copy(alpha = 0.4f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.FilterAlt,
+                                    contentDescription = null,
+                                    tint = Emerald500,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = "Filtered by: $selectedSystemFilter",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Emerald500
+                                )
+                            }
+                            IconButton(
+                                onClick = onClearSystemFilter,
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Clear system filter",
+                                    tint = Emerald500,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Clinical Practice Suites Quick Deck (Horizontally scrollable carousel & vertically scrollable with page)
+            item(key = "home_clinical_suites_quick_deck") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("clinical_practice_suites_section"),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.MedicalServices,
+                                contentDescription = null,
+                                tint = DimsTealPrimary,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "No matching drugs found",
-                                style = MaterialTheme.typography.titleSmall,
+                                text = "Specialized Clinical Suites",
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        }
+                        Text(
+                            text = "Swipe suites →",
+                            fontSize = 10.5.sp,
+                            color = DimsTealPrimary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ClinicalSuiteCard(
+                            title = "ANESTHESIA",
+                            subtitle = "24 Drugs & Dose Calc",
+                            badge = "OT SUITE",
+                            icon = Icons.Default.MedicalServices,
+                            accentColor = Color(0xFFA855F7),
+                            modifier = Modifier.width(152.dp),
+                            onClick = onOpenAnesthesiology
+                        )
+
+                        ClinicalSuiteCard(
+                            title = "ABG SOLVER",
+                            subtitle = "Acid-Base & Deficits",
+                            badge = "ICU",
+                            icon = Icons.Default.Science,
+                            accentColor = Color(0xFF38BDF8),
+                            modifier = Modifier.width(152.dp),
+                            onClick = onOpenAbgSolver
+                        )
+
+                        ClinicalSuiteCard(
+                            title = "STEWARDSHIP",
+                            subtitle = "Empirical & AWaRe",
+                            badge = "EMPIRICAL",
+                            icon = Icons.Default.Shield,
+                            accentColor = Emerald500,
+                            modifier = Modifier.width(152.dp),
+                            onClick = onOpenAntimicrobial
+                        )
+
+                        ClinicalSuiteCard(
+                            title = "INTERACTIONS",
+                            subtitle = "Multi-Drug Safety",
+                            badge = "SAFETY",
+                            icon = Icons.Default.CompareArrows,
+                            accentColor = Red500,
+                            modifier = Modifier.width(152.dp),
+                            onClick = onOpenInteractionChecker
+                        )
+
+                        ClinicalSuiteCard(
+                            title = "SURGICAL PRE-OP",
+                            subtitle = "Clearance & Bridge",
+                            badge = "PRE-OP",
+                            icon = Icons.Default.ContentCut,
+                            accentColor = Color(0xFF6366F1),
+                            modifier = Modifier.width(152.dp),
+                            onClick = onOpenSurgicalPreOp
+                        )
+
+                        ClinicalSuiteCard(
+                            title = "LAB VALUES",
+                            subtitle = "Panic Values & Ratios",
+                            badge = "LABS",
+                            icon = Icons.Default.Biotech,
+                            accentColor = Amber500,
+                            modifier = Modifier.width(152.dp),
+                            onClick = onOpenLabValues
+                        )
+                    }
+                }
+            }
+
+            // Recent Searches section
+            if (effectiveRecentSearches.isNotEmpty()) {
+                item(key = "home_recent_searches_section") {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("recent_searches_section"),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.History,
+                                    contentDescription = null,
+                                    tint = DimsTealPrimary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = "Recent Searches",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                             Text(
-                                text = "Search by Nepal brand (e.g. Moxclave, Dolo, Pantocid), generic name, protocol, or calculator above.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                text = "Quick navigation",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            effectiveRecentSearches.take(5).forEachIndexed { idx, item ->
+                                Surface(
+                                    onClick = { onSearchChange(item) },
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                                    border = BorderStroke(1.dp, DimsTealPrimary.copy(alpha = 0.35f)),
+                                    modifier = Modifier.testTag("recent_search_chip_$idx")
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Search,
+                                            contentDescription = null,
+                                            tint = DimsTealPrimary,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                        Text(
+                                            text = item,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 12 Specialty Therapeutic Classes (Older, Newer, Under Research)
+            item(key = "home_specialty_classes_selector") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("specialty_classes_selector"),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Specialty Classes",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DimsTealPrimary
+                        )
+                        if (selectedSpecialtyTag != null) {
+                            Text(
+                                text = "Reset Filter",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.clickable {
+                                    selectedSpecialtyTag = null
+                                }
+                            )
+                        }
+                    }
+
+                    // Horizontal Carousel of 12 Specialty Classes
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val isAllSelected = selectedSpecialtyTag == null
+                        FilterChip(
+                            selected = isAllSelected,
+                            onClick = { selectedSpecialtyTag = null },
+                            label = {
+                                Text(
+                                    text = "All Classes (12)",
+                                    fontSize = 11.5.sp,
+                                    fontWeight = if (isAllSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            shape = RoundedCornerShape(14.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = DimsTealPrimary,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+
+                        ComprehensiveSpecialtyDrugsData.categories.forEach { cat ->
+                            val isCatSelected = selectedSpecialtyTag == cat.tag
+                            FilterChip(
+                                selected = isCatSelected,
+                                onClick = {
+                                    selectedSpecialtyTag = if (isCatSelected) null else cat.tag
+                                },
+                                label = {
+                                    Text(
+                                        text = "${cat.iconEmoji} ${cat.tag}",
+                                        fontSize = 11.5.sp,
+                                        fontWeight = if (isCatSelected) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                shape = RoundedCornerShape(14.dp),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = DimsTealPrimary,
+                                    selectedLabelColor = Color.White
+                                )
+                            )
+                        }
+                    }
+
+                    // Active Specialty Details Banner
+                    if (selectedSpecialtyTag != null) {
+                        val activeCat = ComprehensiveSpecialtyDrugsData.categories.find { it.tag == selectedSpecialtyTag }
+                        if (activeCat != null) {
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = DimsTealPrimary.copy(alpha = 0.08f),
+                                border = BorderStroke(1.dp, DimsTealPrimary.copy(alpha = 0.3f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                                ) {
+                                    Text(
+                                        text = "${activeCat.iconEmoji} ${activeCat.name}",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
+                                        color = DimsTealPrimary
+                                    )
+                                    Text(
+                                        text = activeCat.clinicalImportance,
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "Includes: ${activeCat.description}",
+                                        fontSize = 10.5.sp,
+                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Results Header for default drug list
+            item(key = "home_drugs_results_header") {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "${effectiveDrugs.size} drugs in database",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.TouchApp,
+                            contentDescription = null,
+                            tint = DimsTealPrimary,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Text(
+                            text = "Tap card for full monograph",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = DimsTealPrimary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            // 611 Drugs List or Empty State
+            if (effectiveDrugs.isEmpty()) {
+                item(key = "home_drugs_empty_state") {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Card(
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+                            modifier = Modifier.fillMaxWidth(0.9f)
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                                modifier = Modifier.padding(24.dp)
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    modifier = Modifier.size(56.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.SearchOff,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(28.dp),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = "No matching drugs found",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Search by Nepal brand (e.g. Moxclave, Dolo, Pantocid), generic name, protocol, or calculator above.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
                         }
                     }
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = 80.dp)
-                ) {
-                    items(items = effectiveDrugs, key = { "drug_${it.id}" }, contentType = { "drug" }) { drug ->
-                        DrugCard(
-                            drug = drug,
-                            isBookmarked = bookmarkedDrugIds.contains(drug.id),
-                            onClick = { onDrugClick(drug) },
-                            onBookmarkToggle = { onBookmarkToggle(drug.id) }
-                        )
-                    }
+                items(
+                    items = effectiveDrugs,
+                    key = { "home_drug_${it.id}" },
+                    contentType = { "drug" }
+                ) { drug ->
+                    DrugCard(
+                        drug = drug,
+                        isBookmarked = bookmarkedDrugIds.contains(drug.id),
+                        onClick = { onDrugClick(drug) },
+                        onBookmarkToggle = { onBookmarkToggle(drug.id) }
+                    )
                 }
             }
         }
@@ -1237,6 +1127,7 @@ private fun MascotMagnifyingGlass(modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DrugCard(
     drug: Drug,
@@ -1260,174 +1151,23 @@ private fun DrugCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // Header: Generic Name, Black Box Badge & Bookmark
+            // Header: Generic Name and Bookmark
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = drug.genericName,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.weight(1f, fill = false)
-                        )
-
-                        if (drug.blackBoxWarning != null) {
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = Red950,
-                                border = BorderStroke(1.dp, Red500)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Warning,
-                                        contentDescription = null,
-                                        tint = Red400,
-                                        modifier = Modifier.size(10.dp)
-                                    )
-                                    Text(
-                                        text = "BLACK BOX",
-                                        color = Red400,
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.Black
-                                    )
-                                }
-                            }
-                        }
-
-                        if (drug.isHighAlert) {
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = Color(0xFFDC2626).copy(alpha = 0.15f),
-                                border = BorderStroke(0.8.dp, Color(0xFFDC2626).copy(alpha = 0.6f))
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(2.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Warning,
-                                        contentDescription = null,
-                                        tint = Color(0xFFDC2626),
-                                        modifier = Modifier.size(9.dp)
-                                    )
-                                    Text(
-                                        text = "HIGH ALERT",
-                                        color = Color(0xFFDC2626),
-                                        fontSize = 8.5.sp,
-                                        fontWeight = FontWeight.Black
-                                    )
-                                }
-                            }
-                        }
-
-                        if (drug.whoAwareCategory != null) {
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = Color(0xFF059669).copy(alpha = 0.15f),
-                                border = BorderStroke(0.8.dp, Color(0xFF059669).copy(alpha = 0.6f))
-                            ) {
-                                Text(
-                                    text = drug.whoAwareCategory!!.uppercase(),
-                                    color = Color(0xFF059669),
-                                    fontSize = 8.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    // Drug Class & System Pill
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.padding(top = 2.dp)
-                    ) {
-                        Text(
-                            text = drug.drugClass,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "•",
-                            color = MaterialTheme.colorScheme.outline
-                        )
-                        Text(
-                            text = drug.system,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontSize = 11.sp,
-                            color = systemColor,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-
-                    // Specialty Class & Era Generation Badges
-                    if (drug.era.isNotBlank() || drug.therapeuticClassTag.isNotBlank()) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
-                            modifier = Modifier.padding(top = 4.dp)
-                        ) {
-                            if (drug.therapeuticClassTag.isNotBlank()) {
-                                Surface(
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = DimsTealPrimary.copy(alpha = 0.12f),
-                                    border = BorderStroke(1.dp, DimsTealPrimary.copy(alpha = 0.35f))
-                                ) {
-                                    Text(
-                                        text = drug.therapeuticClassTag,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = DimsTealPrimary,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                    )
-                                }
-                            }
-                            if (drug.era.isNotBlank()) {
-                                val eraColor = when {
-                                    drug.isUnderResearch -> Color(0xFFD97706)
-                                    drug.isNewerMedication -> Color(0xFF0284C7)
-                                    else -> Color(0xFF475569)
-                                }
-                                val eraPrefix = when {
-                                    drug.isUnderResearch -> "🧪 "
-                                    drug.isNewerMedication -> "⚡ "
-                                    else -> "🏛️ "
-                                }
-                                Surface(
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = eraColor.copy(alpha = 0.12f),
-                                    border = BorderStroke(1.dp, eraColor.copy(alpha = 0.35f))
-                                ) {
-                                    Text(
-                                        text = "$eraPrefix${drug.era}",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = eraColor,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+                Text(
+                    text = drug.genericName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
 
                 IconButton(
                     onClick = onBookmarkToggle,
@@ -1439,6 +1179,184 @@ private fun DrugCard(
                         tint = if (isBookmarked) Amber500 else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
+                }
+            }
+
+            // Safety Badges: Black Box, High Alert, WHO AWaRe
+            val hasBadges = drug.blackBoxWarning != null || drug.isHighAlert || drug.whoAwareCategory != null
+            if (hasBadges) {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (drug.blackBoxWarning != null) {
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = Red950,
+                            border = BorderStroke(1.dp, Red500)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = null,
+                                    tint = Red400,
+                                    modifier = Modifier.size(10.dp)
+                                )
+                                Text(
+                                    text = "BLACK BOX",
+                                    color = Red400,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Black
+                                )
+                            }
+                        }
+                    }
+
+                    if (drug.isHighAlert) {
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = Color(0xFFDC2626).copy(alpha = 0.15f),
+                            border = BorderStroke(0.8.dp, Color(0xFFDC2626).copy(alpha = 0.6f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = null,
+                                    tint = Color(0xFFDC2626),
+                                    modifier = Modifier.size(9.dp)
+                                )
+                                Text(
+                                    text = "HIGH ALERT",
+                                    color = Color(0xFFDC2626),
+                                    fontSize = 8.5.sp,
+                                    fontWeight = FontWeight.Black
+                                )
+                            }
+                        }
+                    }
+
+                    if (drug.whoAwareCategory != null) {
+                        val awareColor = when {
+                            drug.whoAwareCategory!!.contains("ACCESS", ignoreCase = true) -> Color(0xFF059669)
+                            drug.whoAwareCategory!!.contains("WATCH", ignoreCase = true) -> Amber500
+                            else -> Red500
+                        }
+                        val awareText = when {
+                            drug.whoAwareCategory!!.contains("ACCESS", ignoreCase = true) -> "WHO AWaRe: ACCESS"
+                            drug.whoAwareCategory!!.contains("WATCH", ignoreCase = true) -> "WHO AWaRe: WATCH"
+                            drug.whoAwareCategory!!.contains("RESERVE", ignoreCase = true) -> "WHO AWaRe: RESERVE"
+                            else -> drug.whoAwareCategory!!.take(24)
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = awareColor.copy(alpha = 0.15f),
+                            border = BorderStroke(0.8.dp, awareColor.copy(alpha = 0.6f))
+                        ) {
+                            Text(
+                                text = awareText,
+                                color = awareColor,
+                                fontSize = 8.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Drug System Tag and Drug Class (Side-by-side with Ellipsis to prevent vertical stretching)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = systemColor.copy(alpha = 0.12f),
+                    border = BorderStroke(0.8.dp, systemColor.copy(alpha = 0.35f))
+                ) {
+                    Text(
+                        text = drug.system,
+                        fontSize = 10.5.sp,
+                        color = systemColor,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+
+                Text(
+                    text = drug.drugClass,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            // Specialty Class & Era Generation Badges (if present)
+            if (drug.era.isNotBlank() || drug.therapeuticClassTag.isNotBlank()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    if (drug.therapeuticClassTag.isNotBlank()) {
+                        Surface(
+                            shape = RoundedCornerShape(5.dp),
+                            color = DimsTealPrimary.copy(alpha = 0.12f),
+                            border = BorderStroke(0.8.dp, DimsTealPrimary.copy(alpha = 0.35f))
+                        ) {
+                            Text(
+                                text = drug.therapeuticClassTag,
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = DimsTealPrimary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
+                            )
+                        }
+                    }
+                    if (drug.era.isNotBlank()) {
+                        val eraColor = when {
+                            drug.isUnderResearch -> Color(0xFFD97706)
+                            drug.isNewerMedication -> Color(0xFF0284C7)
+                            else -> Color(0xFF64748B)
+                        }
+                        val eraPrefix = when {
+                            drug.isUnderResearch -> "🧪 "
+                            drug.isNewerMedication -> "⚡ "
+                            else -> "🏛️ "
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(5.dp),
+                            color = eraColor.copy(alpha = 0.12f),
+                            border = BorderStroke(0.8.dp, eraColor.copy(alpha = 0.35f))
+                        ) {
+                            Text(
+                                text = "$eraPrefix${drug.era}",
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = eraColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
+                            )
+                        }
+                    }
                 }
             }
 
@@ -1456,7 +1374,8 @@ private fun DrugCard(
                         text = "Rx: ${drug.indications}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
-                        maxLines = 2
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = "Standard Dose: ${drug.doses.lines().firstOrNull() ?: drug.doses}",
@@ -1464,7 +1383,8 @@ private fun DrugCard(
                         fontWeight = FontWeight.Medium,
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.primary,
-                        maxLines = 1
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
