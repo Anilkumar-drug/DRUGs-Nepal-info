@@ -1698,4 +1698,547 @@ object ExtendedCalculators {
 
         return CorrectedSodiumResult(measuredNa, glucoseMgDl, roundedKatz, roundedHillier, fluidRec, interp, steps)
     }
+
+    // =========================================================================
+    // 25. Berlin Criteria for ARDS (P/F Ratio & Lung-Protective Ventilation)
+    // =========================================================================
+    data class BerlinArdsResult(
+        val pfRatio: Double,
+        val ardsSeverity: String,
+        val estimatedMortality: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateBerlinArds(
+        pao2MmHg: Double,
+        fio2Percent: Double,
+        peepCmH2o: Double
+    ): BerlinArdsResult {
+        if (pao2MmHg <= 0 || fio2Percent <= 0) {
+            return BerlinArdsResult(0.0, "Invalid Inputs", "N/A", "Enter valid positive PaO2 and FiO2 values.", emptyList())
+        }
+
+        val fio2Fraction = fio2Percent / 100.0
+        val ratio = (pao2MmHg / fio2Fraction)
+        val roundedPf = (ratio * 10.0).roundToInt() / 10.0
+
+        val (sev, mort, interp, steps) = when {
+            peepCmH2o < 5.0 -> Quadruple(
+                "Non-Diagnostic for ARDS (PEEP < 5 cmH2O)",
+                "Variable",
+                "Berlin definition requires a minimum PEEP of ≥ 5 cmH2O (invasive or non-invasive CPAP). Current P/F is $roundedPf, but PEEP criterion is not met.",
+                listOf(
+                    "Step 1 (Optimize PEEP): Increase PEEP to at least 5 cmH2O on mechanical ventilation or CPAP mask to assess true physiological shunt.",
+                    "Step 2 (Clinical Context): Verify that acute hypoxemia occurred within 1 week of a known clinical insult (sepsis, pneumonia, aspiration, pancreatitis, trauma).",
+                    "Step 3 (Exclude Cardiogenic Edema): Perform bedside echocardiogram to ensure pulmonary edema is not solely explained by cardiac failure or volume overload."
+                )
+            )
+            roundedPf > 300.0 -> Quadruple(
+                "No ARDS (Normal / Mild Hypoxemia)",
+                "< 15% mortality",
+                "P/F ratio is > 300 mmHg. Does not meet Berlin definition for Acute Respiratory Distress Syndrome.",
+                listOf(
+                    "Step 1 (Maintain Therapy): Continue current oxygen delivery / ventilator settings; wean supplemental FiO2 as tolerated.",
+                    "Step 2 (Surveillance): Monitor serial blood gases and pulmonary compliance if patient remains at high risk for secondary lung injury."
+                )
+            )
+            roundedPf > 200.0 && roundedPf <= 300.0 -> Quadruple(
+                "Mild ARDS (200 < P/F ≤ 300 mmHg)",
+                "~27% ICU mortality",
+                "Mild ARDS according to Berlin consensus definition (PEEP ≥ 5 cmH2O). High risk of progression if lung injury is not mitigated.",
+                listOf(
+                    "Step 1 (Lung-Protective Ventilation): Set tidal volume strictly to 6 mL/kg of Predicted Body Weight (PBW); limit plateau pressure (Pplat) < 30 cmH2O and driving pressure < 14 cmH2O.",
+                    "Step 2 (PEEP Titration): Apply moderate PEEP (5–10 cmH2O) according to ARDSNet lower PEEP/higher FiO2 protocol; target SpO2 88–95% (PaO2 55–80 mmHg).",
+                    "Step 3 (Conservative Fluid Management): Implement conservative fluid strategy (FACTS protocol: neutral to negative daily fluid balance) once hemodynamic shock has resolved.",
+                    "Step 4 (Etiology Treatment): Aggressively treat underlying cause (source-control antibiotics for pneumonia/sepsis, drainage of intra-abdominal sepsis)."
+                )
+            )
+            roundedPf > 100.0 && roundedPf <= 200.0 -> Quadruple(
+                "Moderate ARDS (100 < P/F ≤ 200 mmHg)",
+                "~32% ICU mortality",
+                "Moderate ARDS. Substantial alveolar collapse and ventilation-perfusion mismatch. Escalation of respiratory support required.",
+                listOf(
+                    "Step 1 (Strict Low Tidal Volume): Maintain 6 mL/kg PBW (titrate down to 4 mL/kg if Pplat > 30 cmH2O); tolerate permissive hypercapnia (target arterial pH ≥ 7.20).",
+                    "Step 2 (Higher PEEP Strategy): Titrate higher PEEP (10–14 cmH2O) using ARDSNet higher PEEP table; assess alveolar recruitability.",
+                    "Step 3 (Early Prone Positioning): If P/F remains < 150 mmHg despite PEEP optimization: initiate prone positioning immediately for at least 16 consecutive hours daily (PROSEVA trial: 16% absolute mortality reduction).",
+                    "Step 4 (Sedation & Synchrony): Optimize analgesia and sedation to eliminate patient-ventilator dyssynchrony and coughing against the ventilator."
+                )
+            )
+            else -> Quadruple(
+                "Severe ARDS (P/F ≤ 100 mmHg)",
+                "~45% ICU mortality",
+                "Severe ARDS. Critical refractory hypoxemia with high risk of right ventricular failure (cor pulmonale) and death. Emergent multimodality rescue indicated.",
+                listOf(
+                    "Step 1 (Immediate Prone Positioning): Mandatory prone ventilation for ≥ 16 hours daily; do not delay prone positioning in severe ARDS.",
+                    "Step 2 (Neuromuscular Blockade): Initiate continuous infusion of Cisatracurium for up to 48 hours to abolish ventilator dyssynchrony and decrease oxygen consumption.",
+                    "Step 3 (Recruitment & PEEP): High PEEP (14–18 cmH2O); monitor right heart function on bedside echo (prevent PEEP-induced RV failure / septal shifting).",
+                    "Step 4 (Inhaled Pulmonary Vasodilators): Consider Inhaled Epoprostenol (Prostacyclin) or Inhaled Nitric Oxide (iNO 10–20 ppm) as rescue bridge to improve V/Q matching.",
+                    "Step 5 (VV-ECMO Evaluation): Evaluate immediately for Venovenous Extracorporeal Membrane Oxygenation (VV-ECMO) if P/F < 80 for > 6h or pH < 7.15 despite lung-protective measures (EOLIA criteria)."
+                )
+            )
+        }
+
+        return BerlinArdsResult(roundedPf, sev, mort, interp, steps)
+    }
+
+    // =========================================================================
+    // 26. Lactate Clearance in Sepsis & Septic Shock
+    // =========================================================================
+    data class LactateClearanceResult(
+        val initialLactate: Double,
+        val repeatLactate: Double,
+        val clearancePercent: Double,
+        val resuscitationStatus: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateLactateClearance(
+        initialLactateMmol: Double,
+        repeatLactateMmol: Double,
+        hoursInterval: Double = 2.0
+    ): LactateClearanceResult {
+        if (initialLactateMmol <= 0) {
+            return LactateClearanceResult(0.0, 0.0, 0.0, "Invalid", "Enter a positive baseline lactate value.", emptyList())
+        }
+
+        val clearance = ((initialLactateMmol - repeatLactateMmol) / initialLactateMmol) * 100.0
+        val rounded = (clearance * 10.0).roundToInt() / 10.0
+
+        val (status, interp, steps) = when {
+            rounded >= 20.0 -> Triple(
+                "Excellent Resuscitation (Clearance ≥ 20%)",
+                "Lactate cleared by $rounded% over ~$hoursInterval hours. Indicates robust tissue reperfusion, restoration of microvascular flow, and favorable response to resuscitation.",
+                listOf(
+                    "Step 1 (Consolidate Resuscitation): Continue targeted resuscitation strategy; maintain MAP ≥ 65 mmHg.",
+                    "Step 2 (Wean Vasopressors): Gradually de-escalate vasopressor support as perfusion indicators (capillary refill, urine output) remain normal.",
+                    "Step 3 (Surveillance): Repeat serum lactate every 4 hours until completely normalized (< 2.0 mmol/L)."
+                )
+            )
+            rounded >= 10.0 && rounded < 20.0 -> Triple(
+                "Adequate Resuscitation (Clearance 10%–20%)",
+                "Lactate cleared by $rounded% over ~$hoursInterval hours. Meets Surviving Sepsis Campaign minimum clearance target of ≥ 10% every 2 hours.",
+                listOf(
+                    "Step 1 (Maintain Perfusion): Maintain MAP ≥ 65 mmHg; track hourly urine output (target > 0.5 mL/kg/hr).",
+                    "Step 2 (Assess Dynamic Fluid Responsiveness): Check passive leg raise or pulse pressure variation before infusing additional crystalloids to avoid fluid overload.",
+                    "Step 3 (Repeat Interval): Repeat serum lactate in 2 to 4 hours to verify sustained clearance towards normal."
+                )
+            )
+            rounded > 0.0 && rounded < 10.0 -> Triple(
+                "Suboptimal Clearance (< 10%)",
+                "Lactate cleared by only $rounded%. Indicates persistent occult tissue hypoperfusion, ongoing cellular dysoxia, or delayed source control.",
+                listOf(
+                    "Step 1 (Hemodynamic Re-evaluation): Check central venous oxygen saturation (ScvO2 > 70%) or bedside cardiac ultrasound (VTI, ejection fraction).",
+                    "Step 2 (Inotropic Support): Consider adding Dobutamine infusion (2.5–20 mcg/kg/min) if septic myocardial dysfunction is present.",
+                    "Step 3 (Urgent Source Control Review): Screen for missed deep abscess, empyema, infected prosthetic device, or bowel ischemia requiring surgical laparotomy.",
+                    "Step 4 (Repeat Stat): Re-check arterial/venous lactate strictly within 2 hours."
+                )
+            )
+            else -> Triple(
+                "Lactate Accumulation / Rising Lactate (Clearance: $rounded%)",
+                "Serum lactate increased from $initialLactateMmol to $repeatLactateMmol mmol/L. Severe indicator of ongoing shock, anaerobic metabolism, and impending multiorgan failure.",
+                listOf(
+                    "Step 1 (EMERGENCY CRITICAL CARE REVIEW): Immediate intensivist bedside evaluation and arterial line placement.",
+                    "Step 2 (Second-Line Vasopressor): Add Vasopressin infusion (0.03 U/min fixed dose) to Norepinephrine; consider stress-dose IV Hydrocortisone (200 mg/day).",
+                    "Step 3 (Blood Product Transfusion): Transfuse packed red blood cells if hemoglobin < 7.0 g/dL to optimize systemic oxygen delivery.",
+                    "Step 4 (Comprehensive Diagnostic CT): STAT Contrast-Enhanced CT of abdomen/chest to search for catastrophic surgical catastrophe (e.g. mesenteric ischemia, perforated hollow viscus)."
+                )
+            )
+        }
+
+        return LactateClearanceResult(initialLactateMmol, repeatLactateMmol, rounded, status, interp, steps)
+    }
+
+    // =========================================================================
+    // 27. Ottawa Ankle & Foot Rules
+    // =========================================================================
+    data class OttawaAnkleResult(
+        val ankleXrayIndicated: Boolean,
+        val footXrayIndicated: Boolean,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateOttawaAnkle(
+        inabilityToBearWeight: Boolean,
+        lateralMalleolusTenderness: Boolean,
+        medialMalleolusTenderness: Boolean,
+        fifthMetatarsalTenderness: Boolean,
+        navicularTenderness: Boolean
+    ): OttawaAnkleResult {
+        val ankleIndicated = inabilityToBearWeight || lateralMalleolusTenderness || medialMalleolusTenderness
+        val footIndicated = inabilityToBearWeight || fifthMetatarsalTenderness || navicularTenderness
+
+        val interp = buildString {
+            if (!ankleIndicated && !footIndicated) {
+                append("Neither Ankle nor Foot X-ray is required. Ottawa Ankle Rules are negative with > 98.5% sensitivity for ruling out clinically significant fractures.")
+            } else {
+                append("Plain radiography IS indicated: ")
+                if (ankleIndicated && footIndicated) append("Both Ankle series and Foot series radiographs required.")
+                else if (ankleIndicated) append("Ankle series radiographs (AP, Lateral, Mortise views) required.")
+                else append("Foot series radiographs (AP, Lateral, Oblique views) required.")
+            }
+        }
+
+        val steps = if (!ankleIndicated && !footIndicated) {
+            listOf(
+                "Step 1 (No X-ray Needed): Plain radiographs are not indicated; reassure patient regarding absence of bone fracture.",
+                "Step 2 (Conservative PRICE Protocol): Protection (semi-rigid brace or elastic bandage), Rest, Ice packs for 15–20 min every 2–3 hours, Compression, and Elevation above heart level.",
+                "Step 3 (Analgesia): Prescribe oral Paracetamol (Acetaminophen) and short-course NSAID (Ibuprofen 400 mg TID or Naproxen 500 mg BID) with food.",
+                "Step 4 (Weight Bearing): Encourage early functional weight-bearing as tolerated to accelerate ligamentous recovery.",
+                "Step 5 (Re-evaluation): Instruct patient to return for repeat clinical examination if unable to bear weight after 5 to 7 days."
+            )
+        } else {
+            listOf(
+                "Step 1 (Radiographic Order): Obtain designated X-ray views: Ankle (AP, Lateral, Mortise) and/or Foot (AP, Lateral, Oblique).",
+                "Step 2 (Splinting & Immobilization): Apply posterior U-slab / stirrup splint in neutral 90° dorsiflexion while awaiting X-ray results.",
+                "Step 3 (Neurovascular Check): Verify distal dorsal and posterior tibial pulses, capillary refill (<2s), and peroneal/tibial nerve sensation.",
+                "Step 4 (Orthopedic Triage): If fracture is identified: evaluate for mortise widening / syndesmotic injury (Maisonneuve fracture) and consult Orthopedics."
+            )
+        }
+
+        return OttawaAnkleResult(ankleIndicated, footIndicated, interp, steps)
+    }
+
+    // =========================================================================
+    // 28. Ottawa Knee Rule
+    // =========================================================================
+    data class OttawaKneeResult(
+        val xrayIndicated: Boolean,
+        val positiveCriteriaCount: Int,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateOttawaKnee(
+        age55OrOlder: Boolean,
+        isolatedPatellaTenderness: Boolean,
+        fibulaHeadTenderness: Boolean,
+        inabilityToFlex90: Boolean,
+        inabilityToBearWeight: Boolean
+    ): OttawaKneeResult {
+        var count = 0
+        if (age55OrOlder) count++
+        if (isolatedPatellaTenderness) count++
+        if (fibulaHeadTenderness) count++
+        if (inabilityToFlex90) count++
+        if (inabilityToBearWeight) count++
+
+        val indicated = count > 0
+
+        val (interp, steps) = if (!indicated) {
+            Pair(
+                "Knee X-ray is NOT indicated. Ottawa Knee Rule is negative (100% sensitivity for detecting acute knee fractures in clinical trials).",
+                listOf(
+                    "Step 1 (Avoid Radiation): Reassure patient; plain knee radiography is safely omitted.",
+                    "Step 2 (Symptomatic Care): Apply knee compression support sleeve, ice therapy, and elevation.",
+                    "Step 3 (Analgesia): Prescribe oral analgesics (Acetaminophen or topical/oral NSAID).",
+                    "Step 4 (Mobilization): Ambulate with assistance as tolerated; avoid vigorous pivoting or sports.",
+                    "Step 5 (Follow-up): Arrange outpatient review in 7 days if joint effusion or persistent pain prevents normal walking."
+                )
+            )
+        } else {
+            Pair(
+                "Knee X-ray IS indicated ($count high-risk criteria present). Plain radiographs required to exclude acute knee fracture.",
+                listOf(
+                    "Step 1 (Radiographic Views): Order standard Knee Radiograph Series (AP, Lateral, and Skyline/Sunrise views for patella).",
+                    "Step 2 (Knee Immobilization): Apply straight knee brace / immobilizer to prevent displacement of occult patellar or tibial plateau fracture.",
+                    "Step 3 (Non-Weight Bearing): Instruct strict non-weight bearing with crutches until X-rays are reviewed.",
+                    "Step 4 (Ligamentous Assessment): If fracture is ruled out on X-ray but joint hemarthrosis is present: evaluate for ACL rupture or meniscal tear; arrange outpatient MRI."
+                )
+            )
+        }
+
+        return OttawaKneeResult(indicated, count, interp, steps)
+    }
+
+    // =========================================================================
+    // 29. Caprini Score for Venous Thromboembolism (Surgical VTE Prophylaxis)
+    // =========================================================================
+    data class CapriniResult(
+        val totalScore: Int,
+        val riskTier: String,
+        val baselineVteRisk: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateCaprini(totalPoints: Int): CapriniResult {
+        val score = totalPoints.coerceAtLeast(0)
+
+        val (tier, risk, interp, steps) = when (score) {
+            0 -> Quadruple(
+                "Lowest Risk (Score 0)",
+                "< 0.5% VTE risk without prophylaxis",
+                "Lowest risk for post-operative venous thromboembolism. Routine pharmacologic thromboprophylaxis is not indicated.",
+                listOf(
+                    "Step 1 (Early Ambulation): Emphasize early, aggressive, and frequent post-operative ambulation.",
+                    "Step 2 (Hydration): Ensure adequate oral or IV hydration.",
+                    "Step 3 (Medication): No pharmacologic anticoagulant prophylaxis needed."
+                )
+            )
+            in 1..2 -> Quadruple(
+                "Low Risk (Score 1–2)",
+                "~1.5% VTE risk without prophylaxis",
+                "Low post-operative VTE risk. Mechanical prophylaxis is preferred.",
+                listOf(
+                    "Step 1 (Mechanical Prophylaxis): Intermittent Pneumatic Compression (IPC) devices or graduated compression stockings during hospital stay.",
+                    "Step 2 (Ambulation): Mobilize out of bed on post-operative day 0–1.",
+                    "Step 3 (Anticoagulation): Pharmacologic prophylaxis not routinely recommended unless mechanical devices are contraindicated."
+                )
+            )
+            in 3..4 -> Quadruple(
+                "Moderate Risk (Score 3–4)",
+                "~3.0% VTE risk without prophylaxis",
+                "Moderate VTE risk. Combined mechanical prophylaxis or pharmacologic anticoagulation indicated.",
+                listOf(
+                    "Step 1 (Pharmacologic Prophylaxis): Initiate Low-Molecular-Weight Heparin (LMWH: Enoxaparin 40 mg SC once daily) OR Unfractionated Heparin (5,000 units SC q12h).",
+                    "Step 2 (Mechanical Adjunct): Utilize continuous Intermittent Pneumatic Compression (IPC) while in bed.",
+                    "Step 3 (Duration): Continue prophylaxis until fully ambulatory and discharged from hospital."
+                )
+            )
+            in 5..8 -> Quadruple(
+                "High Risk (Score 5–8)",
+                "~6.0% VTE risk without prophylaxis",
+                "High VTE risk. Dual prophylaxis (pharmacologic + mechanical) strongly recommended.",
+                listOf(
+                    "Step 1 (Dual Prophylaxis): Both pharmacologic anticoagulation (Enoxaparin 40 mg SC daily or 30 mg SC q12h) AND Intermittent Pneumatic Compression (IPC).",
+                    "Step 2 (Timing): First dose 12 hours pre-operatively or 12–24 hours post-operatively once surgical hemostasis is confirmed.",
+                    "Step 3 (Extended Duration): For major abdominal or pelvic cancer resection: continue extended-duration LMWH for 28 days post-operatively.",
+                    "Step 4 (Bleeding Vigilance): Monitor surgical drains and hemoglobin levels."
+                )
+            )
+            else -> Quadruple(
+                "Highest Risk (Score ≥ 9 [Score: $score])",
+                "> 11.0% VTE risk without prophylaxis",
+                "Highest VTE risk. Aggressive dual prophylaxis and extended post-discharge treatment mandatory.",
+                listOf(
+                    "Step 1 (Mandatory Dual Modality): LMWH (Enoxaparin 40 mg SC daily adjusted for renal function) PLUS sequential Intermittent Pneumatic Compression (IPC).",
+                    "Step 2 (Extended 4-Week Prophylaxis): Prescribe outpatient LMWH or Direct Oral Anticoagulant (DOAC) for 28 to 35 days post-discharge.",
+                    "Step 3 (Mechanical Precaution): If active bleeding precludes anticoagulation: apply continuous bilateral IPC; initiate pharmacologic anticoagulation as soon as bleeding ceases.",
+                    "Step 4 (Vascular Surveillance): Maintain low threshold for venous duplex ultrasound if unexplained tachycardia or unilateral leg edema occurs."
+                )
+            )
+        }
+
+        return CapriniResult(score, tier, risk, interp, steps)
+    }
+
+    // =========================================================================
+    // 30. CRUSADE Bleeding Score in Acute Coronary Syndrome
+    // =========================================================================
+    data class CrusadeResult(
+        val totalScore: Int,
+        val riskTier: String,
+        val inHospitalMajorBleedRate: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateCrusade(totalPoints: Int): CrusadeResult {
+        val score = totalPoints.coerceIn(0, 100)
+
+        val (tier, rate, interp, steps) = when {
+            score <= 20 -> Quadruple(
+                "Very Low Risk (Score ≤ 20)",
+                "3.1% major bleeding rate",
+                "Very low probability of in-hospital major bleeding during ACS management.",
+                listOf(
+                    "Step 1 (Standard DAPT): Proceed with guideline-directed Dual Antiplatelet Therapy (Aspirin + Ticagrelor 90 mg BID or Prasugrel 10 mg daily).",
+                    "Step 2 (Anticoagulation): Standard procedural anticoagulation (Unfractionated Heparin or Enoxaparin).",
+                    "Step 3 (Routine Monitoring): Check baseline CBC and renal function."
+                )
+            )
+            score in 21..30 -> Quadruple(
+                "Low Risk (Score 21–30)",
+                "5.5% major bleeding rate",
+                "Low bleeding risk. Standard antithrombotic therapy well tolerated.",
+                listOf(
+                    "Step 1 (Standard ACS Care): Proceed with standard antiplatelet and anticoagulant regimens.",
+                    "Step 2 (Vascular Access): Prefer radial artery access for percutaneous coronary intervention (reduces vascular access site bleeding).",
+                    "Step 3 (Gastric Protection): Co-prescribe Proton Pump Inhibitor (Pantoprazole 40 mg daily) if age ≥ 65 or history of peptic ulcer."
+                )
+            )
+            score in 31..40 -> Quadruple(
+                "Moderate Risk (Score 31–40)",
+                "8.6% major bleeding rate",
+                "Moderate bleeding risk. Meticulous dosing of antithrombotics required.",
+                listOf(
+                    "Step 1 (Radial First Strategy): Mandatory radial artery access over femoral approach for coronary angiography.",
+                    "Step 2 (Renal Dose Adjustments): Strictly adjust Enoxaparin, Bivalirudin, and Fondaparinux doses to baseline creatinine clearance.",
+                    "Step 3 (PPI Prophylaxis): Routine Proton Pump Inhibitor co-prescription with DAPT.",
+                    "Step 4 (Monitoring): Daily complete blood counts to detect occult drop in hemoglobin."
+                )
+            )
+            score in 41..50 -> Quadruple(
+                "High Risk (Score 41–50)",
+                "11.9% major bleeding rate",
+                "High bleeding risk. Consider safer antithrombotic strategies and shorter DAPT duration.",
+                listOf(
+                    "Step 1 (P2Y12 Inhibitor Choice): Consider Clopidogrel (75 mg daily) over more potent Ticagrelor/Prasugrel to reduce major bleeding hazard.",
+                    "Step 2 (Anticoagulation Choice): Prefer Bivalirudin over Heparin + GPIIb/IIIa inhibitors during catheterization.",
+                    "Step 3 (Shortened DAPT): Plan for shortened DAPT duration (e.g. 1–3 months followed by P2Y12 or Aspirin monotherapy).",
+                    "Step 4 (Avoid Triple Therapy): If patient has Atrial Fibrillation: DO NOT use Triple Therapy (Aspirin + P2Y12 + DOAC); use Dual Therapy (DOAC + Clopidogrel without Aspirin)."
+                )
+            )
+            else -> Quadruple(
+                "Very High Risk (Score > 50 [Score: $score])",
+                "19.5% major bleeding rate",
+                "Very high bleeding risk (~1 in 5 patients suffers major bleed). Extreme caution with antithrombotic regimens.",
+                listOf(
+                    "Step 1 (Minimize Antithrombotic Intensity): Clopidogrel 75 mg daily preferred; avoid glycoprotein IIb/IIIa inhibitors completely.",
+                    "Step 2 (Radial Access & Hemostasis): Radial access mandatory; use closure devices if femoral puncture unavoidable.",
+                    "Step 3 (Proton Pump Inhibitor): High-dose PPI therapy (Pantoprazole 40 mg BID).",
+                    "Step 4 (Ultra-Short DAPT): Limit DAPT to 1 month post-DES, then switch to single antiplatelet monotherapy (MASTER-DAPT trial).",
+                    "Step 5 (Transfusion Protocol): Maintain restrictive transfusion threshold (transfuse only if Hb < 7–8 g/dL or active hemodynamic instability)."
+                )
+            )
+        }
+
+        return CrusadeResult(score, tier, rate, interp, steps)
+    }
+
+    // =========================================================================
+    // 31. APGAR Score & Neonatal Resuscitation Guide
+    // =========================================================================
+    data class ApgarResult(
+        val totalScore: Int,
+        val clinicalStatus: String,
+        val resuscitationTier: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateApgar(
+        appearancePts: Int,
+        pulsePts: Int,
+        grimacePts: Int,
+        activityPts: Int,
+        respirationPts: Int
+    ): ApgarResult {
+        val score = (appearancePts.coerceIn(0, 2) +
+                pulsePts.coerceIn(0, 2) +
+                grimacePts.coerceIn(0, 2) +
+                activityPts.coerceIn(0, 2) +
+                respirationPts.coerceIn(0, 2))
+
+        val (status, tier, interp, steps) = when {
+            score >= 7 -> Quadruple(
+                "Normal / Vigorous Newborn (Score $score / 10)",
+                "Routine Postnatal Care",
+                "Reassuring transition to extrauterine life. Infant is vigorous with stable cardiorespiratory drive.",
+                listOf(
+                    "Step 1 (Thermal Care): Dry infant thoroughly, discard wet towels, maintain warm room temperature (23–25°C).",
+                    "Step 2 (Skin-to-Skin): Place newborn in skin-to-skin contact with mother; cover with dry warm blanket and cap.",
+                    "Step 3 (Airway): Do not perform routine suctioning if infant is breathing comfortably and crying.",
+                    "Step 4 (Breastfeeding): Initiate early breastfeeding within the first hour of birth.",
+                    "Step 5 (Repeat Assessment): Calculate 5-minute APGAR score (and 10-minute if 5-minute score < 7)."
+                )
+            )
+            score in 4..6 -> Quadruple(
+                "Moderately Depressed Newborn (Score $score / 10)",
+                "Active Neonatal Resuscitation Required",
+                "Mild-to-moderate cardiorespiratory depression. Requires immediate intervention under Neonatal Resuscitation Program (NRP) guidelines.",
+                listOf(
+                    "Step 1 (Clear Airway & Stimulate): Position head in 'sniffing' position; suction mouth then nose gently with bulb syringe; rub back or flick soles.",
+                    "Step 2 (Positive Pressure Ventilation - PPV): If apnea, gasping, or HR < 100 bpm despite 30 seconds of stimulation: initiate Positive Pressure Ventilation (PPV) immediately at 40–60 breaths/min using bag-valve-mask or T-piece resuscitator.",
+                    "Step 3 (Oxygen Concentration): Start PPV with room air (21% O2 for term infants; 21–30% for preterm <35 weeks); attach pulse oximeter probe to right wrist (pre-ductal).",
+                    "Step 4 (Evaluate Heart Rate): Check HR after 15 seconds of PPV; if chest not moving: implement MR. SOPA ventilation corrective steps (Mask adjustment, Reposition airway, Suction, Open mouth, Pressure increase, Alternative airway).",
+                    "Step 5 (Repeat APGAR): Recalculate APGAR strictly at 5 and 10 minutes."
+                )
+            )
+            else -> Quadruple(
+                "Severely Depressed Newborn (Score $score / 10)",
+                "EMERGENCY ADVANCED LIFE SUPPORT (NRP)",
+                "Critical neonatal depression. High risk of severe asphyxia, hypoxic-ischemic encephalopathy (HIE), and mortality. Immediate advanced resuscitation mandatory.",
+                listOf(
+                    "Step 1 (EMERGENCY CODE CALL): Call immediate Neonatal Intensive Care / Pediatric resuscitation team to delivery room.",
+                    "Step 2 (Immediate Effective PPV): Begin Positive Pressure Ventilation (PPV) within 60 seconds of birth ('The Golden Minute'); monitor bilateral chest rise.",
+                    "Step 3 (Chest Compressions if HR < 60): If heart rate remains < 60 bpm despite 30 seconds of effective PPV that moves the chest: initiate 3:1 Chest Compressions (90 compressions + 30 breaths per minute) using two-thumb encircling-hands technique; increase oxygen to 100% FiO2.",
+                    "Step 4 (Endotracheal Intubation): Intubate trachea with appropriate sized endotracheal tube (size 3.0 for term, 2.5 for preterm) without interrupting resuscitation.",
+                    "Step 5 (Emergency Epinephrine & Line Access): Place emergency Umbilical Venous Catheter (UVC); administer IV Epinephrine (0.02 mg/kg [0.2 mL/kg of 1:10,000 solution]); consider normal saline bolus (10 mL/kg over 10 min) if hypovolemic shock / blood loss.",
+                    "Step 6 (Therapeutic Hypothermia): If term newborn with signs of moderate-severe encephalopathy: screen for Therapeutic Hypothermia protocol (target core temp 33.5°C within 6 hours of birth)."
+                )
+            )
+        }
+
+        return ApgarResult(score, status, tier, interp, steps)
+    }
+
+    // =========================================================================
+    // 32. Potassium Deficit & Safe Replacement Calculator
+    // =========================================================================
+    data class PotassiumDeficitResult(
+        val serumK: Double,
+        val estimatedDeficitMeq: Double,
+        val severity: String,
+        val maxPeripheralRateMeqHr: Double,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculatePotassiumDeficit(
+        weightKg: Double,
+        serumKMeqL: Double
+    ): PotassiumDeficitResult {
+        if (weightKg <= 0 || serumKMeqL <= 0) {
+            return PotassiumDeficitResult(0.0, 0.0, "Invalid", 10.0, "Enter valid weight and potassium values.", emptyList())
+        }
+
+        // Physiological rule: For each 0.1 mEq/L drop below 4.0 mEq/L, total body deficit is approx 30-35 mEq in 70kg adult (~0.45 mEq/kg per 0.1 drop)
+        val dropBelowNormal = max(0.0, 4.0 - serumKMeqL)
+        val deficit = (dropBelowNormal * 10.0) * (weightKg * 0.45)
+        val roundedDeficit = (deficit * 10.0).roundToInt() / 10.0
+
+        val (sev, maxRate, interp, steps) = when {
+            serumKMeqL >= 3.5 -> Quadruple(
+                "Normal Potassium (≥ 3.5 mEq/L)",
+                10.0,
+                "Serum potassium is within normal reference range (3.5–5.0 mEq/L). Total body deficit: $roundedDeficit mEq.",
+                listOf(
+                    "Step 1 (Maintain Intake): Ensure normal dietary potassium intake (~40–80 mEq/day) or standard maintenance IV fluids with 20 mEq KCl/L.",
+                    "Step 2 (Monitoring): Routine electrolyte monitoring if patient is receiving loop/thiazide diuretics or insulin."
+                )
+            )
+            serumKMeqL in 3.0..3.4 -> Quadruple(
+                "Mild Hypokalemia (3.0–3.4 mEq/L)",
+                10.0,
+                "Mild potassium deficit of approximately $roundedDeficit mEq. Oral replacement is preferred, safest, and most effective.",
+                listOf(
+                    "Step 1 (Oral Potassium Preferred): Prescribe oral Potassium Chloride (KCl) 20–40 mEq PO 2 to 3 times daily with meals (oral route avoids severe chemical phlebitis and accidental hyperkalemia).",
+                    "Step 2 (Check Serum Magnesium): Check Serum Magnesium immediately! Hypomagnesemia impairs renal Na+/K+-ATPase and causes refractory urinary potassium wasting; replete Magnesium (oral or 2g IV MgSO4) if Mg < 2.0 mg/dL.",
+                    "Step 3 (Identify Trigger): Review medication list for loop diuretics, thiazides, corticosteroids, or high-dose beta-agonists; consider potassium-sparing diuretic (Spironolactone) if chronic diuretic use.",
+                    "Step 4 (Follow-up): Repeat serum potassium level in 24 to 48 hours."
+                )
+            )
+            serumKMeqL in 2.5..2.9 -> Quadruple(
+                "Moderate Hypokalemia (2.5–2.9 mEq/L)",
+                10.0,
+                "Moderate potassium deficit of approximately $roundedDeficit mEq. Significant risk of cardiac arrhythmias, muscle weakness, and ileus.",
+                listOf(
+                    "Step 1 (Combined Oral & IV Route): Administer oral KCl (40 mEq PO q4–6h) PLUS IV infusion of KCl (10–20 mEq/hr).",
+                    "Step 2 (Infusion Rate Limits): Peripheral line max rate: 10 mEq/hr (concentration max 40 mEq/L to prevent severe burning and venous sclerosis); Central line max rate: 20 mEq/hr.",
+                    "Step 3 (Mandatory ECG & Cardiac Telemetry): Obtain 12-lead ECG to screen for flattened T waves, ST depression, prominent U waves, or prolonged QTc; place on continuous cardiac telemetry.",
+                    "Step 4 (Stat Magnesium Repletion): Administer IV Magnesium Sulfate 2g in 100 mL D5W over 1 hour.",
+                    "Step 5 (Repeat Interval): Repeat serum potassium strictly 2 to 4 hours post-infusion."
+                )
+            )
+            else -> Quadruple(
+                "Severe / Critical Hypokalemia (< 2.5 mEq/L)",
+                20.0,
+                "Severe life-threatening hypokalemia. Total body deficit exceeds $roundedDeficit mEq. High risk of fatal ventricular arrhythmias (Torsades de pointes, VFib), paralysis, and respiratory arrest.",
+                listOf(
+                    "Step 1 (EMERGENCY ICU / TELEMETRY ADMISSION): Immediate transfer to High Dependency or Intensive Care Unit; continuous ECG telemetry.",
+                    "Step 2 (High-Concentration Central IV Infusion): Infuse IV KCl via Central Venous Catheter at 20 mEq/hr (using dedicated infusion pump); do NOT infuse through peripheral line at this rate.",
+                    "Step 3 (Concurrent Oral Potassium): Give oral KCl liquid or effervescent tablets (40 mEq PO q4h) concurrently if patient is conscious and has functioning GI tract.",
+                    "Step 4 (Stat IV Magnesium): Give IV Magnesium Sulfate 2g to 4g immediately.",
+                    "Step 5 (Frequent Blood Draws): Check repeat serum potassium strictly every 2 to 3 hours until K+ > 3.0 mEq/L, then every 4 to 6 hours.",
+                    "Step 6 (Avoid Glucose-Only Fluids): DO NOT infuse Potassium in plain Dextrose fluids (D5W triggers endogenous insulin secretion, which shifts potassium intracellularly and causes paradoxically worsening hypokalemia); infuse in 0.9% Normal Saline."
+                )
+            )
+        }
+
+        return PotassiumDeficitResult(serumKMeqL, roundedDeficit, sev, maxRate, interp, steps)
+    }
 }

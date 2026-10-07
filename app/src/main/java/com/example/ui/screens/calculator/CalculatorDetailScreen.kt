@@ -2044,7 +2044,28 @@ fun GenericScoreInteractiveCard(title: String, category: String, formula: String
                   "risk_tier": "${if (hasComplication) "Severe / High" else selectedTier}",
                   "clinical_recommendation": "${if (hasComplication) "Immediate specialist escalation and close hemodynamic monitoring." else "Follow standard disease-specific guideline management."}"
                 }
-            """.trimIndent()
+            """.trimIndent(),
+            nextSteps = if (hasComplication || selectedTier == "High Risk") {
+                listOf(
+                    "Step 1 (Immediate Triage): High-risk threshold identified for $title ($selectedTier). Prompt senior clinical review and continuous vital signs monitoring.",
+                    "Step 2 (Specialist Escalation): Expedite urgent consultation with $category specialist and assess HDU/ICU level of care.",
+                    "Step 3 (Therapeutic Protocol): Initiate guideline-directed medical interventions immediately and adjust medication dosages.",
+                    "Step 4 (Serial Monitoring): Repeat targeted labs and clinical reassessment within 12-24 hours."
+                )
+            } else if (selectedTier == "Intermediate") {
+                listOf(
+                    "Step 1 (Risk Stratification): Intermediate-risk classification ($selectedTier). Investigate reversible contributing factors.",
+                    "Step 2 (Care Setting): Inpatient monitored care or expedited ambulatory surveillance with documented alarm criteria.",
+                    "Step 3 (Pharmacotherapy): Optimize guideline-directed medical therapy and ensure organ-specific dosing.",
+                    "Step 4 (Follow-up Plan): Schedule short-interval reassessment and educate patient on warning symptoms."
+                )
+            } else {
+                listOf(
+                    "Step 1 (Risk Confirmation): Low-risk stratification confirmed for $title ($selectedTier). Favorable baseline profile.",
+                    "Step 2 (Management Pathway): Standard outpatient or low-intensity ward care; avoid unnecessary invasive interventions.",
+                    "Step 3 (Safety-Netting): Review red-flag symptoms with patient requiring immediate medical re-evaluation."
+                )
+            }
         )
     }
 }

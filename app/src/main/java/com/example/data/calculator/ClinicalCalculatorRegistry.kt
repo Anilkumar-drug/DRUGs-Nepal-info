@@ -1097,6 +1097,88 @@ object ClinicalCalculatorRegistry {
             aliases = listOf("Corrected Sodium", "Hyperglycemia Sodium", "DKA Sodium", "HHS Sodium", "Pseudohyponatremia", "Katz Formula"),
             isPopular = true,
             isNew = true
+        ),
+
+        // --- Critical Care, Trauma, Resuscitation & Surgery Suite ---
+        CalculatorSummary(
+            id = "berlin_ards",
+            title = "Berlin Criteria for ARDS (P/F Ratio)",
+            category = "Critical Care",
+            description = "Stratifies ARDS severity (Mild, Moderate, Severe) and guides prone positioning & lung-protective ventilation.",
+            formulaSummary = "P/F Ratio = PaO2 / (FiO2/100) with PEEP >= 5. Mild (201-300), Moderate (101-200), Severe (<=100). Triggers low tidal volume (6 mL/kg PBW), high PEEP, prone positioning (16h/d), Cisatracurium, and VV-ECMO triage.",
+            aliases = listOf("Berlin", "ARDS", "P/F Ratio", "PaO2/FiO2", "Acute Respiratory Distress", "Lung Protective", "Prone Ventilation", "PEEP ARDS"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "lactate_clearance",
+            title = "Lactate Clearance in Sepsis",
+            category = "Critical Care",
+            description = "Assesses dynamic tissue reperfusion and resuscitation response in sepsis and septic shock.",
+            formulaSummary = "Clearance % = [(Lactate Initial - Lactate Follow-up) / Lactate Initial] * 100%. Goal >= 10-20% clearance every 2 hours indicates adequate microvascular perfusion.",
+            aliases = listOf("Lactate Clearance", "Sepsis Resuscitation", "Lactate Kinetics", "Septic Shock Perfusion", "Microvascular Perfusion"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "ottawa_ankle",
+            title = "Ottawa Ankle & Foot Rules",
+            category = "Surgery & Emergency",
+            description = "Determines whether radiography is required for acute ankle or midfoot trauma.",
+            formulaSummary = "Ankle X-ray if malleolar pain + bone tenderness (distal 6cm) OR inability to bear weight. Foot X-ray if 5th metatarsal/navicular tenderness OR inability to bear weight. Sensitivity > 98.5%.",
+            aliases = listOf("Ottawa Ankle", "Ottawa Foot", "Ankle Fracture", "Ankle Xray Rule", "Foot Xray", "Ankle Sprain"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "ottawa_knee",
+            title = "Ottawa Knee Rule",
+            category = "Surgery & Emergency",
+            description = "Rules out acute knee fracture and determines need for plain knee radiography.",
+            formulaSummary = "X-ray indicated if: Age >= 55, isolated patellar tenderness, fibular head tenderness, inability to flex knee to 90°, or inability to bear weight (4 steps). 100% sensitivity for fracture rule-out.",
+            aliases = listOf("Ottawa Knee", "Knee Fracture", "Knee Xray Rule", "Acute Knee Trauma", "Patella Fracture"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "caprini_vte",
+            title = "Caprini Score for Surgical VTE",
+            category = "Surgery & Emergency",
+            description = "Risk assessment for post-operative venous thromboembolism and thromboprophylaxis selection.",
+            formulaSummary = "Evaluates age, procedure duration, BMI, malignancy, prior VTE, mobility, and thrombophilia. Categorizes into Very Low (0), Low (1-2), Moderate (3-4), High (5-8), and Highest (>=9). Guides IPC vs. LMWH vs. 28-day extended prophylaxis.",
+            aliases = listOf("Caprini", "Caprini Score", "Surgical DVT", "VTE Prophylaxis", "Post-op Thrombosis", "Enoxaparin Prophylaxis"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "crusade_bleeding",
+            title = "CRUSADE Bleeding Score in ACS",
+            category = "Cardiology",
+            description = "Predicts in-hospital major bleeding risk in acute coronary syndrome patients on antithrombotics.",
+            formulaSummary = "Score based on baseline Hct, CrCl, HR, SBP, sex, heart failure signs, and diabetes. Guides radial vs. femoral access, P2Y12 selection (Clopidogrel vs. Ticagrelor), and DAPT duration.",
+            aliases = listOf("CRUSADE", "ACS Bleeding", "Post-MI Bleeding", "DAPT Bleeding", "Catheterization Bleed"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "apgar_score",
+            title = "APGAR Score & Neonatal Care",
+            category = "Pediatrics",
+            description = "Evaluates newborn transition at 1 and 5 minutes and directs neonatal resuscitation.",
+            formulaSummary = "Appearance, Pulse, Grimace, Activity, Respiration (0-10). Normal (7-10), Moderate depression (4-6: airway, tactile stimulus, PPV), Severe depression (0-3: emergency chest compressions & epinephrine).",
+            aliases = listOf("APGAR", "APGAR Score", "Neonatal Resuscitation", "NRP", "Newborn Score", "Delivery Room Triage"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "potassium_deficit",
+            title = "Potassium Deficit & Replacement",
+            category = "Nephrology & Dosing",
+            description = "Estimates total body potassium deficit and calculates safe oral vs. IV replacement rates.",
+            formulaSummary = "Each 0.1 mEq/L fall below 4.0 mEq/L represents ~30-35 mEq deficit in adult. Stratifies into Mild (3.0-3.4), Moderate (2.5-2.9), and Severe (<2.5). Outlines peripheral (max 10 mEq/hr) vs. central line (20 mEq/hr) infusion rules and mandatory Magnesium correction.",
+            aliases = listOf("Potassium Deficit", "Hypokalemia", "Potassium Replacement", "KCl Infusion", "Electrolyte Deficit", "Serum K"),
+            isPopular = true,
+            isNew = true
         )
     )
 }
