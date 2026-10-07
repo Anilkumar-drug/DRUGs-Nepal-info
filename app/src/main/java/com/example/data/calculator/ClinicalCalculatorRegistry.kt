@@ -985,6 +985,118 @@ object ClinicalCalculatorRegistry {
             aliases = listOf("KDIGO", "KDIGO AKI", "AKI Staging", "Acute Kidney Injury", "Urine Output AKI", "Renal Failure Staging"),
             isPopular = true,
             isNew = true
+        ),
+
+        // --- Newly Added High-Impact Formulas & Scores ---
+        CalculatorSummary(
+            id = "alvarado",
+            title = "Alvarado Score (MANTRELS)",
+            category = "Surgery & Emergency",
+            description = "Acute appendicitis probability and surgical triage.",
+            formulaSummary = "10-point scale: Migration of pain (1), Anorexia (1), Nausea (1), RLQ tenderness (2), Rebound (1), Fever (1), Leukocytosis (2), Left shift (1). Guides surgery vs. imaging vs. safe discharge.",
+            aliases = listOf("Alvarado", "MANTRELS", "Appendicitis", "Acute Appendicitis", "RLQ Pain", "Surgical Abdomen", "Appendectomy Score"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "four_ts_hit",
+            title = "4Ts Score for HIT",
+            category = "Hematology",
+            description = "Pre-test probability of Heparin-Induced Thrombocytopenia.",
+            formulaSummary = "Assesses Thrombocytopenia (2), Timing (2), Thrombosis (2), and oTher causes (2). Score <=3 low risk (continue heparin); >=4 stop heparin and start direct thrombin inhibitor.",
+            aliases = listOf("4Ts", "4T", "HIT", "Heparin Induced Thrombocytopenia", "Argatroban", "Heparin Allergy", "Platelet Fall"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "anion_delta_gap",
+            title = "Anion Gap & Delta-Delta Ratio",
+            category = "Nephrology & Dosing",
+            description = "Serum anion gap, albumin correction, and delta ratio for mixed acid-base disorders.",
+            formulaSummary = "AG = Na - (Cl + HCO3). Corrected AG = AG + 2.5*(4 - Albumin). Delta Gap = AG - 12. Delta Ratio = Delta AG / Delta HCO3. Differentiates pure HAGMA, mixed HAGMA+NAGMA, and mixed HAGMA+metabolic alkalosis.",
+            aliases = listOf("Anion Gap", "Delta Gap", "Delta Ratio", "Delta Delta", "Metabolic Acidosis", "GOLDMARK", "Acid Base", "Serum Anion Gap"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "osmolar_gap",
+            title = "Serum Osmolar Gap",
+            category = "Toxicology",
+            description = "Calculated osmolality and osmolar gap for toxic alcohol ingestion screening.",
+            formulaSummary = "Calc Osm = 2*Na + Glucose/18 + BUN/2.8 (+ EtOH/4.6). Gap = Measured - Calculated. Gap >10 indicates toxic alcohols (Methanol, Ethylene Glycol) and mandates Fomepizole / Dialysis.",
+            aliases = listOf("Osmolar Gap", "Osmolality", "Toxic Alcohol", "Methanol", "Ethylene Glycol", "Fomepizole", "Freezing Point Osmolality"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "rox_index",
+            title = "ROX Index (HFNC Failure)",
+            category = "Critical Care",
+            description = "Predicts high-flow nasal cannula success vs. urgent need for intubation.",
+            formulaSummary = "ROX = (SpO2 / FiO2) / RR. Score >=4.88 predicts HFNC success; <3.85 after 2-12h indicates high failure risk requiring urgent intubation.",
+            aliases = listOf("ROX", "ROX Index", "HFNC", "High Flow", "Intubation Predictor", "Respiratory Failure", "Hypoxemia"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "spesi_pe",
+            title = "Simplified PESI (sPESI)",
+            category = "Pulmonology",
+            description = "Pulmonary Embolism 30-day mortality risk and outpatient treatment eligibility.",
+            formulaSummary = "Age >80, Cancer, Cardiopulmonary disease, HR >=110, SBP <100, SpO2 <90%. Score 0 indicates low risk (1.1% mortality, outpatient DOAC candidate); >=1 high risk requiring hospital admission.",
+            aliases = listOf("PESI", "sPESI", "Pulmonary Embolism Severity", "PE Mortality", "PE Outpatient", "Hestia Criteria"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "feurea",
+            title = "FEUrea (Fractional Excretion of Urea)",
+            category = "Nephrology & Dosing",
+            description = "Differentiates prerenal azotemia from intrinsic ATN when patient is on diuretics.",
+            formulaSummary = "FEUrea = (Urine Urea * Serum Cr) / (Serum Urea * Urine Cr) * 100%. <35% Prerenal azotemia (intact tubular reabsorption); >50% Acute Tubular Necrosis (ATN).",
+            aliases = listOf("FEUrea", "Fractional Excretion Urea", "Prerenal Diuretic", "ATN on Diuretics", "Urea Clearance"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "bap65",
+            title = "BAP-65 for COPD Exacerbation",
+            category = "Pulmonology",
+            description = "In-hospital mortality and ICU triage for acute COPD exacerbation.",
+            formulaSummary = "BUN >25 (1), Altered mental status (1), Pulse >=109 (1), Age >=65 (1). Class I (0 pts, 0.3% mort, outpatient) to Class V (4 pts, >25% mort, ICU intubation).",
+            aliases = listOf("BAP65", "BAP-65", "COPD Exacerbation", "AECOPD", "BiPAP Triage", "Respiratory Mortality"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "nihss_stroke",
+            title = "NIHSS Stroke Scale Screening",
+            category = "Neurology",
+            description = "Quantifies stroke deficit severity and guides acute IV thrombolysis / thrombectomy.",
+            formulaSummary = "Score 0-42. Minor (1-4), Moderate (5-15), Moderate-Severe (16-20), Severe (21-42). Identifies candidates for IV thrombolysis (<4.5h) and mechanical thrombectomy (<24h).",
+            aliases = listOf("NIHSS", "NIH Stroke Scale", "Stroke Severity", "Alteplase Candidate", "Tenecteplase", "EVT Thrombectomy", "Acute Stroke"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "san_francisco_syncope",
+            title = "San Francisco Syncope Rule",
+            category = "Emergency & Nepal",
+            description = "Identifies high-risk syncope patients requiring admission vs. safe discharge.",
+            formulaSummary = "CHESS: CHF history, Hct <30%, abnormal ECG, SOB, SBP <90. 0 criteria = low risk safe discharge; >=1 criterion = admission for telemetry/cardiac workup.",
+            aliases = listOf("San Francisco Syncope", "SFSR", "Syncope Rule", "CHESS Syncope", "Fainting Risk", "Cardiac Syncope"),
+            isPopular = true,
+            isNew = true
+        ),
+        CalculatorSummary(
+            id = "corrected_sodium",
+            title = "Corrected Sodium (Hyperglycemia)",
+            category = "Endocrinology",
+            description = "Corrects serum sodium for hyperglycemia in DKA and HHS.",
+            formulaSummary = "Katz: Na + 0.016 * (Glucose - 100). Hillier: Na + 0.024 * (Glucose - 100). Directs fluid selection between 0.9% Normal Saline and 0.45% Half-Normal Saline.",
+            aliases = listOf("Corrected Sodium", "Hyperglycemia Sodium", "DKA Sodium", "HHS Sodium", "Pseudohyponatremia", "Katz Formula"),
+            isPopular = true,
+            isNew = true
         )
     )
 }

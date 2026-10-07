@@ -25,6 +25,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import com.example.data.calculator.ClinicalCalculatorRegistry
 import com.example.data.calculator.ClinicalCalculators
 import com.example.data.calculator.ExtendedCalculators
@@ -308,6 +312,18 @@ fun CalculatorDetailScreen(
                 "pecarn_head" -> PecarnInteractiveCard()
                 "abg_solver" -> AbgSolverInteractiveCard()
                 "truelove_witts" -> TrueloveWittsInteractiveCard()
+                // --- Newly Added High-Impact Formulas & Scores ---
+                "alvarado" -> AlvaradoInteractiveCard()
+                "four_ts_hit" -> FourTsInteractiveCard()
+                "anion_delta_gap" -> AnionDeltaGapInteractiveCard()
+                "osmolar_gap" -> OsmolarGapInteractiveCard()
+                "rox_index" -> RoxIndexInteractiveCard()
+                "spesi_pe" -> SpesiInteractiveCard()
+                "feurea" -> FeUreaInteractiveCard()
+                "bap65" -> Bap65InteractiveCard()
+                "nihss_stroke" -> NihssInteractiveCard()
+                "san_francisco_syncope" -> SanFranciscoSyncopeInteractiveCard()
+                "corrected_sodium" -> CorrectedSodiumInteractiveCard()
                 else -> GenericScoreInteractiveCard(title, category, formulaDesc)
             }
         }
@@ -2044,7 +2060,8 @@ fun ResultBanner(
     badgeText: String,
     guidance: String,
     isSafe: Boolean,
-    jsonPayload: String? = null
+    jsonPayload: String? = null,
+    nextSteps: List<String> = emptyList()
 ) {
     val borderColor = if (isSafe) Color(0xFF00897B) else Color(0xFFDC2626)
     val bgColor = if (isSafe) Color(0xFF00897B).copy(alpha = 0.08f) else Color(0xFFDC2626).copy(alpha = 0.08f)
@@ -2058,7 +2075,7 @@ fun ResultBanner(
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -2172,6 +2189,169 @@ fun ResultBanner(
                     lineHeight = 17.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
                 )
+            }
+
+            // -------------------------------------------------------------
+            // Prominent Recommended Next Steps & Clinical Management
+            // -------------------------------------------------------------
+            val actionSteps = remember(title, badgeText, guidance, isSafe, nextSteps) {
+                if (nextSteps.isNotEmpty()) {
+                    nextSteps
+                } else {
+                    val lines = guidance.lines().map { it.trim() }.filter { it.isNotBlank() }
+                    val extracted = mutableListOf<String>()
+                    for (line in lines) {
+                        if (line.startsWith("1.") || line.startsWith("2.") || line.startsWith("3.") ||
+                            line.startsWith("4.") || line.startsWith("5.") || line.startsWith("Step") ||
+                            line.startsWith("-") || line.startsWith("•") || line.contains("Clinical Action:", ignoreCase = true)
+                        ) {
+                            extracted.add(line.removePrefix("-").removePrefix("•").trim())
+                        }
+                    }
+                    if (extracted.size >= 2) {
+                        extracted
+                    } else {
+                        val sentences = guidance.split(". ").map { it.trim().removeSuffix(".") }.filter { it.length > 10 }
+                        if (sentences.size >= 2) {
+                            sentences.mapIndexed { idx, s -> "Step ${idx + 1}: $s." }
+                        } else if (isSafe) {
+                            listOf(
+                                "Step 1 (Risk Assessment): Patient meets low-risk / baseline criteria for $title ($badgeText).",
+                                "Step 2 (Plan & Monitoring): Continue standard clinical observation or outpatient management as indicated.",
+                                "Step 3 (Safety Net): Re-evaluate if clinical status changes or red-flag signs emerge."
+                            )
+                        } else {
+                            listOf(
+                                "Step 1 (Immediate Triage): High-risk threshold identified for $title ($badgeText). Immediate clinical review indicated.",
+                                "Step 2 (Clinical Action): Implement guideline-directed therapeutic intervention and increase monitoring frequency.",
+                                "Step 3 (Escalation): Consult relevant subspecialist / critical care outreach if no prompt improvement."
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (actionSteps.isNotEmpty()) {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, borderColor.copy(alpha = 0.35f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MedicalServices,
+                                    contentDescription = null,
+                                    tint = borderColor,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = "RECOMMENDED NEXT STEPS",
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = borderColor,
+                                    letterSpacing = 0.5.sp
+                                )
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = borderColor.copy(alpha = 0.12f)
+                            ) {
+                                Text(
+                                    text = "${actionSteps.size} Action Steps",
+                                    fontSize = 9.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = borderColor,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                        actionSteps.forEachIndexed { index, step ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = borderColor.copy(alpha = 0.18f),
+                                    modifier = Modifier.size(20.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = "${index + 1}",
+                                            fontSize = 10.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = borderColor
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = step,
+                                    fontSize = 11.5.sp,
+                                    lineHeight = 16.5.sp,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+
+                        val clipboardManager = LocalClipboardManager.current
+                        val context = LocalContext.current
+
+                        OutlinedButton(
+                            onClick = {
+                                val summaryText = buildString {
+                                    appendLine("--- $title ---")
+                                    appendLine("Result: $valueText ($badgeText)")
+                                    appendLine("Guidance: $guidance")
+                                    appendLine("\nRecommended Next Steps:")
+                                    actionSteps.forEachIndexed { i, s ->
+                                        appendLine("${i + 1}. $s")
+                                    }
+                                }
+                                clipboardManager.setText(AnnotatedString(summaryText))
+                                Toast.makeText(context, "Copied score & next steps to clipboard", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, borderColor.copy(alpha = 0.5f)),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = borderColor
+                            ),
+                            contentPadding = PaddingValues(vertical = 6.dp, horizontal = 12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Copy Score & Clinical Next Steps",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -2345,93 +2525,640 @@ fun VocalPennInteractiveCard() {
         }
 
         // Result Card
+        ResultBanner(
+            title = "VOCAL-Penn Cirrhosis Surgical Risk",
+            valueText = "30d Mort: ${res.thirtyDayMortalityPercent}% (90d: ${res.ninetyDayMortalityPercent}%)",
+            badgeText = res.riskCategory,
+            guidance = res.recommendations,
+            isSafe = res.thirtyDayMortalityPercent < 5.0,
+            nextSteps = listOf(
+                "Step 1 (Pre-op Optimization): ${res.surgicalOptimization.lines().getOrNull(0) ?: "Multidisciplinary hepatology & critical care evaluation."}",
+                "Step 2 (Fluid & Hemostasis): ${res.surgicalOptimization.lines().getOrNull(1) ?: "Correct coagulopathy and optimize volume status."}",
+                "Step 3 (Surgical Technique): ${res.surgicalOptimization.lines().getOrNull(2) ?: "Prefer minimally invasive / laparoscopic approaches."}",
+                "Step 4 (Post-op Surveillance): ${res.surgicalOptimization.lines().getOrNull(3) ?: "Meticulous surveillance for post-op hepatic decompensation."}"
+            )
+        )
+    }
+}
+
+// =============================================================================
+// NEW INTERACTIVE CLINICAL CALCULATOR SUITE (11 FORMULAS & SCORES)
+// =============================================================================
+
+@Composable
+fun AlvaradoInteractiveCard() {
+    var migration by remember { mutableStateOf(false) }
+    var anorexia by remember { mutableStateOf(false) }
+    var nausea by remember { mutableStateOf(false) }
+    var tenderness by remember { mutableStateOf(false) }
+    var rebound by remember { mutableStateOf(false) }
+    var elevatedTemp by remember { mutableStateOf(false) }
+    var leukocytosis by remember { mutableStateOf(false) }
+    var shift by remember { mutableStateOf(false) }
+
+    val res = remember(migration, anorexia, nausea, tenderness, rebound, elevatedTemp, leukocytosis, shift) {
+        ExtendedCalculators.calculateAlvarado(
+            migrationOfPain = migration,
+            anorexia = anorexia,
+            nauseaOrVomiting = nausea,
+            rlqTenderness = tenderness,
+            reboundPain = rebound,
+            elevatedTemp = elevatedTemp,
+            leukocytosis = leukocytosis,
+            neutrophilShift = shift
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("Symptoms (1 point each)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        ScoringToggleRow("Migration of pain to RLQ (+1)", migration, { migration = it })
+        ScoringToggleRow("Anorexia / loss of appetite (+1)", anorexia, { anorexia = it })
+        ScoringToggleRow("Nausea or vomiting (+1)", nausea, { nausea = it })
+
+        Text("Signs", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        ScoringToggleRow("Tenderness in Right Lower Quadrant (+2 pts)", tenderness, { tenderness = it })
+        ScoringToggleRow("Rebound pain in RLQ (+1 pt)", rebound, { rebound = it })
+        ScoringToggleRow("Fever (≥ 37.3°C / 99.1°F) (+1 pt)", elevatedTemp, { elevatedTemp = it })
+
+        Text("Laboratory Findings", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        ScoringToggleRow("Leukocytosis (WBC > 10,000/μL) (+2 pts)", leukocytosis, { leukocytosis = it })
+        ScoringToggleRow("Neutrophilic left shift (> 75%) (+1 pt)", shift, { shift = it })
+
+        ResultBanner(
+            title = "Alvarado Score (MANTRELS)",
+            valueText = "${res.totalScore} / 10 Points",
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nProbability: ${res.probability}",
+            isSafe = res.totalScore <= 4,
+            nextSteps = res.nextSteps
+        )
+    }
+}
+
+@Composable
+fun FourTsInteractiveCard() {
+    var thrombocytopeniaPts by remember { mutableIntStateOf(0) }
+    var timingPts by remember { mutableIntStateOf(0) }
+    var thrombosisPts by remember { mutableIntStateOf(0) }
+    var otherCausesPts by remember { mutableIntStateOf(2) }
+
+    val res = remember(thrombocytopeniaPts, timingPts, thrombosisPts, otherCausesPts) {
+        ExtendedCalculators.calculateFourTs(thrombocytopeniaPts, timingPts, thrombosisPts, otherCausesPts)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // T1: Thrombocytopenia
+        Text("1. Thrombocytopenia", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(
+                selected = thrombocytopeniaPts == 2,
+                onClick = { thrombocytopeniaPts = 2 },
+                label = { Text("Platelet fall > 50% AND nadir ≥ 20k (+2 pts)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            FilterChip(
+                selected = thrombocytopeniaPts == 1,
+                onClick = { thrombocytopeniaPts = 1 },
+                label = { Text("Platelet fall 30–50% OR nadir 10–19k (+1 pt)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            FilterChip(
+                selected = thrombocytopeniaPts == 0,
+                onClick = { thrombocytopeniaPts = 0 },
+                label = { Text("Platelet fall < 30% OR nadir < 10k (0 pts)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // T2: Timing
+        Text("2. Timing of Platelet Fall", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(
+                selected = timingPts == 2,
+                onClick = { timingPts = 2 },
+                label = { Text("Clear onset Day 5–10, or ≤1d with heparin in past 30d (+2 pts)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            FilterChip(
+                selected = timingPts == 1,
+                onClick = { timingPts = 1 },
+                label = { Text("Fall after Day 10, or ≤1d with heparin 30–100d ago (+1 pt)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            FilterChip(
+                selected = timingPts == 0,
+                onClick = { timingPts = 0 },
+                label = { Text("Fall < Day 4 without recent heparin exposure (0 pts)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // T3: Thrombosis
+        Text("3. Thrombosis or Other Sequelae", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(
+                selected = thrombosisPts == 2,
+                onClick = { thrombosisPts = 2 },
+                label = { Text("Proven new thrombosis, skin necrosis, or systemic reaction (+2 pts)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            FilterChip(
+                selected = thrombosisPts == 1,
+                onClick = { thrombosisPts = 1 },
+                label = { Text("Progressive/recurrent thrombosis or suspected DVT (+1 pt)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            FilterChip(
+                selected = thrombosisPts == 0,
+                onClick = { thrombosisPts = 0 },
+                label = { Text("None (0 pts)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // T4: Other Causes
+        Text("4. Other Causes for Thrombocytopenia", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            FilterChip(
+                selected = otherCausesPts == 2,
+                onClick = { otherCausesPts = 2 },
+                label = { Text("No other apparent cause (+2 pts)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            FilterChip(
+                selected = otherCausesPts == 1,
+                onClick = { otherCausesPts = 1 },
+                label = { Text("Possible other cause present (+1 pt)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            FilterChip(
+                selected = otherCausesPts == 0,
+                onClick = { otherCausesPts = 0 },
+                label = { Text("Definite other cause present (sepsis, surgery dilution) (0 pts)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        ResultBanner(
+            title = "4Ts Score for Heparin-Induced Thrombocytopenia",
+            valueText = "${res.totalScore} / 8 Points",
+            badgeText = res.riskTier,
+            guidance = "${res.interpretation}\n\nPretest Probability: ${res.probability}",
+            isSafe = res.totalScore <= 3,
+            nextSteps = res.nextSteps
+        )
+    }
+}
+
+@Composable
+fun AnionDeltaGapInteractiveCard() {
+    var sodium by remember { mutableStateOf("140") }
+    var chloride by remember { mutableStateOf("102") }
+    var bicarb by remember { mutableStateOf("14") }
+    var albumin by remember { mutableStateOf("4.0") }
+
+    val naVal = sodium.toDoubleOrNull() ?: 140.0
+    val clVal = chloride.toDoubleOrNull() ?: 102.0
+    val hco3Val = bicarb.toDoubleOrNull() ?: 14.0
+    val albVal = albumin.toDoubleOrNull() ?: 4.0
+
+    val res = remember(naVal, clVal, hco3Val, albVal) {
+        ExtendedCalculators.calculateAnionDeltaGap(naVal, clVal, hco3Val, albVal)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = sodium,
+                onValueChange = { sodium = it },
+                label = { Text("Sodium (mEq/L)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = chloride,
+                onValueChange = { chloride = it },
+                label = { Text("Chloride (mEq/L)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = bicarb,
+                onValueChange = { bicarb = it },
+                label = { Text("HCO3 / Bicarb (mEq/L)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = albumin,
+                onValueChange = { albumin = it },
+                label = { Text("Albumin (g/dL)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        // Summary details card
         Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = Color(res.riskColorHex).copy(alpha = 0.12f),
-            border = BorderStroke(1.2.dp, Color(res.riskColorHex)),
+            shape = RoundedCornerShape(10.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier.padding(14.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "30-DAY MORTALITY",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "${res.thirtyDayMortalityPercent}%",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Color(res.riskColorHex)
-                        )
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "90-DAY MORTALITY",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "${res.ninetyDayMortalityPercent}%",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(res.riskColorHex)
-                        )
-                    }
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = Color(res.riskColorHex).copy(alpha = 0.2f)
-                ) {
-                    Text(
-                        text = res.riskCategory,
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(res.riskColorHex),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
-                }
-
-                HorizontalDivider(color = Color(res.riskColorHex).copy(alpha = 0.3f))
-
-                Text(
-                    text = "Clinical Recommendation:",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = res.recommendations,
-                    fontSize = 11.5.sp,
-                    lineHeight = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
-                )
-
-                Text(
-                    text = "Pre-operative Optimization Checklist:",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = res.surgicalOptimization,
-                    fontSize = 11.5.sp,
-                    lineHeight = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Measured AG: ${res.anionGap} mEq/L  |  Albumin-Corrected AG: ${res.correctedAnionGap} mEq/L", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                Text("Delta Gap (AG - 12): ${res.deltaGap}  |  Delta Ratio: ${res.deltaRatio}", fontSize = 11.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+
+        ResultBanner(
+            title = "Serum Anion Gap & Delta Ratio",
+            valueText = "${res.correctedAnionGap} mEq/L (Delta Ratio: ${res.deltaRatio})",
+            badgeText = res.acidBaseCategory,
+            guidance = res.interpretation,
+            isSafe = res.correctedAnionGap <= 12.0 && hco3Val >= 22.0,
+            nextSteps = res.nextSteps
+        )
+    }
+}
+
+@Composable
+fun OsmolarGapInteractiveCard() {
+    var measuredOsm by remember { mutableStateOf("315") }
+    var sodium by remember { mutableStateOf("140") }
+    var glucose by remember { mutableStateOf("110") }
+    var bun by remember { mutableStateOf("18") }
+    var ethanol by remember { mutableStateOf("0") }
+
+    val mOsmVal = measuredOsm.toDoubleOrNull() ?: 315.0
+    val naVal = sodium.toDoubleOrNull() ?: 140.0
+    val gluVal = glucose.toDoubleOrNull() ?: 110.0
+    val bunVal = bun.toDoubleOrNull() ?: 18.0
+    val etohVal = ethanol.toDoubleOrNull() ?: 0.0
+
+    val res = remember(mOsmVal, naVal, gluVal, bunVal, etohVal) {
+        ExtendedCalculators.calculateOsmolarGap(mOsmVal, naVal, gluVal, bunVal, etohVal)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        OutlinedTextField(
+            value = measuredOsm,
+            onValueChange = { measuredOsm = it },
+            label = { Text("Measured Osmolality (Freezing point) [mOsm/kg]") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = sodium,
+                onValueChange = { sodium = it },
+                label = { Text("Sodium (mEq/L)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = glucose,
+                onValueChange = { glucose = it },
+                label = { Text("Glucose (mg/dL)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = bun,
+                onValueChange = { bun = it },
+                label = { Text("BUN (mg/dL)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = ethanol,
+                onValueChange = { ethanol = it },
+                label = { Text("Ethanol (mg/dL) [optional]") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        ResultBanner(
+            title = "Serum Osmolar Gap",
+            valueText = "Gap: ${res.osmolarGap} mOsm/kg (Calc: ${res.calculatedOsmolality})",
+            badgeText = res.riskTier,
+            guidance = res.interpretation,
+            isSafe = res.osmolarGap <= 10.0,
+            nextSteps = res.nextSteps
+        )
+    }
+}
+
+@Composable
+fun RoxIndexInteractiveCard() {
+    var spo2 by remember { mutableStateOf("94") }
+    var fio2 by remember { mutableStateOf("60") }
+    var rr by remember { mutableStateOf("22") }
+
+    val spo2Val = spo2.toDoubleOrNull() ?: 94.0
+    val fio2Val = fio2.toDoubleOrNull() ?: 60.0
+    val rrVal = rr.toDoubleOrNull() ?: 22.0
+
+    val res = remember(spo2Val, fio2Val, rrVal) {
+        ExtendedCalculators.calculateRoxIndex(spo2Val, fio2Val, rrVal)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = spo2,
+                onValueChange = { spo2 = it },
+                label = { Text("SpO2 (%)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = fio2,
+                onValueChange = { fio2 = it },
+                label = { Text("FiO2 (%) [e.g. 60]") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+        }
+        OutlinedTextField(
+            value = rr,
+            onValueChange = { rr = it },
+            label = { Text("Respiratory Rate (breaths/min)") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        ResultBanner(
+            title = "ROX Index (High-Flow Nasal Cannula)",
+            valueText = "${res.roxScore}",
+            badgeText = res.riskTier,
+            guidance = res.interpretation,
+            isSafe = res.roxScore >= 4.88,
+            nextSteps = res.nextSteps
+        )
+    }
+}
+
+@Composable
+fun SpesiInteractiveCard() {
+    var ageOver80 by remember { mutableStateOf(false) }
+    var cancer by remember { mutableStateOf(false) }
+    var cardiopulmonary by remember { mutableStateOf(false) }
+    var hrOver110 by remember { mutableStateOf(false) }
+    var sbpUnder100 by remember { mutableStateOf(false) }
+    var spo2Under90 by remember { mutableStateOf(false) }
+
+    val res = remember(ageOver80, cancer, cardiopulmonary, hrOver110, sbpUnder100, spo2Under90) {
+        ExtendedCalculators.calculateSpesi(
+            ageOver80 = ageOver80,
+            historyOfCancer = cancer,
+            chronicCardiopulmonaryDisease = cardiopulmonary,
+            heartRateOver110 = hrOver110,
+            sbpUnder100 = sbpUnder100,
+            spo2Under90 = spo2Under90
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        ScoringToggleRow("Age > 80 years (+1 pt)", ageOver80, { ageOver80 = it })
+        ScoringToggleRow("History of cancer / active malignancy (+1 pt)", cancer, { cancer = it })
+        ScoringToggleRow("Chronic cardiopulmonary disease (CHF / COPD) (+1 pt)", cardiopulmonary, { cardiopulmonary = it })
+        ScoringToggleRow("Pulse ≥ 110 beats/min (+1 pt)", hrOver110, { hrOver110 = it })
+        ScoringToggleRow("Systolic BP < 100 mmHg (+1 pt)", sbpUnder100, { sbpUnder100 = it })
+        ScoringToggleRow("Arterial oxygen saturation SpO2 < 90% (+1 pt)", spo2Under90, { spo2Under90 = it })
+
+        ResultBanner(
+            title = "Simplified PESI (sPESI) for Pulmonary Embolism",
+            valueText = "${res.totalScore} Points (${res.thirtyDayMortality})",
+            badgeText = res.riskTier,
+            guidance = res.interpretation,
+            isSafe = res.totalScore == 0,
+            nextSteps = res.nextSteps
+        )
+    }
+}
+
+@Composable
+fun FeUreaInteractiveCard() {
+    var serumUrea by remember { mutableStateOf("45") }
+    var urineUrea by remember { mutableStateOf("320") }
+    var serumCr by remember { mutableStateOf("2.1") }
+    var urineCr by remember { mutableStateOf("55") }
+
+    val sUreaVal = serumUrea.toDoubleOrNull() ?: 45.0
+    val uUreaVal = urineUrea.toDoubleOrNull() ?: 320.0
+    val sCrVal = serumCr.toDoubleOrNull() ?: 2.1
+    val uCrVal = urineCr.toDoubleOrNull() ?: 55.0
+
+    val res = remember(sUreaVal, uUreaVal, sCrVal, uCrVal) {
+        ExtendedCalculators.calculateFeUrea(sUreaVal, uUreaVal, sCrVal, uCrVal)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = serumUrea,
+                onValueChange = { serumUrea = it },
+                label = { Text("Serum Urea / BUN (mg/dL)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = urineUrea,
+                onValueChange = { urineUrea = it },
+                label = { Text("Urine Urea (mg/dL)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = serumCr,
+                onValueChange = { serumCr = it },
+                label = { Text("Serum Cr (mg/dL)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = urineCr,
+                onValueChange = { urineCr = it },
+                label = { Text("Urine Cr (mg/dL)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        ResultBanner(
+            title = "Fractional Excretion of Urea (FEUrea)",
+            valueText = "${res.feUreaPercent}%",
+            badgeText = res.etiology,
+            guidance = res.interpretation,
+            isSafe = res.feUreaPercent < 35.0,
+            nextSteps = res.nextSteps
+        )
+    }
+}
+
+@Composable
+fun Bap65InteractiveCard() {
+    var bunOver25 by remember { mutableStateOf(false) }
+    var alteredMentalStatus by remember { mutableStateOf(false) }
+    var pulseOver109 by remember { mutableStateOf(false) }
+    var ageOver65 by remember { mutableStateOf(true) }
+
+    val res = remember(bunOver25, alteredMentalStatus, pulseOver109, ageOver65) {
+        ExtendedCalculators.calculateBap65(bunOver25, alteredMentalStatus, pulseOver109, ageOver65)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        ScoringToggleRow("B: Blood Urea Nitrogen > 25 mg/dL (+1 pt)", bunOver25, { bunOver25 = it })
+        ScoringToggleRow("A: Altered Mental Status (GCS < 15, lethargy) (+1 pt)", alteredMentalStatus, { alteredMentalStatus = it })
+        ScoringToggleRow("P: Pulse ≥ 109 beats/min (+1 pt)", pulseOver109, { pulseOver109 = it })
+        ScoringToggleRow("65: Age ≥ 65 years (+1 pt)", ageOver65, { ageOver65 = it })
+
+        ResultBanner(
+            title = "BAP-65 for Acute COPD Exacerbation",
+            valueText = "${res.totalScore} Points (${res.inHospitalMortality})",
+            badgeText = res.riskClass,
+            guidance = res.interpretation,
+            isSafe = res.totalScore <= 1,
+            nextSteps = res.nextSteps
+        )
+    }
+}
+
+@Composable
+fun NihssInteractiveCard() {
+    var pointsText by remember { mutableStateOf("6") }
+    val pointsVal = pointsText.toIntOrNull() ?: 6
+
+    val res = remember(pointsVal) {
+        ExtendedCalculators.calculateNihss(pointsVal)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Quick Stroke Severity Presets:", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            FilterChip(selected = pointsVal == 3, onClick = { pointsText = "3" }, label = { Text("Minor (3)") })
+            FilterChip(selected = pointsVal == 8, onClick = { pointsText = "8" }, label = { Text("Moderate (8)") })
+            FilterChip(selected = pointsVal == 17, onClick = { pointsText = "17" }, label = { Text("Mod-Severe (17)") })
+            FilterChip(selected = pointsVal == 24, onClick = { pointsText = "24" }, label = { Text("Severe (24)") })
+        }
+
+        OutlinedTextField(
+            value = pointsText,
+            onValueChange = { pointsText = it },
+            label = { Text("NIHSS Total Score (0 to 42)") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        ResultBanner(
+            title = "NIH Stroke Scale (NIHSS) Screening",
+            valueText = "${res.totalScore} / 42 Points",
+            badgeText = res.strokeSeverity,
+            guidance = "${res.interpretation}\n\nReperfusion Candidate: ${res.thrombolysisCandidate}",
+            isSafe = res.totalScore <= 4,
+            nextSteps = res.nextSteps
+        )
+    }
+}
+
+@Composable
+fun SanFranciscoSyncopeInteractiveCard() {
+    var chf by remember { mutableStateOf(false) }
+    var hctUnder30 by remember { mutableStateOf(false) }
+    var abnormalEcg by remember { mutableStateOf(false) }
+    var sob by remember { mutableStateOf(false) }
+    var sbpUnder90 by remember { mutableStateOf(false) }
+
+    val res = remember(chf, hctUnder30, abnormalEcg, sob, sbpUnder90) {
+        ExtendedCalculators.calculateSanFranciscoSyncope(
+            congestiveHeartFailure = chf,
+            hematocritUnder30 = hctUnder30,
+            abnormalEcg = abnormalEcg,
+            shortnessOfBreath = sob,
+            sbpUnder90 = sbpUnder90
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        ScoringToggleRow("C: Congestive Heart Failure history", chf, { chf = it })
+        ScoringToggleRow("H: Hematocrit < 30%", hctUnder30, { hctUnder30 = it })
+        ScoringToggleRow("E: ECG abnormal (non-sinus, conduction block, prolonged QTc)", abnormalEcg, { abnormalEcg = it })
+        ScoringToggleRow("S: Shortness of breath", sob, { sob = it })
+        ScoringToggleRow("S: Systolic Blood Pressure < 90 mmHg at triage", sbpUnder90, { sbpUnder90 = it })
+
+        ResultBanner(
+            title = "San Francisco Syncope Rule (CHESS)",
+            valueText = if (res.hasAnyHighRiskFactor) "HIGH RISK (Positive)" else "LOW RISK (Negative)",
+            badgeText = res.riskTier,
+            guidance = res.interpretation,
+            isSafe = !res.hasAnyHighRiskFactor,
+            nextSteps = res.nextSteps
+        )
+    }
+}
+
+@Composable
+fun CorrectedSodiumInteractiveCard() {
+    var measuredNa by remember { mutableStateOf("128") }
+    var glucose by remember { mutableStateOf("480") }
+
+    val naVal = measuredNa.toDoubleOrNull() ?: 128.0
+    val gluVal = glucose.toDoubleOrNull() ?: 480.0
+
+    val res = remember(naVal, gluVal) {
+        ExtendedCalculators.calculateCorrectedSodium(naVal, gluVal)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = measuredNa,
+                onValueChange = { measuredNa = it },
+                label = { Text("Measured Sodium (mEq/L)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = glucose,
+                onValueChange = { glucose = it },
+                label = { Text("Serum Glucose (mg/dL)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        // Formula comparison
+        Surface(
+            shape = RoundedCornerShape(10.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Katz Formula (+1.6 per 100): ${res.katzCorrectedNa} mEq/L", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("Hillier Formula (+2.4 per 100): ${res.hillierCorrectedNa} mEq/L", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text("Fluid Recommendation: ${res.fluidSelection}", fontSize = 11.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+
+        ResultBanner(
+            title = "Corrected Sodium for Hyperglycemia",
+            valueText = "${res.hillierCorrectedNa} mEq/L (Hillier)",
+            badgeText = if (res.hillierCorrectedNa in 135.0..145.0) "Euvolemic" else "Osmolar Shift",
+            guidance = "${res.interpretation}\n\nRecommended Fluid: ${res.fluidSelection}",
+            isSafe = res.hillierCorrectedNa in 135.0..145.0,
+            nextSteps = res.nextSteps
+        )
     }
 }

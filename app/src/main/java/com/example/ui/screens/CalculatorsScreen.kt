@@ -59,6 +59,7 @@ private fun CalculatorsListView(
         listOf(
             "All",
             "Favorites",
+            "Surgery & Emergency",
             "Critical Care",
             "Gastroenterology",
             "Hepatology",
@@ -78,6 +79,15 @@ private fun CalculatorsListView(
 
     val quickScoringPills = remember {
         listOf(
+            "Alvarado",
+            "4Ts HIT",
+            "Anion Gap",
+            "Osmolar Gap",
+            "ROX Index",
+            "sPESI",
+            "FEUrea",
+            "BAP-65",
+            "NIHSS",
             "VOCAL-Penn",
             "MELD",
             "Child-Turcotte-Pugh",
@@ -92,7 +102,8 @@ private fun CalculatorsListView(
             "King's College",
             "qSOFA",
             "APACHE II",
-            "KDIGO AKI"
+            "KDIGO AKI",
+            "Corrected Na"
         )
     }
 

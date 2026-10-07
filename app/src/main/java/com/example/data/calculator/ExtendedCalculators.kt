@@ -4,6 +4,7 @@ import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 object ExtendedCalculators {
@@ -967,4 +968,734 @@ object ExtendedCalculators {
     }
 
     private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+
+    // =========================================================================
+    // 14. Alvarado Score for Acute Appendicitis (MANTRELS)
+    // =========================================================================
+    data class AlvaradoResult(
+        val totalScore: Int,
+        val riskTier: String,
+        val probability: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateAlvarado(
+        migrationOfPain: Boolean,
+        anorexia: Boolean,
+        nauseaOrVomiting: Boolean,
+        rlqTenderness: Boolean,
+        reboundPain: Boolean,
+        elevatedTemp: Boolean,
+        leukocytosis: Boolean,
+        neutrophilShift: Boolean
+    ): AlvaradoResult {
+        var score = 0
+        if (migrationOfPain) score += 1
+        if (anorexia) score += 1
+        if (nauseaOrVomiting) score += 1
+        if (rlqTenderness) score += 2
+        if (reboundPain) score += 1
+        if (elevatedTemp) score += 1
+        if (leukocytosis) score += 2
+        if (neutrophilShift) score += 1
+
+        val (tier, prob, interp, steps) = when {
+            score <= 4 -> Quadruple(
+                "Low Risk (Score $score / 10)",
+                "< 5% probability of appendicitis",
+                "Acute appendicitis is unlikely. Safe for outpatient discharge with clear return instructions if clinical condition remains stable.",
+                listOf(
+                    "Step 1 (Disposition): Safe for discharge home provided patient has reliable observation and tolerance of oral intake.",
+                    "Step 2 (Red Flags): Educate on immediate emergency return precautions: worsening localized RLQ pain, spiking fever (>38°C), or persistent vomiting.",
+                    "Step 3 (Re-evaluation): Recommend scheduled follow-up abdominal examination in 12–24 hours if mild abdominal discomfort persists.",
+                    "Step 4 (Medication): Prescribe oral Acetaminophen (Paracetamol) for analgesia; avoid strong opiates or NSAIDs that may mask evolving peritonitis."
+                )
+            )
+            score in 5..6 -> Quadruple(
+                "Equivocal / Moderate Risk (Score $score / 10)",
+                "30% - 50% probability of appendicitis",
+                "Compatible with acute appendicitis, but not diagnostic. Patient warrants observation, active surgical consultation, and diagnostic imaging.",
+                listOf(
+                    "Step 1 (Surgical Triage): Request urgent General Surgery consultation for clinical observation and inpatient admission.",
+                    "Step 2 (Patient Fasting): Strict NPO (Nil Per Os) status; initiate IV isotonic hydration (Ringer's Lactate or Normal Saline at 100–125 mL/hr).",
+                    "Step 3 (Diagnostic Imaging): Perform Abdominal Ultrasound (preferred first-line in pediatric and pregnant patients) or Contrast-Enhanced Abdominal CT (high sensitivity in adults).",
+                    "Step 4 (Monitoring): Perform serial abdominal examinations every 2 to 4 hours by the same clinical surgical team."
+                )
+            )
+            score in 7..8 -> Quadruple(
+                "High Probability (Score $score / 10)",
+                "70% - 80% probability of appendicitis",
+                "Probable acute appendicitis. Operative management is strongly indicated; proceed directly with surgical preparation.",
+                listOf(
+                    "Step 1 (Urgent Surgical Consult): Immediate General Surgery consultation for emergency appendectomy (laparoscopic preferred).",
+                    "Step 2 (Pre-operative Care): Strict NPO; secure large-bore IV access and infuse balanced crystalloids for volume repletion.",
+                    "Step 3 (Antimicrobial Prophylaxis): Administer pre-operative IV antibiotics within 60 minutes prior to surgical incision: Cefoxitin 2g IV OR Ceftriaxone 1g + Metronidazole 500mg IV.",
+                    "Step 4 (Pre-op Workup): Stat Type & Screen, PT/INR, CBC, electrolytes, and urinalysis (to exclude nephrolithiasis / severe UTI)."
+                )
+            )
+            else -> Quadruple(
+                "Almost Definite (Score $score / 10)",
+                "> 90% probability of appendicitis",
+                "Definite acute appendicitis. High risk of perforation, gangrene, or localized abscess. Immediate surgical intervention required.",
+                listOf(
+                    "Step 1 (Immediate OR Transfer): Expedite operating room transfer for emergency appendectomy without unnecessary imaging delays.",
+                    "Step 2 (Broad-Spectrum IV Antibiotics): Initiate therapeutic IV Ceftriaxone 1g-2g + Metronidazole 500mg IV (or Piperacillin-Tazobactam 4.5g IV if septic shock / perforation suspected).",
+                    "Step 3 (Resuscitation & Analgesia): Infuse IV fluids to restore perfusion; provide parenteral analgesia (IV Fentanyl or Morphine titrations; analgesia does NOT delay diagnosis).",
+                    "Step 4 (Anesthesia Notification): Alert anesthesiology for rapid sequence induction and airway management in a potentially full-stomach emergency."
+                )
+            )
+        }
+
+        return AlvaradoResult(score, tier, prob, interp, steps)
+    }
+
+    // =========================================================================
+    // 15. 4Ts Score for Heparin-Induced Thrombocytopenia (HIT)
+    // =========================================================================
+    data class FourTsResult(
+        val totalScore: Int,
+        val riskTier: String,
+        val probability: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateFourTs(
+        thrombocytopeniaPts: Int, // 0, 1, 2
+        timingPts: Int,           // 0, 1, 2
+        thrombosisPts: Int,       // 0, 1, 2
+        otherCausesPts: Int       // 0, 1, 2
+    ): FourTsResult {
+        val score = (thrombocytopeniaPts.coerceIn(0, 2) +
+                timingPts.coerceIn(0, 2) +
+                thrombosisPts.coerceIn(0, 2) +
+                otherCausesPts.coerceIn(0, 2))
+
+        val (tier, prob, interp, steps) = when {
+            score <= 3 -> Quadruple(
+                "Low Probability (Score $score / 8)",
+                "≤ 5% probability of HIT",
+                "Heparin-induced thrombocytopenia is highly unlikely. Negative predictive value > 99%.",
+                listOf(
+                    "Step 1 (Heparin Status): Continue heparin therapy if clinically indicated; routine cessation is NOT required.",
+                    "Step 2 (Testing Rule): DO NOT send HIT antibody testing (anti-PF4 ELISA); testing in low-probability patients yields high false-positive rates.",
+                    "Step 3 (Surveillance): Continue routine platelet monitoring every 2 to 3 days if unfractionated heparin is continued.",
+                    "Step 4 (Alternative Causes): Evaluate other common etiologies of mild thrombocytopenia: post-op hemodilution, sepsis, medications, or EDTA clumping."
+                )
+            )
+            score in 4..5 -> Quadruple(
+                "Intermediate Probability (Score $score / 8)",
+                "~14% probability of HIT",
+                "Moderate pre-test probability of HIT. Immediate cessation of all heparin and transition to non-heparin anticoagulation required.",
+                listOf(
+                    "Step 1 (STOP ALL HEPARIN): Immediately discontinue all unfractionated heparin, LMWH (Enoxaparin), heparin flushes, and heparin-coated central catheters.",
+                    "Step 2 (Alternative Anticoagulation): Start alternative therapeutic non-heparin anticoagulant: Argatroban IV infusion (titrate to aPTT 1.5–3x baseline) OR Fondaparinux (7.5 mg SC daily).",
+                    "Step 3 (Laboratory Workup): Send urgent anti-PF4/heparin immunoassay (ELISA); confirm with functional Serotonin Release Assay (SRA) if positive.",
+                    "Step 4 (Crucial Contraindications): DO NOT give platelet transfusions (triggers arterial thrombosis) and DO NOT initiate Warfarin (triggers venous limb gangrene and skin necrosis).",
+                    "Step 5 (Screening Ultrasound): Perform bilateral lower extremity venous duplex ultrasound to screen for occult deep vein thrombosis."
+                )
+            )
+            else -> Quadruple(
+                "High Probability (Score $score / 8)",
+                "~64% probability of HIT",
+                "High pre-test probability of HIT. Immediate cessation of heparin and full therapeutic alternative anticoagulation mandatory.",
+                listOf(
+                    "Step 1 (EMERGENCY HEPARIN CESSATION): Cease all heparin products immediately; flag patient medical chart with prominent 'HEPARIN ALLERGY / HIT ALERT'.",
+                    "Step 2 (Therapeutic Anticoagulation): Initiate full-dose non-heparin anticoagulation: Argatroban (0.5–2 mcg/kg/min IV, adjust for liver disease) OR Fondaparinux OR Bivalirudin.",
+                    "Step 3 (Diagnostic Confirmation): Order STAT PF4/heparin ELISA and functional 14C-Serotonin Release Assay (SRA); consult Hematology.",
+                    "Step 4 (Vascular Screening): Mandatory bilateral lower extremity venous Doppler ultrasound to detect silent thrombosis; monitor limb perfusion.",
+                    "Step 5 (Warfarin Reversal): If patient was already on Warfarin, give oral/IV Vitamin K to reverse it, because Warfarin-induced Protein C depletion causes catastrophic limb necrosis."
+                )
+            )
+        }
+
+        return FourTsResult(score, tier, prob, interp, steps)
+    }
+
+    // =========================================================================
+    // 16. Serum Anion Gap & Delta-Delta Ratio (Delta Gap)
+    // =========================================================================
+    data class AnionDeltaGapResult(
+        val anionGap: Double,
+        val correctedAnionGap: Double,
+        val deltaGap: Double,
+        val deltaRatio: Double,
+        val acidBaseCategory: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateAnionDeltaGap(
+        sodium: Double,
+        chloride: Double,
+        bicarbonate: Double,
+        albumin: Double = 4.0
+    ): AnionDeltaGapResult {
+        if (sodium <= 0 || chloride <= 0 || bicarbonate <= 0) {
+            return AnionDeltaGapResult(0.0, 0.0, 0.0, 0.0, "Invalid Inputs", "Enter valid positive electrolyte values.", emptyList())
+        }
+
+        val uncorrectedAG = sodium - (chloride + bicarbonate)
+        val alb = if (albumin > 0) albumin else 4.0
+        val correctedAG = uncorrectedAG + 2.5 * (4.0 - alb)
+        val roundedAG = (correctedAG * 10.0).roundToInt() / 10.0
+
+        val deltaGap = roundedAG - 12.0
+        val bicarbDeficit = 24.0 - bicarbonate
+        val deltaRatio = if (bicarbDeficit > 0.5) {
+            (deltaGap / bicarbDeficit * 100.0).roundToInt() / 100.0
+        } else {
+            0.0
+        }
+
+        val (cat, interp, steps) = when {
+            roundedAG <= 12.0 -> {
+                if (bicarbonate < 22.0) {
+                    Triple(
+                        "Normal Anion Gap Metabolic Acidosis (NAGMA)",
+                        "Non-anion gap (hyperchloremic) metabolic acidosis. Primary bicarbonate loss without unmeasured organic anions.",
+                        listOf(
+                            "Step 1 (Etiology Screen): Differentiate GI bicarbonate loss (severe diarrhea, enterocutaneous fistula) from Renal Tubular Acidosis (RTA).",
+                            "Step 2 (Urine Anion Gap): Calculate Urine AG = (Urine Na + Urine K) - Urine Cl. Negative result (<0) confirms GI diarrhea; positive result (>0) confirms impaired renal H+ excretion (RTA).",
+                            "Step 3 (Fluid Selection): Avoid excessive 0.9% Normal Saline (causes dilutional hyperchloremic acidosis); switch to balanced crystalloid (Plasmalyte or Ringer's Lactate).",
+                            "Step 4 (Therapy): Treat underlying diarrhea; consider oral Sodium Bicarbonate supplementation only if serum HCO3 < 15 mEq/L or pH < 7.20."
+                        )
+                    )
+                } else {
+                    Triple(
+                        "Normal Anion Gap (Normal Acid-Base)",
+                        "Normal serum anion gap (≤ 12 mEq/L). No high anion gap metabolic acidosis present.",
+                        listOf(
+                            "Step 1 (Clinical Correlation): Correlate with patient's arterial blood gas (ABG) and clinical presentation.",
+                            "Step 2 (Routine Monitoring): Repeat electrolyte panel as clinically indicated during acute illness."
+                        )
+                    )
+                }
+            }
+            deltaRatio < 0.4 -> Triple(
+                "Mixed High AG Acidosis + Normal AG Acidosis (NAGMA)",
+                "High Anion Gap Acidosis combined with severe hyperchloremic non-gap acidosis (Delta Ratio < 0.4). Bicarbonate drop exceeds the anion gap rise.",
+                listOf(
+                    "Step 1 (Dual Etiology Workup): Screen for concurrent cause of high AG acidosis (e.g. DKA or lactic acidosis) PLUS cause of non-gap acidosis (diarrhea or saline overload).",
+                    "Step 2 (Fluid Strategy): Immediately stop 0.9% Normal Saline infusions; switch to balanced crystalloids (Ringer's Lactate or Plasmalyte).",
+                    "Step 3 (Diagnostic Labs): Order Serum Lactate, Serum Ketones (Beta-hydroxybutyrate), BUN/Creatinine, and Urine Anion Gap.",
+                    "Step 4 (Targeted Treatment): Treat the primary organic acidosis driver (insulin for DKA, perfusion for sepsis); monitor electrolytes every 2–4 hours."
+                )
+            )
+            deltaRatio >= 0.4 && deltaRatio <= 0.8 -> Triple(
+                "Mixed HAGMA + Concomitant Non-Gap Acidosis",
+                "High Anion Gap Acidosis with secondary hyperchloremic non-gap acidosis component (Delta Ratio 0.4–0.8).",
+                listOf(
+                    "Step 1 (Screen GOLDMARK): Screen for Glycols, Oxoproline, L-Lactate, D-Lactate, Methanol, Aspirin, Uremia, and Ketoacidosis.",
+                    "Step 2 (Evaluate Saline Loading): Determine if recent large-volume 0.9% Normal Saline resuscitation contributed to hyperchloremia.",
+                    "Step 3 (Balanced Hydration): Transition fluids to Ringer's Lactate or D5W with bicarbonate if severe acidosis.",
+                    "Step 4 (Frequent Checks): Re-evaluate basic metabolic panel and venous/arterial blood gas in 2 to 4 hours."
+                )
+            )
+            deltaRatio >= 0.8 && deltaRatio <= 2.0 -> Triple(
+                "Pure High Anion Gap Metabolic Acidosis (HAGMA)",
+                "Uncomplicated High Anion Gap Metabolic Acidosis (Delta Ratio 0.8–2.0). 1:1 stoichiometric rise in anion gap matches the decline in bicarbonate.",
+                listOf(
+                    "Step 1 (GOLDMARK Differential): Investigate standard causes: Diabetic Ketoacidosis (DKA), L-Lactic Acidosis (sepsis/hypoperfusion), Alcoholic/Starvation Ketoacidosis, Uremia, or Toxic Ingestions.",
+                    "Step 2 (Critical Diagnostics): Stat Serum Lactate, Beta-hydroxybutyrate, BUN/Creatinine, and Serum Osmolality (to check Osmolar Gap).",
+                    "Step 3 (Etiology-Directed Care): DKA -> IV fluid hydration + IV Insulin infusion (0.1 U/kg/hr); Sepsis -> Broad-spectrum antibiotics + fluid resuscitation; Uremia -> Nephrology consult.",
+                    "Step 4 (Bicarbonate Warning): Routine sodium bicarbonate infusion is generally NOT recommended in pure HAGMA unless arterial pH < 7.10 or severe refractory shock."
+                )
+            )
+            else -> Triple(
+                "Mixed HAGMA + Metabolic Alkalosis (or Chronic Resp Acidosis)",
+                "High Anion Gap Acidosis with concurrent Metabolic Alkalosis (Delta Ratio > 2.0). Bicarbonate is higher than expected for the degree of anion gap elevation.",
+                listOf(
+                    "Step 1 (Identify Alkalosis Source): Evaluate for concurrent severe vomiting, nasogastric tube suction, or prior loop/thiazide diuretic therapy.",
+                    "Step 2 (Screen COPD / Hypercapnia): Check if patient has underlying severe COPD with chronic compensatory renal bicarbonate retention.",
+                    "Step 3 (Electrolyte Replacement): Check serum potassium and magnesium; hypokalemia frequently perpetuates metabolic alkalosis. Administer IV/oral Potassium Chloride.",
+                    "Step 4 (Volume Resuscitation): Administer isotonic IV fluids with Potassium Chloride if hypovolemic and chloride-responsive; treat primary high AG source."
+                )
+            )
+        }
+
+        return AnionDeltaGapResult(uncorrectedAG, roundedAG, deltaGap, deltaRatio, cat, interp, steps)
+    }
+
+    // =========================================================================
+    // 17. Serum Osmolality & Osmolar Gap
+    // =========================================================================
+    data class OsmolarGapResult(
+        val calculatedOsmolality: Double,
+        val measuredOsmolality: Double,
+        val osmolarGap: Double,
+        val riskTier: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateOsmolarGap(
+        measuredOsm: Double,
+        sodium: Double,
+        glucoseMgDl: Double,
+        bunMgDl: Double,
+        ethanolMgDl: Double = 0.0
+    ): OsmolarGapResult {
+        if (measuredOsm <= 0 || sodium <= 0) {
+            return OsmolarGapResult(0.0, 0.0, 0.0, "Invalid Inputs", "Enter valid positive measured osmolality and sodium.", emptyList())
+        }
+
+        val calculated = (2.0 * sodium) + (glucoseMgDl / 18.0) + (bunMgDl / 2.8) + (ethanolMgDl / 4.6)
+        val roundedCalc = (calculated * 10.0).roundToInt() / 10.0
+        val gap = ((measuredOsm - calculated) * 10.0).roundToInt() / 10.0
+
+        val (tier, interp, steps) = when {
+            gap > 10.0 -> Triple(
+                "Elevated Osmolar Gap (> 10 mOsm/kg)",
+                "High Osmolar Gap ($gap mOsm/kg). Indicates the presence of unmeasured low-molecular-weight osmotically active toxins: Toxic Alcohols (Methanol, Ethylene Glycol, Isopropanol), Propylene Glycol, or Acetone.",
+                listOf(
+                    "Step 1 (Antidote Initiation): Start Fomepizole loading dose immediately (15 mg/kg IV in 100 mL D5W over 30 min) OR IV Ethanol 10% infusion if Fomepizole is unavailable.",
+                    "Step 2 (Methanol Specific Adjunct): If visual disturbance or optic disc hyperemia: administer Folinic Acid (Leucovorin) 50 mg IV q4h to promote formic acid conversion to CO2.",
+                    "Step 3 (Ethylene Glycol Specific Adjunct): If flank pain or urine calcium oxalate envelope crystals: administer Pyridoxine 100 mg IV + Thiamine 100 mg IV q6h.",
+                    "Step 4 (Emergent Hemodialysis): Request STAT Nephrology consult for urgent Hemodialysis if: Osmolar Gap > 20 mOsm/kg, severe metabolic acidosis (pH < 7.25), visual deficit, or AKI.",
+                    "Step 5 (Toxicology & Poison Control): Contact Regional Poison Center; check arterial blood gas, serum lactate, and repeat osmolar gap every 2 to 4 hours."
+                )
+            )
+            else -> Triple(
+                "Normal Osmolar Gap (≤ 10 mOsm/kg)",
+                "Normal Osmolar Gap ($gap mOsm/kg). Significant acute toxic alcohol ingestion is unlikely at this time.",
+                listOf(
+                    "Step 1 (Clinical Correlation): Note that in late-presenting toxic alcohol ingestions (>24–48h), the parent alcohol has converted into acid metabolites, closing the osmolar gap while widening the anion gap.",
+                    "Step 2 (Alternative Differential): If severe metabolic acidosis is present without osmolar gap, investigate DKA, lactic acidosis, starvation ketosis, or salicylate toxicity.",
+                    "Step 3 (Monitoring): Repeat basic metabolic panel and vital signs monitoring."
+                )
+            )
+        }
+
+        return OsmolarGapResult(roundedCalc, measuredOsm, gap, tier, interp, steps)
+    }
+
+    // =========================================================================
+    // 18. ROX Index (High-Flow Nasal Cannula Failure Predictor)
+    // =========================================================================
+    data class RoxIndexResult(
+        val roxScore: Double,
+        val riskTier: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateRoxIndex(
+        spo2Percent: Double,
+        fio2Percent: Double, // 21 to 100%
+        respiratoryRate: Double
+    ): RoxIndexResult {
+        if (spo2Percent <= 0 || fio2Percent <= 0 || respiratoryRate <= 0) {
+            return RoxIndexResult(0.0, "Invalid Inputs", "Enter valid positive values for SpO2, FiO2, and RR.", emptyList())
+        }
+        val fio2Fraction = fio2Percent / 100.0
+        val rox = (spo2Percent / fio2Fraction) / respiratoryRate
+        val rounded = (rox * 100.0).roundToInt() / 100.0
+
+        val (tier, interp, steps) = when {
+            rounded >= 4.88 -> Triple(
+                "Low Risk of Failure (Score $rounded)",
+                "ROX Index ≥ 4.88. High likelihood of successful High-Flow Nasal Cannula (HFNC) therapy. Low risk of progression to mechanical ventilation.",
+                listOf(
+                    "Step 1 (Maintain Therapy): Continue High-Flow Nasal Cannula; titrate flow (30–60 L/min) and FiO2 to maintain SpO2 92–96% (88–92% in hypercapnic COPD).",
+                    "Step 2 (Awake Proning): Encourage awake prone positioning (proning sessions 4–8 hours daily) to improve ventilation-perfusion matching.",
+                    "Step 3 (Reassessment Schedule): Re-evaluate ROX index strictly at 2 hours, 6 hours, and 12 hours post-initiation.",
+                    "Step 4 (Weaning Protocol): Once stabilized with ROX > 5.0 and RR < 25, gradually wean FiO2 first below 40%, then taper flow rate."
+                )
+            )
+            rounded >= 3.85 && rounded <= 4.87 -> Triple(
+                "Intermediate / Warning Zone (Score $rounded)",
+                "ROX Index between 3.85 and 4.87. Indeterminate response to HFNC. High vigilance required.",
+                listOf(
+                    "Step 1 (Optimize Settings): Increase HFNC flow rate up to maximum tolerance (e.g. 50–60 L/min) to optimize alveolar recruitment and reduce dead space.",
+                    "Step 2 (Clinical Assessment): Actively evaluate work of breathing: check for sternocleidomastoid accessory muscle usage, suprasternal retraction, and thoracoabdominal asynchrony.",
+                    "Step 3 (Stat Repeat): Repeat ROX index strictly within 1 to 2 hours; alert the ICU / Critical Care outreach team.",
+                    "Step 4 (Pre-intubation Planning): Ensure functional bag-valve mask, suction, endotracheal intubation tray, and video laryngoscope are ready at bedside."
+                )
+            )
+            else -> Triple(
+                "High Risk of HFNC Failure (Score $rounded)",
+                "ROX Index < 3.85. Very high failure rate of High-Flow Nasal Cannula (mortality hazard increases significantly if intubation is delayed).",
+                listOf(
+                    "Step 1 (STAT ICU Notification): Immediately alert Intensive Care Unit / Anesthesia team for urgent endotracheal intubation.",
+                    "Step 2 (Do NOT Delay Intubation): Avoid prolonging non-invasive trials in a failing patient; delayed emergency crash intubations carry increased cardiopulmonary arrest rates.",
+                    "Step 3 (Pre-oxygenation): Provide optimal pre-oxygenation with 100% FiO2 on HFNC + non-rebreather mask; minimize patient desaturation during induction.",
+                    "Step 4 (RSI Medication Preparation): Prepare Rapid Sequence Induction medications: hemodynamically stable induction agent (Ketamine 1.5–2 mg/kg or Etomidate 0.3 mg/kg) + Rocuronium (1.2 mg/kg IV)."
+                )
+            )
+        }
+
+        return RoxIndexResult(rounded, tier, interp, steps)
+    }
+
+    // =========================================================================
+    // 19. Simplified PESI (sPESI) for Pulmonary Embolism
+    // =========================================================================
+    data class SpesiResult(
+        val totalScore: Int,
+        val riskTier: String,
+        val thirtyDayMortality: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateSpesi(
+        ageOver80: Boolean,
+        historyOfCancer: Boolean,
+        chronicCardiopulmonaryDisease: Boolean,
+        heartRateOver110: Boolean,
+        sbpUnder100: Boolean,
+        spo2Under90: Boolean
+    ): SpesiResult {
+        var score = 0
+        if (ageOver80) score += 1
+        if (historyOfCancer) score += 1
+        if (chronicCardiopulmonaryDisease) score += 1
+        if (heartRateOver110) score += 1
+        if (sbpUnder100) score += 1
+        if (spo2Under90) score += 1
+
+        val (tier, mort, interp, steps) = when (score) {
+            0 -> Quadruple(
+                "Low Risk (Score 0)",
+                "1.1% 30-day mortality",
+                "Low risk of 30-day all-cause mortality. Patient is a candidate for early discharge or outpatient anticoagulation management if home criteria are met.",
+                listOf(
+                    "Step 1 (Outpatient Candidacy): Screen for outpatient home therapy eligibility (Hestia criteria): confirmed hemodynamic stability, absence of severe pain, adequate social support.",
+                    "Step 2 (First-Line Anticoagulation): Initiate oral Direct Oral Anticoagulant (DOAC): Apixaban (10 mg PO BID for 7 days, then 5 mg PO BID) OR Rivaroxaban (15 mg PO BID with food for 21 days, then 20 mg PO daily).",
+                    "Step 3 (Patient Counseling): Educate on bleeding precautions (signs of GI bleed, intracranial hemorrhage), compliance importance, and avoid concurrent NSAIDs.",
+                    "Step 4 (Follow-up): Schedule mandatory outpatient clinical review within 5 to 7 days."
+                )
+            )
+            else -> Quadruple(
+                "High Risk (Score ≥ 1 [Score: $score])",
+                "8.9% - 10.9% 30-day mortality",
+                "High risk of 30-day adverse outcomes. Hospital inpatient admission is mandatory; requires active hemodynamic and RV strain monitoring.",
+                listOf(
+                    "Step 1 (Hospital Admission): Inpatient admission required; continuous telemetry and pulse oximetry monitoring.",
+                    "Step 2 (Right Ventricle Evaluation): Order urgent Transthoracic Echocardiogram (TTE) to check for RV enlargement, hypokinesis, and McConnell's sign; check CT PA for RV/LV diameter ratio > 1.0.",
+                    "Step 3 (Cardiac Biomarkers): Stat Cardiac Troponin I/T and NT-proBNP/BNP to detect right ventricular myocardial strain.",
+                    "Step 4 (Anticoagulation Choice): Initiate Low-Molecular-Weight Heparin (Enoxaparin 1 mg/kg SC q12h) or IV Unfractionated Heparin infusion (if impending hemodynamic collapse or severe renal failure).",
+                    "Step 5 (Advanced Reperfusion): If sustained hypotension (SBP < 90 mmHg) or cardiac arrest develops: Activate Pulmonary Embolism Response Team (PERT) for Systemic Thrombolysis (Alteplase 100 mg IV over 2h) or catheter-directed embolectomy."
+                )
+            )
+        }
+
+        return SpesiResult(score, tier, mort, interp, steps)
+    }
+
+    // =========================================================================
+    // 20. Fractional Excretion of Urea (FEUrea) for AKI
+    // =========================================================================
+    data class FeUreaResult(
+        val feUreaPercent: Double,
+        val etiology: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateFeUrea(
+        serumUreaBun: Double,
+        urineUrea: Double,
+        serumCr: Double,
+        urineCr: Double
+    ): FeUreaResult {
+        if (serumUreaBun <= 0 || serumCr <= 0 || urineCr <= 0 || urineUrea <= 0) {
+            return FeUreaResult(0.0, "Invalid Inputs", "Enter valid positive urea and creatinine values.", emptyList())
+        }
+
+        val feUrea = ((urineUrea * serumCr) / (serumUreaBun * urineCr)) * 100.0
+        val rounded = (feUrea * 10.0).roundToInt() / 10.0
+
+        val (etio, interp, steps) = when {
+            rounded < 35.0 -> Triple(
+                "Prerenal Azotemia (< 35%)",
+                "FEUrea < 35% indicates intact tubular urea reabsorption. Diagnostic of Prerenal Azotemia even if the patient has received loop diuretics (which falsely elevate FENa).",
+                listOf(
+                    "Step 1 (Fluid Resuscitation): Volume depletion is the most common cause; administer an isotonic fluid challenge (500–1000 mL crystalloid over 1–2 hours) unless overt pulmonary edema or severe heart failure.",
+                    "Step 2 (Hold Diuretics & Nephrotoxins): Temporarily discontinue loop diuretics, ACE inhibitors, ARBs, and NSAIDs.",
+                    "Step 3 (Assess Perfusion): Evaluate effective circulating volume (cardiorenal syndrome, hepatorenal syndrome, or severe sepsis-induced vasodilation).",
+                    "Step 4 (Serial Monitoring): Track hourly urine output via Foley catheter (target > 0.5 mL/kg/hr); repeat serum BUN and Creatinine at 12 and 24 hours."
+                )
+            )
+            rounded >= 35.0 && rounded <= 50.0 -> Triple(
+                "Indeterminate Zone (35% - 50%)",
+                "FEUrea in indeterminate range. May represent evolving acute tubular injury, acute interstitial nephritis, or mixed prerenal and intrinsic insult.",
+                listOf(
+                    "Step 1 (Comprehensive Review): Review medication chart for recent aminoglycosides, vancomycin, IV radiocontrast, or calcineurin inhibitors.",
+                    "Step 2 (Urine Microscopy): Perform spun urine microscopy to inspect for 'muddy brown' granular casts (diagnostic of ATN) or WBC casts (interstitial nephritis).",
+                    "Step 3 (Conservative Hydration): Give gentle isotonic fluids while closely monitoring volume status; avoid fluid overloading an oligo-anuric patient.",
+                    "Step 4 (Renal Ultrasound): Perform renal ultrasound to rule out post-renal hydronephrosis/obstruction."
+                )
+            )
+            else -> Triple(
+                "Intrinsic AKI / Acute Tubular Necrosis (> 50%)",
+                "FEUrea > 50% indicates damaged tubular reabsorptive capacity. Consistent with Intrinsic Renal Injury (Acute Tubular Necrosis / ATN).",
+                listOf(
+                    "Step 1 (Fluid Restriction): Restrict maintenance IV fluids to insensible losses (~500 mL/day) plus measured urine output; aggressive fluid loading in established ATN causes lethal pulmonary edema.",
+                    "Step 2 (Strict Medication Dose Adjustments): Dose-adjust all renally eliminated medications (beta-lactams, fluoroquinolones, enoxaparin, digoxin, gabapentin) to current eGFR.",
+                    "Step 3 (Electrolyte Vigilance): Monitor and aggressively treat hyperkalemia (calcium gluconate, insulin/glucose, Lokelma/Kayexalate) and severe metabolic acidosis.",
+                    "Step 4 (Nephrology Consultation): Involve Nephrology early for hemodialysis planning if refractory volume overload, intractable hyperkalemia, or uremic pericarditis/encephalopathy occurs."
+                )
+            )
+        }
+
+        return FeUreaResult(rounded, etio, interp, steps)
+    }
+
+    // =========================================================================
+    // 21. BAP-65 Score for Acute Exacerbation of COPD
+    // =========================================================================
+    data class Bap65Result(
+        val totalScore: Int,
+        val riskClass: String,
+        val inHospitalMortality: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateBap65(
+        bunOver25: Boolean,
+        alteredMentalStatus: Boolean,
+        pulseOver109: Boolean,
+        ageOver65: Boolean
+    ): Bap65Result {
+        var score = 0
+        if (bunOver25) score += 1
+        if (alteredMentalStatus) score += 1
+        if (pulseOver109) score += 1
+        if (ageOver65) score += 1
+
+        val (cls, mort, interp, steps) = when (score) {
+            0 -> Quadruple(
+                "Class I (Low Risk)",
+                "0.3% in-hospital mortality",
+                "Low risk of in-hospital death and need for mechanical ventilation. Suitable for outpatient management or brief observation.",
+                listOf(
+                    "Step 1 (Bronchodilator Therapy): Inhaled Short-Acting Beta-Agonist (Salbutamol 2.5–5 mg) + Anticholinergic (Ipratropium 0.5 mg) nebulized every 4 to 6 hours.",
+                    "Step 2 (Systemic Corticosteroids): Oral Prednisolone 40 mg once daily for 5 days (shorter courses are as effective as prolonged tapers).",
+                    "Step 3 (Antibiotic Coverage): Oral Amoxicillin-Clavulanate (875/125 mg BID) OR Azithromycin (500 mg day 1, then 250 mg daily for 4 days) if purulent sputum is present.",
+                    "Step 4 (Discharge Planning): Ensure proper inhaler technique; arrange outpatient follow-up within 7 to 14 days."
+                )
+            )
+            1 -> Quadruple(
+                "Class II (Low-to-Intermediate Risk)",
+                "1.0% in-hospital mortality",
+                "Mildly elevated mortality risk. Inpatient medical ward admission or observation unit recommended.",
+                listOf(
+                    "Step 1 (Inpatient Admission): Admit to general medicine / respiratory ward for close observation and scheduled nebulizers.",
+                    "Step 2 (Controlled Oxygen Therapy): Titrate supplemental oxygen targeting SpO2 88–92% using a 28% Venturi mask (avoid hyperoxia that worsens CO2 retention).",
+                    "Step 3 (Medical Optimization): Regular nebulized bronchodilators + systemic steroids (Prednisolone 40 mg PO daily) + appropriate antibiotics.",
+                    "Step 4 (Arterial Blood Gas): Obtain baseline ABG to check for hypercapnia and respiratory acidosis."
+                )
+            )
+            2 -> Quadruple(
+                "Class III (Moderate-High Risk)",
+                "6.0% in-hospital mortality",
+                "Significant risk of treatment failure and clinical deterioration. Hospital admission with high-dependency care capability required.",
+                listOf(
+                    "Step 1 (High-Dependency Admission): Admit to step-down / High Dependency Unit with continuous cardiorespiratory monitoring.",
+                    "Step 2 (Arterial Blood Gas Evaluation): If pH < 7.35 and PaCO2 > 45 mmHg despite medical therapy: Initiate Non-Invasive Ventilation (BiPAP: IPAP 10–12 cmH2O, EPAP 4–5 cmH2O).",
+                    "Step 3 (IV Therapeutics): Administer IV Methylprednisolone 40–60 mg q12h; consider IV Magnesium Sulfate 2g infusion over 20 min for severe bronchospasm.",
+                    "Step 4 (Pseudomonas Screening): If frequent exacerbations or FEV1 < 30%: send sputum culture and use antipseudomonal antibiotic (Piperacillin-Tazobactam or Cefepime)."
+                )
+            )
+            3 -> Quadruple(
+                "Class IV (Severe Risk)",
+                "14.1% in-hospital mortality",
+                "Severe exacerbation with high mortality risk. Intensive Care Unit (ICU) admission and early ventilatory support indicated.",
+                listOf(
+                    "Step 1 (Urgent ICU Admission): Transfer immediately to the Intensive Care Unit.",
+                    "Step 2 (Early NIV / BiPAP Trial): Immediate trial of BiPAP unless patient is severely obtunded, vomiting, or hemodynamically unstable.",
+                    "Step 3 (Intubation Readiness): Prepare for endotracheal intubation if patient fails to improve on BiPAP within 1–2 hours (persistent acidosis pH < 7.25 or worsening lethargy).",
+                    "Step 4 (Continuous Hemodynamic Line): Place arterial catheter for continuous blood pressure monitoring and frequent ABG draws."
+                )
+            )
+            else -> Quadruple(
+                "Class V (Extreme Critical Risk)",
+                "> 25.0% in-hospital mortality",
+                "Extreme risk of mortality and immediate respiratory arrest. Emergent invasive mechanical ventilation and critical care resuscitation required.",
+                listOf(
+                    "Step 1 (Immediate Critical Care Transfer): Emergent ICU resuscitation; notify on-duty critical care intensivist.",
+                    "Step 2 (Invasive Mechanical Ventilation): Urgent endotracheal intubation and lung-protective mechanical ventilation with permissive hypercapnia (prolonged expiratory time to avoid auto-PEEP / dynamic hyperinflation).",
+                    "Step 3 (Broad-Spectrum IV Therapy): IV Broad-spectrum antibiotics + IV Corticosteroids + continuous nebulized bronchodilators.",
+                    "Step 4 (Central Line & Vasopressors): Secure central venous access; initiate Norepinephrine if post-intubation hypotension develops due to hyperinflation and decreased venous return."
+                )
+            )
+        }
+
+        return Bap65Result(score, cls, mort, interp, steps)
+    }
+
+    // =========================================================================
+    // 22. NIH Stroke Scale (NIHSS) Screening
+    // =========================================================================
+    data class NihssResult(
+        val totalScore: Int,
+        val strokeSeverity: String,
+        val thrombolysisCandidate: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateNihss(totalPoints: Int): NihssResult {
+        val score = totalPoints.coerceIn(0, 42)
+
+        val (sev, candidate, interp, steps) = when {
+            score == 0 -> Quadruple(
+                "No Stroke Symptoms (Score 0)",
+                "Not indicated",
+                "No focal neurological deficits detected on NIHSS.",
+                listOf(
+                    "Step 1 (Transient Ischemic Attack Evaluation): If transient focal deficits resolved completely: calculate ABCD2 score for TIA risk stratification.",
+                    "Step 2 (Vascular Imaging): Order MRI Brain with DWI or CT Angiography of head and neck to rule out minor infarction or high-grade carotid stenosis.",
+                    "Step 3 (Cardiac Workup): 12-lead ECG and echocardiogram to exclude cardioembolic sources (Atrial Fibrillation, mural thrombus).",
+                    "Step 4 (Secondary Prevention): Start antiplatelet therapy (Aspirin 81–100 mg daily) and high-intensity Statin (Atorvastatin 80 mg daily)."
+                )
+            )
+            score in 1..4 -> Quadruple(
+                "Minor Stroke (Score $score / 42)",
+                "Evaluate for disabling deficits",
+                "Minor acute ischemic stroke. Consider IV thrombolysis if disabling deficit present (e.g. hemianopia, severe aphasia, or hand weakness).",
+                listOf(
+                    "Step 1 (Disabling Deficit Assessment): Determine if the minor deficit is clinically disabling for the patient's occupation/life; if disabling and within 4.5 hours: consider IV Thrombolysis (Tenecteplase 0.25 mg/kg or Alteplase 0.9 mg/kg).",
+                    "Step 2 (Stat Non-Contrast CT): Immediate Non-contrast Head CT to exclude intracranial hemorrhage.",
+                    "Step 3 (Dual Antiplatelet Therapy): If thrombolysis is NOT administered: start DAPT (Aspirin 100 mg + Clopidogrel 75 mg with 300 mg loading dose) for 21 days (POINT/CHANCE protocol).",
+                    "Step 4 (Stroke Unit Care): Admit to certified Stroke Unit; monitor NIHSS every 4 hours to detect early neurological deterioration."
+                )
+            )
+            score in 5..15 -> Quadruple(
+                "Moderate Stroke (Score $score / 42)",
+                "Prime Thrombolysis / Thrombectomy Candidate",
+                "Moderate acute neurological deficit. High benefit from acute reperfusion therapy if within time windows.",
+                listOf(
+                    "Step 1 (EMERGENCY CODE STROKE): Immediate Code Stroke activation; target door-to-needle time < 45 minutes.",
+                    "Step 2 (Stat CT & CT Angiography): STAT Non-contrast CT Head to exclude hemorrhage + CT Angiography (CTA) of Head and Neck to detect Large Vessel Occlusion (LVO).",
+                    "Step 3 (IV Thrombolysis Window < 4.5h): If symptom onset < 4.5 hours and no contraindications: administer IV Tenecteplase 0.25 mg/kg IV bolus (max 25 mg) OR Alteplase 0.9 mg/kg IV (max 90 mg; 10% bolus, 90% over 60 min). Blood pressure must be < 185/110 mmHg (use IV Labetalol or Nicardipine).",
+                    "Step 4 (Endovascular Thrombectomy Window < 24h): If CTA shows proximal anterior circulation occlusion (ICA, M1 segment of MCA): transfer immediately to Interventional Radiology for Endovascular Thrombectomy (EVT).",
+                    "Step 5 (Dysphagia & Vitals): Strict NPO until bedside swallow screen; continuous cardiac telemetry and blood pressure monitoring in Neuro-ICU."
+                )
+            )
+            score in 16..20 -> Quadruple(
+                "Moderate-to-Severe Stroke (Score $score / 42)",
+                "Urgent EVT & Thrombolysis Candidate",
+                "Moderate-to-severe stroke. Very high likelihood of major arterial occlusion (ICA or proximal MCA).",
+                listOf(
+                    "Step 1 (Immediate Reperfusion Protocol): Expedited multi-modal neuroimaging (CT/CTA/CT Perfusion); urgent Thrombectomy suite activation.",
+                    "Step 2 (IV Thrombolysis): Infuse IV Thrombolytic immediately if within 4.5h window; do not delay mechanical thrombectomy while waiting for thrombolytic infusion to complete.",
+                    "Step 3 (Airway Protection): Closely evaluate bulbar reflexes and airway stability; prepare for intubation if GCS drops or aspiration risk is high.",
+                    "Step 4 (Blood Pressure Targets): Maintain SBP < 180/105 mmHg for at least 24 hours post-thrombolysis; avoid hypotension (MAP > 85 mmHg) to preserve collateral penumbra.",
+                    "Step 5 (Intensive Care Admission): Mandatory Neuro-ICU admission; serial NIHSS evaluations every 15 minutes during and 1 hour post-infusion."
+                )
+            )
+            else -> Quadruple(
+                "Severe Stroke (Score $score / 42)",
+                "High Risk / Critical Thrombectomy Triage",
+                "Severe stroke with massive hemispheric or basilar artery infarction. Significant risk of cerebral edema, herniation, and hemorrhagic transformation.",
+                listOf(
+                    "Step 1 (Stat CTA / Basilar Occlusion Check): Screen for Basilar Artery Occlusion (locked-in syndrome / coma) or complete ICA/M1 occlusion.",
+                    "Step 2 (Mechanical Thrombectomy Triage): Proceed with emergent endovascular thrombectomy if penumbral tissue salvageable on perfusion imaging.",
+                    "Step 3 (Airway & Hemodynamics): Secure endotracheal airway for coma or severe loss of consciousness; avoid hypoxemia and hyperthermia (target temp < 37.5°C).",
+                    "Step 4 (Malignant Edema Surveillance): Monitor closely for midline shift; alert Neurosurgery early for potential decompressive hemicraniectomy within 48 hours for malignant MCA infarction.",
+                    "Step 5 (Strict Post-Stroke Precautions): Postpone anticoagulation for at least 14 days; use intermittent pneumatic compression for DVT prophylaxis."
+                )
+            )
+        }
+
+        return NihssResult(score, sev, candidate, interp, steps)
+    }
+
+    // =========================================================================
+    // 23. San Francisco Syncope Rule (SFSR)
+    // =========================================================================
+    data class SanFranciscoSyncopeResult(
+        val hasAnyHighRiskFactor: Boolean,
+        val riskTier: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateSanFranciscoSyncope(
+        congestiveHeartFailure: Boolean,
+        hematocritUnder30: Boolean,
+        abnormalEcg: Boolean,
+        shortnessOfBreath: Boolean,
+        sbpUnder90: Boolean
+    ): SanFranciscoSyncopeResult {
+        val isHighRisk = congestiveHeartFailure || hematocritUnder30 || abnormalEcg || shortnessOfBreath || sbpUnder90
+
+        val (tier, interp, steps) = if (!isHighRisk) {
+            Triple(
+                "Low Risk (0 CHESS Criteria)",
+                "Low risk of 30-day serious cardiac outcomes or death. Highly sensitive for excluding immediate life-threatening syncope.",
+                listOf(
+                    "Step 1 (Exclude Vasovagal/Orthostatic): Confirm typical situational or orthostatic triggers (postural drop >20 mmHg SBP on standing).",
+                    "Step 2 (Safe Outpatient Discharge): Discharge with reassurance and adequate hydration education provided patient is hemodynamically stable and ambulatory.",
+                    "Step 3 (Outpatient Holter / Cardiology): Arrange outpatient 24–48 hour Holter monitoring or primary care review if recurrent episodes.",
+                    "Step 4 (Precaution Instructions): Instruct patient to avoid sudden position changes, maintain fluid/salt intake, and return immediately if syncope recurs during exertion."
+                )
+            )
+        } else {
+            Triple(
+                "High Risk (≥ 1 CHESS Criteria Present)",
+                "High risk of serious adverse outcomes (arrhythmia, myocardial infarction, severe hemorrhage, structural heart disease, or sudden death) within 30 days.",
+                listOf(
+                    "Step 1 (Hospital Telemetry Admission): Admit patient to hospital for continuous cardiac telemetry monitoring.",
+                    "Step 2 (12-Lead ECG Analysis): Thoroughly analyze 12-lead ECG for non-sinus rhythm, conduction disease (bifascicular block, Mobitz II), prolonged QTc, Brugada pattern, or ischemic ST-T changes.",
+                    "Step 3 (Transthoracic Echocardiogram): Order urgent echocardiogram to evaluate Left Ventricular Ejection Fraction (LVEF), severe aortic stenosis, hypertrophic cardiomyopathy, or pericardial effusion.",
+                    "Step 4 (Laboratory Diagnostics): Stat Serial Troponins (to rule out acute coronary syndrome) and Complete Blood Count (to rule out occult gastrointestinal hemorrhage if Hct < 30%).",
+                    "Step 5 (Cardiology Consultation): Urgent Cardiology consultation for consideration of electrophysiology study (EPS) or permanent pacemaker / ICD placement."
+                )
+            )
+        }
+
+        return SanFranciscoSyncopeResult(isHighRisk, tier, interp, steps)
+    }
+
+    // =========================================================================
+    // 24. Corrected Sodium for Hyperglycemia
+    // =========================================================================
+    data class CorrectedSodiumResult(
+        val measuredSodium: Double,
+        val glucoseMgDl: Double,
+        val katzCorrectedNa: Double,
+        val hillierCorrectedNa: Double,
+        val fluidSelection: String,
+        val interpretation: String,
+        val nextSteps: List<String>
+    )
+
+    fun calculateCorrectedSodium(
+        measuredNa: Double,
+        glucoseMgDl: Double
+    ): CorrectedSodiumResult {
+        if (measuredNa <= 0 || glucoseMgDl <= 0) {
+            return CorrectedSodiumResult(0.0, 0.0, 0.0, 0.0, "Invalid Inputs", "Enter valid positive sodium and glucose.", emptyList())
+        }
+
+        val excessGlucose = max(0.0, glucoseMgDl - 100.0)
+        val katzNa = measuredNa + (0.016 * excessGlucose)
+        val hillierNa = measuredNa + (0.024 * excessGlucose)
+
+        val roundedKatz = (katzNa * 10.0).roundToInt() / 10.0
+        val roundedHillier = (hillierNa * 10.0).roundToInt() / 10.0
+
+        val fluidRec = when {
+            roundedHillier >= 145.0 -> "0.45% Saline (Half-Normal Saline) - Severe Hypertonicity"
+            roundedHillier >= 135.0 && roundedHillier <= 144.9 -> "0.45% Saline (Half-Normal Saline) - Euvolemic Maintenance"
+            else -> "0.9% Normal Saline - True Hyponatremia"
+        }
+
+        val interp = "In marked hyperglycemia, osmotic fluid shift from intracellular to extracellular space dilutes serum sodium. Corrected sodium reflects the patient's true effective intravascular osmolar status."
+
+        val steps = listOf(
+            "Step 1 (Initial Fluid Resuscitation): Regardless of corrected sodium, infuse 0.9% Normal Saline at 1000–1500 mL/hr during the first 1 to 2 hours for acute hypovolemic restoration.",
+            "Step 2 (Fluid Choice Post-Initial Resuscitation): Evaluate Corrected Sodium: If Corrected Na is NORMAL or HIGH (≥ 135 mEq/L), switch to 0.45% Half-Normal Saline (250–500 mL/hr) to replace free water deficit; if Corrected Na remains LOW (< 135 mEq/L), continue 0.9% Normal Saline.",
+            "Step 3 (Potassium Check Before Insulin): DO NOT start IV Insulin if serum K+ < 3.3 mEq/L! Replete potassium first to avoid fatal arrhythmias; start insulin (0.1 U/kg/hr) once K+ ≥ 3.3 mEq/L.",
+            "Step 4 (Add Dextrose when Glucose drops): When blood glucose reaches 200–250 mg/dL in DKA (or 250–300 mg/dL in HHS), immediately add 5% Dextrose (D5W with 0.45% Saline) to maintain euglycemia while continuing insulin until ketoacidosis resolution."
+        )
+
+        return CorrectedSodiumResult(measuredNa, glucoseMgDl, roundedKatz, roundedHillier, fluidRec, interp, steps)
+    }
 }
