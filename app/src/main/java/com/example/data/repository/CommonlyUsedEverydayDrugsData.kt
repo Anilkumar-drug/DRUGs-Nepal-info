@@ -643,6 +643,104 @@ object CommonlyUsedEverydayDrugsData {
             contraindications = "Hypersensitivity to fluoroquinolones; concurrent administration with tizanidine; history of quinolone-associated tendon rupture.",
             modeOfAction = "Inhibits bacterial DNA gyrase (topoisomerase II) and topoisomerase IV, preventing DNA replication, transcription, repair, and recombination.",
             therapeuticClassTag = "Fluoroquinolones / Antimicrobials"
+        ),
+
+        // --- CHLORDIAZEPOXIDE HYDROCHLORIDE ---
+        Drug(
+            id = "d_everyday_chlordiazepoxide",
+            genericName = "Chlordiazepoxide",
+            system = "Central Nervous System (CNS)",
+            drugClass = "Long-Acting Benzodiazepine Anxiolytic & Alcohol Withdrawal Agent",
+            blackBoxWarning = "CONCOMITANT USE WITH OPIOIDS, ABUSE, MISUSE, ADDICTION, DEPENDENCE & WITHDRAWAL: Concomitant use of benzodiazepines and opioids may result in profound sedation, respiratory depression, coma, and death. Use of benzodiazepines exposes users to risks of abuse, misuse, and addiction. Discontinuation can cause life-threatening acute withdrawal reactions (seizures, delirium tremens). Taper gradually.",
+            indications = "Acute Alcohol Withdrawal Syndrome (AWS) & Delirium Tremens prevention (CIWA-Ar protocol gold standard), acute severe anxiety disorders, pre-operative apprehension and surgical sedation, acute muscle spasm associated with psychogenic tension.",
+            doses = "Alcohol Withdrawal Syndrome (AWS / CIWA-Ar):\n• Severe Agitation / Tremor: 50 to 100 mg PO immediately; repeat q2-4h PRN until agitation is controlled (maximum 300 mg in first 24 hours).\n• Maintenance / Step-Down Taper: Day 1: 50 mg PO q6h; Day 2: 25 mg PO q6h; Day 3: 25 mg PO q8h; Day 4: 10 mg PO q8h; Day 5: 10 mg PO q12h; Day 6: 10 mg at bedtime, then discontinue.\n\nMild to Moderate Anxiety:\n• 5 to 10 mg PO TID or QID.\n\nSevere Anxiety & Pre-Operative Sedation:\n• 20 to 25 mg PO TID or QID (or 50-100 mg IM 1 hour prior to surgery).\n\nElderly / Debilitated Patients:\n• 5 mg PO BID to QID (titrate cautiously).",
+            administration = "Administer orally with water. May be taken with or without food. When using symptom-triggered dosing for alcohol withdrawal, re-evaluate clinical status using CIWA-Ar score every 1 to 2 hours.",
+            timing = "Divided doses TID to QID or schedule-tapered every 6-8 hours.",
+            specialInstructions = "NEPAL DDA SCHEDULE 'KA' (नियन्त्रित मनोद्विपक औषधि / Controlled Psychotropic Medicine) - Requires narcotic/psychotropic prescription register entry. Common spelling variants & aliases: Chlordiazopoxide, Librium, Equibral, Zepox, Methaminodiazepoxide. Monitor closely for active metabolite accumulation (nordiazepam half-life up to 100-200 hours). Always co-prescribe high-dose Thiamine (100-300 mg IV/IM) prior to glucose infusion in alcohol withdrawal to prevent Wernicke-Korsakoff syndrome.",
+            pkPd = "Rapid oral absorption; peak plasma concentration in 1-2 hours. Protein binding ~96%. Extensively metabolized in the liver (CYP3A4) to active metabolites: desmethylchlordiazepoxide, demoxepam, and desmethyldiazepam (nordiazepam). Elimination half-life of parent compound: 5-30 hours; active metabolite half-life: 36-200 hours. Renal excretion of metabolites.",
+            renalAdj = "CrCl <10 mL/min: Reduce dose by 50% or prolong dosing interval; monitor closely for active metabolite accumulation and excessive sedation.",
+            hepaticAdj = "Mild-to-moderate impairment: Reduce initial dose by 50% (start 5-10 mg/day). Severe hepatic insufficiency / decompensated cirrhosis: CONTRAINDICATED or avoid; impaired clearance precipitates hepatic encephalopathy (prefer short-acting Lorazepam or Oxazepam which undergo direct glucuronidation).",
+            pregnancy = "Category D (Contraindicated in first trimester due to risk of congenital anomalies; late third-trimester exposure causes neonatal hypotonia, hypothermia, floppy infant syndrome, and severe neonatal withdrawal).",
+            lactation = "Excreted in human breast milk; contraindicated during breastfeeding due to accumulation, infant sedation, lethargy, and poor feeding.",
+            sideEffects = "Drowsiness, ataxia, confusion, lightheadedness, dizziness, syncope, muscular weakness, anterograde amnesia, constipation, paradoxical excitement / rage reactions in the elderly, physical dependence, withdrawal seizures on abrupt cessation.",
+            priceNpr = "NPR 25.00 - 65.00 per strip of 10 (10 mg / 25 mg)",
+            priceInr = "INR 18.00 - 45.00 per strip of 10",
+            brandsNepal = listOf(
+                BrandInfo("Librium", "Piramal / Medisales Nepal", "Tablet", "10 mg / 25 mg"),
+                BrandInfo("Equibral", "Sun Pharma Nepal", "Tablet", "10 mg / 25 mg"),
+                BrandInfo("Zepox", "Torrent / Medisales Nepal", "Tablet", "10 mg / 25 mg"),
+                BrandInfo("Librax", "Abbott Nepal / Piramal", "Tablet", "Chlordiazepoxide 5mg + Clidinium 2.5mg"),
+                BrandInfo("Clindex", "Cipla Nepal", "Tablet", "Chlordiazepoxide 5mg + Clidinium 2.5mg"),
+                BrandInfo("Spasmonil-C", "Ami Lifesciences Nepal", "Tablet", "Chlordiazepoxide 5mg + Clidinium 2.5mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Librium", "Abbott India / Piramal", "Tablet", "10 mg / 25 mg"),
+                BrandInfo("Equibral", "Sun Pharma", "Tablet", "10 mg / 25 mg"),
+                BrandInfo("Librax", "Abbott India", "Tablet", "Chlordiazepoxide 5mg + Clidinium 2.5mg"),
+                BrandInfo("C-Poxide", "Cipla Ltd.", "Tablet", "10 mg / 25 mg"),
+                BrandInfo("Zepox", "Torrent Pharmaceuticals", "Tablet", "10 mg / 25 mg")
+            ),
+            adultDose = "Alcohol Withdrawal: 50-100 mg PO stat, max 300 mg/day tapered over 5-7 days. Anxiety: 10-25 mg PO TID-QID.",
+            childDose = "Not recommended for children under 6 years. Children >= 6 yr: 5 mg PO BID-QID (max 10 mg TID).",
+            contraindications = "Hypersensitivity to benzodiazepines, myasthenia gravis, severe respiratory depression or acute respiratory failure, acute narrow-angle glaucoma, severe hepatic failure, sleep apnea syndrome.",
+            modeOfAction = "Binds allosterically to gamma-aminobutyric acid type A (GABA-A) receptor complex, potentiating GABA-mediated inhibitory neurotransmission and increasing chloride ion influx, producing anxiolytic, sedative, anticonvulsant, and muscle-relaxant effects.",
+            precautions = "BEERS CRITERIA HIGH RISK: Avoid in elderly patients due to prolonged elimination half-life, pronounced fall risk, hip fractures, cognitive decline, and delirium. Risk of physiological dependence; taper slowly.",
+            nemlCategory = "Nepal Essential Medicines List (Controlled Psychotropic Formulary)",
+            ddaSchedule = "Schedule 'Ka' (क वर्ग - Controlled Drug)",
+            beersCriteriaRisk = "HIGH RISK: Long-acting benzodiazepine. Avoid in older adults due to high risk of prolonged sedation, ataxia, severe falls, fractures, delirium, and cognitive impairment.",
+            counselingNepali = "यो औषधि मदिरा (रक्सी) छुटाउँदा हुने छटपटी, डर, काँप्ने समस्या तथा अत्याधिक चिन्ता कम गर्न प्रयोग गरिन्छ। औषधि खाएपछि चक्कर लाग्ने, झुमझुम हुने र निन्द्रा लाग्ने हुनाले गाडी नचलाउनुहोस्। डाक्टरको सल्लाह बिना अचानक औषधि खान कहिल्यै नछोड्नुहोस्। रक्सी वा अन्य नशालु औषधिसँग यो औषधि लिनु ज्यानमारा हुनसक्छ।",
+            counselingEnglish = "Indicated for acute alcohol withdrawal symptoms and severe anxiety. Causes marked drowsiness and impaired coordination; do not drive or operate machinery. Never drink alcohol or take opioids while on this medicine. Do not stop taking this medication abruptly, as severe withdrawal seizures may occur. Always follow the gradual tapering instructions given by your physician.",
+            era = "Older / Classical (First Benzodiazepine Synthesized by Leo Sternbach in 1955)",
+            therapeuticClassTag = "Anxiolytic / Benzodiazepine / AWS Protocol",
+            researchNotes = "Aliases: Chlordiazopoxide, Librium, Equibral, Zepox, Methaminodiazepoxide. Cornerstone of modern symptom-triggered CIWA-Ar protocol."
+        ),
+
+        // --- CHLORDIAZEPOXIDE + CLIDINIUM BROMIDE ---
+        Drug(
+            id = "d_everyday_chlordiazepoxide_clidinium",
+            genericName = "Chlordiazepoxide + Clidinium Bromide",
+            system = "Gastrointestinal & Hepatobiliary",
+            drugClass = "Benzodiazepine Anxiolytic + Quaternary Anticholinergic / Antispasmodic",
+            blackBoxWarning = "CONCOMITANT USE WITH OPIOIDS, ABUSE, DEPENDENCE & WITHDRAWAL: Contains chlordiazepoxide. Risk of profound sedation, respiratory depression, and dependence. Avoid combination with CNS depressants and opioids.",
+            indications = "Irritable Bowel Syndrome (IBS), psychogenic abdominal cramping, functional dyspepsia, peptic ulcer disease adjunctive antispasmodic therapy, spastic colon, acute enterocolitis associated with anxiety and stress.",
+            doses = "Adult: 1 to 2 tablets (Chlordiazepoxide 5 mg + Clidinium 2.5 mg per tablet) PO TID to QID taken 30 to 60 minutes before meals and at bedtime.\nElderly / Debilitated: 1 tablet PO BID initially before meals.",
+            administration = "Take orally with water 30 to 60 minutes before meals and at bedtime to maximize antispasmodic and antisecretory efficacy.",
+            timing = "30-60 minutes before meals and at bedtime.",
+            specialInstructions = "NEPAL DDA SCHEDULE 'KA' (Controlled Formulation). Common brands: Librax, Clindex, Normaxin, Spasmonil-C. Dual-action: Chlordiazepoxide reduces visceral anxiety while Clidinium inhibits muscarinic M3 gastrointestinal smooth muscle contractions and gastric acid secretion. Monitor for anticholinergic effects (dry mouth, blurred vision, urinary hesitancy, constipation).",
+            pkPd = "Chlordiazepoxide: Rapid absorption, CYP3A4 metabolism with long-acting metabolites (half-life 24-100h). Clidinium Bromide: Quaternary ammonium anticholinergic with minimal blood-brain barrier penetration, acting predominantly on peripheral GI muscarinic receptors. Half-life ~2-4 hours. Excreted in urine and bile.",
+            renalAdj = "Mild-to-moderate: Use with caution. Severe renal impairment: Reduce dose by 50% due to chlordiazepoxide metabolite accumulation.",
+            hepaticAdj = "Contraindicated in severe hepatic impairment / cirrhosis due to risk of precipitating hepatic encephalopathy. Use lowest effective dose in mild impairment.",
+            pregnancy = "Category D (Contraindicated; risk of fetal malformations from chlordiazepoxide and anticholinergic fetal tachycardia).",
+            lactation = "Contraindicated; chlordiazepoxide excreted in milk causes infant sedation; clidinium suppresses maternal milk secretion.",
+            sideEffects = "Dry mouth (xerostomia), blurred vision, mydriasis, urinary retention/hesitancy, constipation, drowsiness, dizziness, reduced sweating, tachycardia, cognitive dulling in elderly.",
+            priceNpr = "NPR 45.00 - 95.00 per strip of 10 (Librax / Clindex / Normaxin)",
+            priceInr = "INR 35.00 - 75.00 per strip of 10",
+            brandsNepal = listOf(
+                BrandInfo("Librax", "Abbott Nepal / Piramal", "Tablet", "Chlordiazepoxide 5mg + Clidinium 2.5mg"),
+                BrandInfo("Clindex", "Cipla Nepal", "Tablet", "Chlordiazepoxide 5mg + Clidinium 2.5mg"),
+                BrandInfo("Normaxin", "Systopic / Nepal Healthcare", "Tablet", "Chlordiazepoxide 5mg + Clidinium 2.5mg + Dicyclomine"),
+                BrandInfo("Spasmonil-C", "Ami Lifesciences Nepal", "Tablet", "Chlordiazepoxide 5mg + Clidinium 2.5mg"),
+                BrandInfo("Soprax", "Quest Pharmaceuticals Nepal", "Tablet", "Chlordiazepoxide 5mg + Clidinium 2.5mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Librax", "Abbott India", "Tablet", "Chlordiazepoxide 5mg + Clidinium 2.5mg"),
+                BrandInfo("Clindex", "Mankind Pharma", "Tablet", "Chlordiazepoxide 5mg + Clidinium 2.5mg"),
+                BrandInfo("Normaxin", "Systopic Laboratories", "Tablet", "5mg + 2.5mg"),
+                BrandInfo("Equirex", "Sun Pharma", "Tablet", "5mg + 2.5mg")
+            ),
+            adultDose = "1-2 tablets PO TID-QID before meals and at bedtime.",
+            childDose = "Safety and efficacy not established in children under 12 years.",
+            contraindications = "Glaucoma (especially narrow-angle), prostatic hypertrophy (BPH) or bladder neck obstruction, severe ulcerative colitis / toxic megacolon, myasthenia gravis, intestinal obstruction, severe hepatic failure.",
+            modeOfAction = "Dual synergistic mechanism: Clidinium competitively blocks acetylcholine at peripheral muscarinic receptors, relaxing GI smooth muscle and reducing spasms; Chlordiazepoxide acts on central GABA-A receptors, relieving stress-induced brain-gut axis hypersensitivity.",
+            precautions = "BEERS CRITERIA HIGH RISK: Strong anticholinergic and long-acting benzodiazepine. High risk of urinary retention, acute glaucoma, falls, fractures, delirium, and worsening cognitive impairment in elderly.",
+            nemlCategory = "Nepal Essential Medicines List (GI Antispasmodics)",
+            ddaSchedule = "Schedule 'Ka' (क वर्ग - Controlled Drug)",
+            beersCriteriaRisk = "AVOID IN ELDERLY (Beers 2023): Dual high-risk formulation combining a potent anticholinergic with a long-acting benzodiazepine. Marked risk of delirium, falls, urinary retention, and obstipation.",
+            counselingNepali = "यो औषधि पेट दुख्ने, मरोड पर्ने (IBS) र तनाव वा चिन्ताले गर्दा पेट गडबड हुने समस्याका लागि खाना खानु भन्दा आधा घण्टा अगाडि सेवन गर्नुपर्छ। यसले मुख सुक्खा हुने, आँखा धमिलो हुने र निन्द्रा लाग्ने गराउन सक्छ। पिसाब रोकिने वा आँखाको समस्या (ग्लौकोमा) भएका बिरामीले डाक्टरलाई जानकारी गराउनुहोस्।",
+            counselingEnglish = "Take 30 to 60 minutes before meals and at bedtime for irritable bowel syndrome and stomach cramps. May cause dry mouth, blurred vision, and drowsiness. Do not drive if feeling drowsy. Inform doctor if you have difficulty urinating, enlarged prostate, or glaucoma. Avoid alcohol.",
+            era = "Older / Classical Fixed-Dose Combination",
+            therapeuticClassTag = "GI Antispasmodic / Brain-Gut Axis / IBS",
+            researchNotes = "Widely prescribed across South Asia and Nepal as 'Librax' / 'Clindex'. Aliases: Chlordiazopoxide Clidinium, Librax."
         )
     )
 }

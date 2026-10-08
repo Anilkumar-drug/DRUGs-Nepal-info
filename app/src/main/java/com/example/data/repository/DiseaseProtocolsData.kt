@@ -599,6 +599,45 @@ object DiseaseProtocolsData {
                 "Harrison's Principles of Internal Medicine, 21st Edition, Chapter 203",
                 "UpToDate: Rabies post-exposure prophylaxis"
             )
+        ),
+
+        // --- ALCOHOL WITHDRAWAL SYNDROME & DELIRIUM TREMENS ---
+        DiseaseProtocol(
+            id = "dp_alcohol_withdrawal",
+            name = "Alcohol Withdrawal Syndrome (AWS) & Delirium Tremens",
+            category = "Emergency & Psychiatry",
+            icd10 = "F10.232 / F10.231",
+            diagnosticCriteria = "Cessation or reduction in heavy and prolonged alcohol use, accompanied by two or more of the following developing within 6 to 48 hours: autonomic hyperactivity (diaphoresis, pulse >100 bpm, hypertension), coarse hand tremors, insomnia, nausea/vomiting, transient visual/tactile/auditory hallucinations, psychomotor agitation, anxiety, and generalized tonic-clonic seizures. Stratified using the Revised Clinical Institute Withdrawal Assessment for Alcohol (CIWA-Ar) scale: Mild (<8-10), Moderate (10-18), Severe (≥19 / Delirium Tremens).",
+            firstLine = "SYMPTOM-TRIGGERED BENZODIAZEPINE REGIMEN (CIWA-Ar PROTOCOL - GOLD STANDARD):\n" +
+                    "1. Chlordiazepoxide (Preferred Long-Acting Benzodiazepine):\n" +
+                    "   • CIWA-Ar ≥8 to 10: Administer Chlordiazepoxide 50 to 100 mg PO immediately.\n" +
+                    "   • Reassess CIWA-Ar score every 1 to 2 hours.\n" +
+                    "   • Repeat 25 to 50 mg PO PRN every 2 to 4 hours while CIWA-Ar remains ≥10 (maximum 300 mg in first 24 hours).\n" +
+                    "   • Once stabilized, taper dose over 4 to 7 days (e.g., 50 mg q6h x 1d, 25 mg q6h x 1d, 25 mg q8h x 1d, 10 mg q8h x 1d, 10 mg at bedtime x 1d, then discontinue).\n" +
+                    "2. Diazepam (Alternative Long-Acting Agent):\n" +
+                    "   • 10 to 20 mg PO or slow IV (5 mg/min) q1-2h until patient is calm and CIWA-Ar <10.\n" +
+                    "3. Lorazepam (Preferred in Hepatic Cirrhosis, Elderly, or Severe Respiratory Failure):\n" +
+                    "   • 1 to 4 mg PO or IV/IM q1-2h PRN (undergoes direct glucuronidation without active metabolites).",
+            secondLine = "REFRACTORY ALCOHOL WITHDRAWAL & DELIRIUM TREMENS ESCALATION:\n" +
+                    "• Phenobarbital: 10 mg/kg IV infusion over 30 minutes (or 130-260 mg IV q15-20min) in ICU setting for benzodiazepine-refractory agitation.\n" +
+                    "• Dexmedetomidine: 0.2 to 1.4 mcg/kg/hr IV continuous infusion as adjunctive sympatholytic in ICU (does NOT prevent withdrawal seizures; must co-administer GABAergic agent).\n" +
+                    "• Haloperidol: 2.5 to 5 mg PO/IM only as adjunct for severe hallucinations and psychotic agitation (lowers seizure threshold; always give benzodiazepine first).",
+            inpatient = "MANDATORY METABOLIC & NUTRITIONAL PROTOCOL (LIFE-SAVING FIRST STEPS):\n" +
+                    "• Thiamine (Vitamin B1): 100 to 500 mg IV or IM once daily for at least 3-5 days BEFORE or CONCURRENT with IV dextrose infusion (prevent precipitation of acute Wernicke Encephalopathy: ataxia, confusion, ophthalmoplegia).\n" +
+                    "• Dextrose Saline & Electrolyte Correction: IV 5% Dextrose in 0.9% Normal Saline for hypoglycemia and dehydration. Correct hypokalemia, hypophosphatemia, and hypomagnesemia (Magnesium Sulfate 1-2 g IV q6-8h, crucial cofactor for thiamine utilisation).\n" +
+                    "• High-Dose Multivitamin / B-Complex Infusion ('Banana Bag') and Folic Acid 1-5 mg daily.\n" +
+                    "• Continuous monitoring of vital signs, GCS, fluid balance, and serial CIWA-Ar scoring every 1-2 hours until score <8 for 24 consecutive hours.",
+            guidelines = "ASAM Clinical Practice Guideline on Alcohol Withdrawal Management 2020, WHO mhGAP & NICE Clinical Guideline 115.",
+            keyDrugs = listOf("Chlordiazepoxide", "Diazepam", "Lorazepam", "Thiamine (Vitamin B1)", "Phenobarbital"),
+            supportiveCare = "Quiet, well-lit room with minimal sensory stimulation. Frequent reassurance and 1-to-1 nursing observation for fall and aspiration prevention. Physical restraints used only as a last resort for patient safety. Co-manage with addiction psychiatry (Baclofen, Acamprosate, or Naltrexone after acute detoxification).",
+            redFlags = "Delirium Tremens (DTs: fluctuating consciousness, severe confusion, autonomic instability, fever, visual hallucinations - 5-15% untreated mortality), withdrawal seizures (status epilepticus), aspiration pneumonia, severe hyperpyrexia, and Wernicke Encephalopathy triad.",
+            references = listOf(
+                "ASAM Clinical Practice Guideline on Alcohol Withdrawal Management (J Addict Med 2020)",
+                "NICE Clinical Guideline 115: Alcohol-use disorders: diagnosis and clinical management of alcohol-related physical complications",
+                "Harrison's Principles of Internal Medicine, 21st Edition, Chapter 454",
+                "WHO mhGAP Intervention Guide: Substance Use Disorders",
+                "UpToDate: Management of moderate and severe alcohol withdrawal syndromes"
+            )
         )
     )
 }

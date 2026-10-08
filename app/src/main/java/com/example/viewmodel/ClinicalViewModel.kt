@@ -213,10 +213,10 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
             val nepBrands = drug.brandsNepal.joinToString(" ") { "${it.name} ${it.company}" }
             val indBrands = drug.brandsIndia.joinToString(" ") { "${it.name} ${it.company}" }
             val brandText = "$nepBrands $indBrands ${drug.genericName}".lowercase()
-            val genericText = "${drug.genericName} ${drug.drugClass}".lowercase()
+            val genericText = "${drug.genericName} ${drug.drugClass} ${drug.specialInstructions} ${drug.researchNotes}".lowercase()
             val indicationText = drug.indications.lowercase()
             val systemText = drug.system.lowercase()
-            val allText = "$brandText $genericText $indicationText $systemText".lowercase()
+            val allText = "$brandText $genericText $indicationText $systemText ${drug.modeOfAction} ${drug.therapeuticClassTag}".lowercase()
             IndexedDrug(
                 drug = drug,
                 brandIndex = brandText,
@@ -1198,30 +1198,80 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
         _uiState.value = _uiState.value.copy(gcsResult = res)
     }
 
+    private fun normalizeMedicalQuery(raw: String): String {
+        return raw.trim().lowercase()
+            .replace("chlordiazopoxide", "chlordiazepoxide")
+            .replace("chlordiazopo", "chlordiazepo")
+            .replace("chlordiazap", "chlordiazep")
+            .replace("chlordiazepoxid", "chlordiazepoxide")
+            .replace("pantaprazole", "pantoprazole")
+            .replace("pantoprazol", "pantoprazole")
+            .replace("metformine", "metformin")
+            .replace("ciprofloxin", "ciprofloxacin")
+            .replace("ciprofloxacine", "ciprofloxacin")
+            .replace("azithromicin", "azithromycin")
+            .replace("moxclav", "moxclave")
+            .replace("paracetmol", "paracetamol")
+            .replace("diazapam", "diazepam")
+            .replace("clonazapam", "clonazepam")
+            .replace("mgso4", "magnesium sulfate")
+            .replace("mag sulf", "magnesium sulfate")
+            .replace("magnesium sulphate", "magnesium sulfate")
+            .replace("phenobarbitone", "phenobarbital")
+            .replace("phenobarb", "phenobarbital")
+            .replace("largactil", "chlorpromazine")
+            .replace("pacitane", "trihexyphenidyl")
+            .replace("artane", "trihexyphenidyl")
+            .replace("benzhexol", "trihexyphenidyl")
+            .replace("ampicilin", "ampicillin")
+            .replace("hctz", "hydrochlorothiazide")
+            .replace("depo provera", "medroxyprogesterone")
+            .replace("depoprovera", "medroxyprogesterone")
+            .replace("sangini", "medroxyprogesterone")
+            .replace("benadryl", "diphenhydramine")
+            .replace("sorbitrate", "isosorbide dinitrate")
+            .replace("isordil", "isosorbide dinitrate")
+            .replace("ritalin", "methylphenidate")
+            .replace("inspiral", "methylphenidate")
+            .replace("falcigo", "artesunate")
+            .replace("vermox", "mebendazole")
+            .replace("charcoal", "activated charcoal")
+            .replace("solian", "amisulpride")
+            .replace("famocid", "famotidine")
+            .replace("pepcid", "famotidine")
+            .replace("norflox", "norfloxacin")
+            .replace("fasigyn", "tinidazole")
+            .replace("tiniba", "tinidazole")
+            .replace("pexep", "paroxetine")
+            .replace("paxil", "paroxetine")
+    }
+
     fun filterProtocols(query: String): List<DiseaseProtocol> {
         val q = query.trim().lowercase()
+        val normQ = normalizeMedicalQuery(q)
         if (q.isBlank()) return emptyList()
         return ClinicalRepository.diseaseProtocols.filter { proto ->
-            proto.name.lowercase().contains(q) ||
+            proto.name.lowercase().contains(q) || proto.name.lowercase().contains(normQ) ||
             proto.category.lowercase().contains(q) ||
             proto.icd10.lowercase().contains(q) ||
-            proto.keyDrugs.any { it.lowercase().contains(q) } ||
-            proto.diagnosticCriteria.lowercase().contains(q) ||
-            proto.firstLine.lowercase().contains(q) ||
-            proto.secondLine.lowercase().contains(q) ||
+            proto.keyDrugs.any { it.lowercase().contains(q) || it.lowercase().contains(normQ) } ||
+            proto.diagnosticCriteria.lowercase().contains(q) || proto.diagnosticCriteria.lowercase().contains(normQ) ||
+            proto.firstLine.lowercase().contains(q) || proto.firstLine.lowercase().contains(normQ) ||
+            proto.secondLine.lowercase().contains(q) || proto.secondLine.lowercase().contains(normQ) ||
             proto.guidelines.lowercase().contains(q)
         }
     }
 
     fun filterCalculators(query: String): List<CalculatorSummary> {
         val q = query.trim().lowercase()
+        val normQ = normalizeMedicalQuery(q)
         if (q.isBlank()) return emptyList()
         return ClinicalRepository.allCalculators.filter { calc ->
-            calc.title.lowercase().contains(q) ||
+            calc.title.lowercase().contains(q) || calc.title.lowercase().contains(normQ) ||
             calc.category.lowercase().contains(q) ||
-            calc.description.lowercase().contains(q) ||
+            calc.description.lowercase().contains(q) || calc.description.lowercase().contains(normQ) ||
             calc.formulaSummary.lowercase().contains(q) ||
-            calc.aliases.any { it.lowercase().contains(q) }
+            calc.aliases.any { it.lowercase().contains(q) || it.lowercase().contains(normQ) }
         }
     }
 
@@ -1237,6 +1287,10 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
         bookmarkedDrugIds: Set<String>
     ): List<Drug> {
         val q = searchQuery.trim().lowercase()
+        val normQ = normalizeMedicalQuery(q)
+
+        fun String.matchesQuery(): Boolean =
+            this.contains(q) || (normQ.isNotBlank() && this.contains(normQ))
 
         return indexedDrugs.asSequence().filter { item ->
             val drug = item.drug
@@ -1253,9 +1307,12 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
                             drug.genericName.contains("Tramadol", ignoreCase = true) ||
                             drug.genericName.contains("Clonazepam", ignoreCase = true) ||
                             drug.genericName.contains("Diazepam", ignoreCase = true) ||
+                            drug.genericName.contains("Chlordiazepoxide", ignoreCase = true) ||
                             drug.genericName.contains("Morphine", ignoreCase = true) ||
                             drug.genericName.contains("Fentanyl", ignoreCase = true) ||
-                            drug.genericName.contains("Lorazepam", ignoreCase = true)
+                            drug.genericName.contains("Lorazepam", ignoreCase = true) ||
+                            drug.genericName.contains("Phenobarbital", ignoreCase = true) ||
+                            drug.genericName.contains("Methylphenidate", ignoreCase = true)
                         )
                 DrugFilterType.FREE_HEALTH_POST -> drug.isFreeHealthPostDrug ||
                         drug.resolvedNeml.contains("Free", ignoreCase = true)
@@ -1295,10 +1352,10 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
             if (q.isEmpty()) return@filter true
 
             when (searchMode) {
-                SearchMode.BRAND -> item.brandIndex.contains(q) || item.genericIndex.contains(q)
-                SearchMode.GENERIC -> item.genericIndex.contains(q) || item.brandIndex.contains(q)
-                SearchMode.INDICATION -> item.indicationIndex.contains(q)
-                SearchMode.HERBAL -> item.allIndex.contains(q)
+                SearchMode.BRAND -> item.brandIndex.matchesQuery() || item.genericIndex.matchesQuery()
+                SearchMode.GENERIC -> item.genericIndex.matchesQuery() || item.brandIndex.matchesQuery()
+                SearchMode.INDICATION -> item.indicationIndex.matchesQuery()
+                SearchMode.HERBAL -> item.allIndex.matchesQuery()
             }
         }.map { it.drug }.toList()
     }

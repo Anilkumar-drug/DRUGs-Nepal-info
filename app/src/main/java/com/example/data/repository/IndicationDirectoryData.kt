@@ -59,7 +59,7 @@ object IndicationDirectoryData {
         IndicationItem("ind_44", "Acute uncomplicated malaria", 'A', "Infectious Diseases", listOf("Artemether + Lumefantrine", "Artesunate", "Primaquine"), "ACT is WHO gold standard; add single low-dose primaquine."),
         IndicationItem("ind_45", "Adrenocortical insufficiency", 'A', "Endocrine & Emergency", listOf("Hydrocortisone", "Fludrocortisone", "Dexamethasone"), "IV hydrocortisone 100mg stat then q8h with dextrose saline."),
         IndicationItem("ind_46", "Age-related macular degeneration (AMD)", 'A', "Ophthalmology", listOf("Ranibizumab", "Aflibercept", "AREDS2 Vitamins"), "Intravitreal anti-VEGF injections for wet AMD; antioxidant vitamins for dry."),
-        IndicationItem("ind_47", "Alcohol withdrawal syndrome", 'A', "Emergency & Psychiatry", listOf("Diazepam", "Lorazepam", "Thiamine (Vitamin B1)"), "Symptom-triggered benzodiazepine dosing using CIWA-Ar scale; high-dose thiamine."),
+        IndicationItem("ind_47", "Alcohol withdrawal syndrome", 'A', "Emergency & Psychiatry", listOf("Chlordiazepoxide", "Diazepam", "Lorazepam", "Thiamine (Vitamin B1)"), "Symptom-triggered benzodiazepine dosing using CIWA-Ar scale; high-dose thiamine."),
         IndicationItem("ind_48", "Allergic anaphylactic shock", 'A', "Emergency", listOf("Epinephrine (Adrenaline)", "Hydrocortisone", "Chlorpheniramine", "Normal Saline"), "IM Epinephrine 0.5mg (1:1000) immediately; repeat q5-15 min PRN."),
         IndicationItem("ind_49", "Allergic conjunctivitis", 'A', "Ophthalmology", listOf("Olopatadine", "Ketotifen", "Sodium Cromoglicate"), "Dual-action mast cell stabilizer/H1 antihistamine eye drops twice daily."),
         IndicationItem("ind_50", "Allergic rhinitis", 'A', "ENT & Respiratory", listOf("Fluticasone Nasal Spray", "Cetirizine", "Montelukast", "Azelastine"), "Intranasal corticosteroids are the most effective monotherapy."),
@@ -68,7 +68,7 @@ object IndicationDirectoryData {
         IndicationItem("ind_53", "Amoebiasis", 'A', "Infectious Diseases & GI", listOf("Metronidazole", "Tinidazole", "Diloxanide Furoate"), "Metronidazole 400-800mg tid for 7-10 days followed by luminal amoebicide."),
         IndicationItem("ind_54", "Anaemia of chronic renal failure", 'A', "Nephrology & Hematology", listOf("Erythropoietin", "Ferric Carboxymaltose"), "Maintain target Hb 10-11.5 g/dL with iron repletion."),
         IndicationItem("ind_55", "Angina", 'A', "Cardiovascular", listOf("Aspirin", "Atenolol", "Bisoprolol", "Glyceryl Trinitrate (Sublingual)", "Atorvastatin"), "Sublingual GTN PRN for acute attacks; beta-blocker, statin, DAPT."),
-        IndicationItem("ind_56", "Anxiety", 'A', "Psychiatry", listOf("Escitalopram", "Sertraline", "Alprazolam", "Propranolol"), "SSRIs/SNRIs are primary pharmacotherapy; short-term benzodiazepine."),
+        IndicationItem("ind_56", "Anxiety", 'A', "Psychiatry", listOf("Escitalopram", "Sertraline", "Chlordiazepoxide", "Alprazolam", "Propranolol"), "SSRIs/SNRIs are primary pharmacotherapy; short-term benzodiazepine."),
         IndicationItem("ind_56_as", "Ankylosing spondylitis", 'A', "Rheumatology", listOf("Diclofenac", "Tofacitinib", "Adalimumab", "Secukinumab", "Sulfasalazine"), "NSAIDs first-line continuous; TNF inhibitors, IL-17 inhibitors, or JAK inhibitors (Tofacitinib) for refractory axial disease."),
         IndicationItem("ind_57", "Arrhythmias", 'A', "Cardiovascular & Emergency", listOf("Amiodarone", "Metoprolol", "Adenosine", "Digoxin"), "Targeted antiarrhythmic according to narrow vs wide QRS."),
         IndicationItem("ind_58", "Aspiration pneumonia", 'A', "Respiratory & Critical Care", listOf("Amoxicillin + Clavulanate", "Piperacillin + Tazobactam", "Metronidazole"), "Coverage for oral anaerobes and enteric gram-negative bacilli."),
@@ -208,7 +208,7 @@ object IndicationDirectoryData {
         IndicationItem("ind_176", "Intestinal amoebiasis", 'I', "Gastrointestinal", listOf("Metronidazole", "Tinidazole", "Diloxanide Furoate"), "Metronidazole 400-800mg tid x 7-10d followed by luminal agent."),
         IndicationItem("ind_177", "Intra-abdominal infections", 'I', "Surgery & Infectious", listOf("Piperacillin + Tazobactam", "Ceftriaxone + Metronidazole", "Meropenem"), "Coverage for enteric gram-negatives and anaerobes combined with surgical source control."),
         IndicationItem("ind_178", "Iron deficiency anemia", 'I', "Hematology", listOf("Ferrous Sulfate", "Iron Sucrose", "Ferric Carboxymaltose"), "Oral elemental iron 100-200 mg daily for 3 months after Hb normalizes; IV iron for intolerance."),
-        IndicationItem("ind_179", "Irritable bowel syndrome (IBS)", 'I', "Gastrointestinal", listOf("Mebeverine", "Lactulose", "Loperamide", "Amitriptyline"), "Antispasmodics for pain; fiber/laxatives for IBS-C; loperamide for IBS-D; low-dose TCA."),
+        IndicationItem("ind_179", "Irritable bowel syndrome (IBS)", 'I', "Gastrointestinal", listOf("Chlordiazepoxide + Clidinium Bromide", "Mebeverine", "Lactulose", "Loperamide", "Amitriptyline"), "Antispasmodics for pain; fiber/laxatives for IBS-C; loperamide for IBS-D; low-dose TCA."),
         IndicationItem("ind_180", "Ischemic stroke", 'I', "Neurology & Emergency", listOf("Alteplase (rtPA)", "Aspirin", "Atorvastatin", "Labetalol"), "IV thrombolysis with alteplase within 4.5h; Aspirin 150-300mg within 24-48h."),
 
         // --- K, L ---
