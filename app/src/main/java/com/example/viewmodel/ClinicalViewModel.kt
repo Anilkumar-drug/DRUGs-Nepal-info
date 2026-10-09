@@ -51,7 +51,9 @@ enum class NavigationScreen(val title: String) {
     ANESTHESIOLOGY("Anesthesiology & Perioperative"),
     CRITICAL_CARE("Critical Care & Emergency Dashboard"),
     SURGICAL_PREOP("Surgical Pre-Op Drug Clearance & Bridge"),
-    LAB_VALUES("Critical Lab Values & Diagnostic Ratios")
+    LAB_VALUES("Critical Lab Values & Diagnostic Ratios"),
+    TOPICAL_STEROID_LADDER("Topical Corticosteroid Potency Ladder"),
+    BLOOD_TRANSFUSION("Blood Transfusion & Massive Transfusion Protocol")
 }
 
 enum class SearchMode(val title: String) {

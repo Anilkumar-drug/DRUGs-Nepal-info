@@ -38,3 +38,17 @@ data class DiagnosticRatioGuide(
     val clinicalUtility: String,
     val nextDiagnosticSteps: String
 )
+
+data class StandardLabTest(
+    val id: String,
+    val name: String,
+    val panel: String,
+    val standardRange: String,
+    val conventionalUnits: String,
+    val siUnits: String = "",
+    val siRange: String = "",
+    val highSignificance: String,
+    val lowSignificance: String,
+    val clinicalPearls: String,
+    val sampleTube: String = ""
+)

@@ -109,6 +109,8 @@ fun AppSidebarDrawer(
     onAnesthesiologyClick: () -> Unit = {},
     onSurgicalPreOpClick: () -> Unit = {},
     onLabValuesClick: () -> Unit = {},
+    onSteroidLadderClick: () -> Unit = {},
+    onBloodTransfusionClick: () -> Unit = {},
     onInteractionsClick: () -> Unit,
     onAntidotesClick: () -> Unit,
     onSettingsClick: () -> Unit
@@ -451,6 +453,32 @@ fun AppSidebarDrawer(
                                 badgeColor = Color(0xFFEF4444),
                                 onClick = onLabValuesClick,
                                 testTag = "sidebar_lab_values_item"
+                            )
+
+                            // 0j. Topical Corticosteroid Potency Ladder (Classes I-VII)
+                            SidebarItemCard(
+                                icon = Icons.Default.FormatListNumbered,
+                                iconColor = Color(0xFFF97316),
+                                iconBg = Color(0xFFF97316).copy(alpha = 0.15f),
+                                title = "TOPICAL STEROID LADDER",
+                                subtitle = "Class I-VII 7-tier potency, FTU dose calc & OTC abuse alerts",
+                                badge = "CLASSES I-VII",
+                                badgeColor = Color(0xFFF97316),
+                                onClick = onSteroidLadderClick,
+                                testTag = "sidebar_steroid_ladder_item"
+                            )
+
+                            // 0k. Blood Transfusion & Massive Transfusion Protocol (MTP)
+                            SidebarItemCard(
+                                icon = Icons.Default.Bloodtype,
+                                iconColor = Color(0xFFDC2626),
+                                iconBg = Color(0xFFDC2626).copy(alpha = 0.15f),
+                                title = "BLOOD TRANSFUSION & MTP",
+                                subtitle = "Emergency uncrossed, 1:1:1 pack ratio, PRBC calc & reactions",
+                                badge = "MTP / 1:1:1",
+                                badgeColor = Color(0xFFDC2626),
+                                onClick = onBloodTransfusionClick,
+                                testTag = "sidebar_blood_transfusion_item"
                             )
 
                             // 0. Nepal Medical News & Clinical Updates (Live Search Grounding)

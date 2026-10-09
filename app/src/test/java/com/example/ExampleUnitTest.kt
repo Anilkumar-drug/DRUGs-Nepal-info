@@ -42,5 +42,28 @@ class ExampleUnitTest {
     val result = ClinicalRepository.findInteractions(setOf("d36", "d55", "d56"))
     assertTrue("Should detect multiple interactions in polypharmacy regimen", result.size >= 2)
   }
+
+  @Test
+  fun printDrugCounts() {
+    val allDrugs = ClinicalRepository.drugs
+    val uniqueIds = allDrugs.map { it.id }.toSet()
+    val uniqueGenerics = allDrugs.map { it.genericName.trim().lowercase() }.toSet()
+    val totalNepalBrands = allDrugs.sumOf { it.brandsNepal.size }
+    val totalIndiaBrands = allDrugs.sumOf { it.brandsIndia.size }
+    val bySystem = allDrugs.groupBy { it.system }
+
+    println("=== DRUG STATISTICS ===")
+    println("Total Unique Drug Entries: ${allDrugs.size}")
+    println("Total Unique IDs: ${uniqueIds.size}")
+    println("Total Unique Generic Names: ${uniqueGenerics.size}")
+    println("Total Registered Brands (Nepal): $totalNepalBrands")
+    println("Total Registered Brands (India): $totalIndiaBrands")
+    println("Total Combined Brands: ${totalNepalBrands + totalIndiaBrands}")
+    println("--- System Breakdown ---")
+    bySystem.forEach { (sys, list) ->
+      println("- $sys: ${list.size}")
+    }
+    println("========================")
+  }
 }
 

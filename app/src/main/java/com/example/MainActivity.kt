@@ -618,6 +618,12 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                         },
                         onOpenLabValues = {
                             viewModel.navigateTo(NavigationScreen.LAB_VALUES)
+                        },
+                        onOpenSteroidLadder = {
+                            viewModel.navigateTo(NavigationScreen.TOPICAL_STEROID_LADDER)
+                        },
+                        onOpenBloodTransfusion = {
+                            viewModel.navigateTo(NavigationScreen.BLOOD_TRANSFUSION)
                         }
                     )
 
@@ -734,6 +740,14 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                     )
 
                     NavigationScreen.LAB_VALUES -> LabValuesReferenceScreen(
+                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                    )
+
+                    NavigationScreen.TOPICAL_STEROID_LADDER -> TopicalSteroidLadderScreen(
+                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                    )
+
+                    NavigationScreen.BLOOD_TRANSFUSION -> BloodTransfusionProtocolsScreen(
                         onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
                     )
                 }
@@ -868,6 +882,14 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
         onLabValuesClick = {
             viewModel.closeSidebar()
             viewModel.navigateTo(NavigationScreen.LAB_VALUES)
+        },
+        onSteroidLadderClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.TOPICAL_STEROID_LADDER)
+        },
+        onBloodTransfusionClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.BLOOD_TRANSFUSION)
         },
         onInteractionsClick = {
             viewModel.closeSidebar()

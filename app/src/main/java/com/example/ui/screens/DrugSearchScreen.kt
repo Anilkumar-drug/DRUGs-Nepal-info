@@ -39,10 +39,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.CalculatorSummary
+import com.example.data.model.CriticalPanicLabValue
+import com.example.data.model.DiagnosticRatioGuide
 import com.example.data.model.DiseaseProtocol
 import com.example.data.model.Drug
 import com.example.data.model.GlobalSearchTab
+import com.example.data.model.StandardLabTest
 import com.example.data.repository.ComprehensiveSpecialtyDrugsData
+import com.example.data.repository.LabValuesData
 import com.example.ui.components.VoiceSearchButton
 import com.example.ui.theme.*
 import com.example.viewmodel.DrugFilterType
@@ -82,7 +86,9 @@ fun DrugSearchScreen(
     onOpenAbgSolver: () -> Unit = {},
     onOpenIvCompatibility: () -> Unit = {},
     onOpenSurgicalPreOp: () -> Unit = {},
-    onOpenLabValues: () -> Unit = {}
+    onOpenLabValues: () -> Unit = {},
+    onOpenSteroidLadder: () -> Unit = {},
+    onOpenBloodTransfusion: () -> Unit = {}
 ) {
     var showHistoryDialog by remember { mutableStateOf(false) }
 
@@ -119,7 +125,32 @@ fun DrugSearchScreen(
         filteredProtocols.distinctBy { it.id }
     }
 
-    val totalMatches = effectiveDrugs.size + distinctProtocols.size + distinctCalculators.size
+    val matchingStandardLabs = remember(searchQuery) {
+        val q = searchQuery.trim().lowercase()
+        if (q.length < 2) emptyList()
+        else LabValuesData.standardLabTests.filter { test ->
+            test.name.lowercase().contains(q) || test.panel.lowercase().contains(q) || test.clinicalPearls.lowercase().contains(q)
+        }.take(3)
+    }
+
+    val matchingPanicLabs = remember(searchQuery) {
+        val q = searchQuery.trim().lowercase()
+        if (q.length < 2) emptyList()
+        else LabValuesData.panicValues.filter { panic ->
+            panic.testName.lowercase().contains(q) || panic.category.lowercase().contains(q) || panic.commonEtiologies.lowercase().contains(q)
+        }.take(3)
+    }
+
+    val matchingRatios = remember(searchQuery) {
+        val q = searchQuery.trim().lowercase()
+        if (q.length < 2) emptyList()
+        else LabValuesData.diagnosticRatios.filter { ratio ->
+            ratio.title.lowercase().contains(q) || ratio.formula.lowercase().contains(q) || ratio.clinicalUtility.lowercase().contains(q)
+        }.take(3)
+    }
+
+    val totalLabMatches = matchingStandardLabs.size + matchingPanicLabs.size + matchingRatios.size
+    val totalMatches = effectiveDrugs.size + distinctProtocols.size + distinctCalculators.size + totalLabMatches
 
     if (isSearchActive) {
         Column(
@@ -375,6 +406,27 @@ fun DrugSearchScreen(
                                         protocol = proto,
                                         onClick = { onProtocolClick(proto) }
                                     )
+                                }
+                            }
+
+                            // Section: Laboratory Values & Decision Ratios
+                            if (totalLabMatches > 0) {
+                                item {
+                                    SearchSectionHeader(
+                                        icon = Icons.Default.Biotech,
+                                        iconColor = Amber500,
+                                        title = "Laboratory Values & Decision Ratios",
+                                        count = totalLabMatches
+                                    )
+                                }
+                                items(items = matchingStandardLabs, key = { "std_lab_${it.id}" }) { lab ->
+                                    SearchStandardLabCard(lab = lab, onClick = onOpenLabValues)
+                                }
+                                items(items = matchingPanicLabs, key = { "panic_lab_${it.id}" }) { panic ->
+                                    SearchPanicLabCard(panic = panic, onClick = onOpenLabValues)
+                                }
+                                items(items = matchingRatios, key = { "ratio_${it.id}" }) { ratio ->
+                                    SearchRatioCard(ratio = ratio, onClick = onOpenLabValues)
                                 }
                             }
 
@@ -710,6 +762,26 @@ fun DrugSearchScreen(
                             accentColor = Amber500,
                             modifier = Modifier.width(152.dp),
                             onClick = onOpenLabValues
+                        )
+
+                        ClinicalSuiteCard(
+                            title = "STEROID LADDER",
+                            subtitle = "Class I-VII & FTU Calc",
+                            badge = "DERMA",
+                            icon = Icons.Default.FormatListNumbered,
+                            accentColor = Color(0xFFF97316),
+                            modifier = Modifier.width(152.dp),
+                            onClick = onOpenSteroidLadder
+                        )
+
+                        ClinicalSuiteCard(
+                            title = "TRANSFUSION",
+                            subtitle = "1:1:1 MTP & Reactions",
+                            badge = "BLOOD",
+                            icon = Icons.Default.Bloodtype,
+                            accentColor = Color(0xFFDC2626),
+                            modifier = Modifier.width(152.dp),
+                            onClick = onOpenBloodTransfusion
                         )
                     }
                 }
@@ -1892,6 +1964,196 @@ private fun ClinicalSuiteCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 14.sp,
                 maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
+private fun SearchStandardLabCard(
+    lab: StandardLabTest,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, DimsTealPrimary.copy(alpha = 0.35f)),
+        modifier = Modifier.fillMaxWidth().testTag("search_lab_${lab.id}")
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = DimsTealPrimary.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = "LAB TEST",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DimsTealPrimary,
+                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                        )
+                    }
+                    Text(
+                        text = lab.panel,
+                        fontSize = 10.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = lab.name,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Normal: ${lab.standardRange} ${lab.conventionalUnits}",
+                    fontSize = 11.5.sp,
+                    color = DimsTealPrimary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "View Lab Reference",
+                tint = DimsTealPrimary
+            )
+        }
+    }
+}
+
+@Composable
+private fun SearchPanicLabCard(
+    panic: CriticalPanicLabValue,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, Red500.copy(alpha = 0.4f)),
+        modifier = Modifier.fillMaxWidth().testTag("search_panic_${panic.id}")
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = Red500.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = "PANIC ALERT",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Red500,
+                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                        )
+                    }
+                    Text(
+                        text = panic.category,
+                        fontSize = 10.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = panic.testName,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Threshold: ${panic.criticalLowValue ?: panic.criticalHighValue ?: "Critical Panic"}",
+                    fontSize = 11.5.sp,
+                    color = Red500,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "View Emergency Interventions",
+                tint = Red500
+            )
+        }
+    }
+}
+
+@Composable
+private fun SearchRatioCard(
+    ratio: DiagnosticRatioGuide,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, Color(0xFF6366F1).copy(alpha = 0.4f)),
+        modifier = Modifier.fillMaxWidth().testTag("search_ratio_${ratio.id}")
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = Color(0xFF6366F1).copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = "DECISION RATIO",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF6366F1),
+                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                        )
+                    }
+                    Text(
+                        text = "Cutoff: ${ratio.cutoffThreshold}",
+                        fontSize = 10.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = ratio.title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = ratio.formula,
+                    fontSize = 11.sp,
+                    color = Color(0xFF6366F1),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "View Decision Rule",
+                tint = Color(0xFF6366F1)
             )
         }
     }
