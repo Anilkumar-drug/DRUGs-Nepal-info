@@ -225,10 +225,22 @@ class ExampleRobolectricTest {
 
         assertEquals("gemini-3.5-flash", vm.uiState.value.aiSelectedModel)
         assertTrue(vm.uiState.value.isAiSearchGrounded)
+        assertEquals("General Guidance", vm.uiState.value.aiConsultationMode)
 
-        // Switch to Gemini 3.1 Pro
+        // Switch to Gemini 3.1 Pro Reasoner
         vm.setAiModel("gemini-3.1-pro-preview")
         assertEquals("gemini-3.1-pro-preview", vm.uiState.value.aiSelectedModel)
+
+        // Switch to Gemini 3.1 Flash-Lite
+        vm.setAiModel("gemini-3.1-flash-lite-preview")
+        assertEquals("gemini-3.1-flash-lite-preview", vm.uiState.value.aiSelectedModel)
+
+        // Test Consultation Mode switching
+        vm.setAiConsultationMode("Nepal MoHP Protocols")
+        assertEquals("Nepal MoHP Protocols", vm.uiState.value.aiConsultationMode)
+
+        vm.setAiConsultationMode("Polypharmacy Check")
+        assertEquals("Polypharmacy Check", vm.uiState.value.aiConsultationMode)
 
         // Toggle grounding
         vm.toggleAiSearchGrounded()

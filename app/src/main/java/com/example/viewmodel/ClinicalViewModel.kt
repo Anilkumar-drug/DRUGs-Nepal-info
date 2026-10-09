@@ -131,6 +131,7 @@ data class ClinicalUiState(
     val aiInputText: String = "",
     val aiSelectedModel: String = "gemini-3.5-flash",
     val isAiSearchGrounded: Boolean = true,
+    val aiConsultationMode: String = "General Guidance",
     // Nepal Medical News & Alerts with Search Grounding
     val medicalNewsList: List<MedicalNewsItem> = emptyList(),
     val isNewsLoading: Boolean = false,
@@ -938,6 +939,10 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
         _uiState.update { it.copy(aiSelectedModel = model) }
     }
 
+    fun setAiConsultationMode(mode: String) {
+        _uiState.update { it.copy(aiConsultationMode = mode) }
+    }
+
     fun toggleAiSearchGrounded() {
         _uiState.update { it.copy(isAiSearchGrounded = !it.isAiSearchGrounded) }
     }
@@ -947,10 +952,12 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
         if (text.isBlank() || _uiState.value.isAiThinking) return
 
         val userMsg = ChatMessage(id = UUID.randomUUID().toString(), sender = MessageSender.USER, text = text)
-        val updatedMsgs = _uiState.value.chatMessages + userMsg
+        val currentHistory = _uiState.value.chatMessages
+        val updatedMsgs = currentHistory + userMsg
 
         val model = _uiState.value.aiSelectedModel
         val grounded = _uiState.value.isAiSearchGrounded
+        val mode = _uiState.value.aiConsultationMode
 
         _uiState.value = _uiState.value.copy(
             chatMessages = updatedMsgs,
@@ -959,16 +966,21 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
         )
 
         viewModelScope.launch {
-            val responseText = GeminiClinicalService.queryClinicalAi(
+            val aiResponse = GeminiClinicalService.queryClinicalAiResponse(
                 userQuery = text,
+                conversationHistory = currentHistory.takeLast(6),
                 model = model,
-                enableSearchGrounding = grounded
+                enableSearchGrounding = grounded,
+                consultationMode = mode
             )
             val aiMsg = ChatMessage(
                 id = UUID.randomUUID().toString(),
                 sender = MessageSender.AI,
-                text = responseText,
-                searchQuerySuggestion = text
+                text = aiResponse.text,
+                searchQuerySuggestion = text,
+                webSources = aiResponse.webSources,
+                modelUsed = aiResponse.modelUsed,
+                isGrounded = aiResponse.isLiveGrounded
             )
             _uiState.value = _uiState.value.copy(
                 chatMessages = _uiState.value.chatMessages + aiMsg,

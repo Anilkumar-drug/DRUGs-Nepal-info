@@ -1,9 +1,11 @@
 package com.example.data.ai
 
 import com.example.BuildConfig
+import com.example.data.model.ChatMessage
 import com.example.data.model.GroundingSource
 import com.example.data.model.MedicalNewsFetchResult
 import com.example.data.model.MedicalNewsItem
+import com.example.data.model.MessageSender
 import com.example.data.repository.ClinicalGuidelinesNewsData
 import com.example.data.repository.ClinicalRepository
 import kotlinx.coroutines.Dispatchers
@@ -16,25 +18,62 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
+data class GeminiClinicalResponse(
+    val text: String,
+    val webSources: List<GroundingSource> = emptyList(),
+    val modelUsed: String = "gemini-3.5-flash",
+    val isLiveGrounded: Boolean = false,
+    val searchQueries: List<String> = emptyList()
+)
+
 object GeminiClinicalService {
 
     private val client = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
         .build()
 
     private const val SYSTEM_PROMPT =
         "You are the DRUGs Nepal Clinical Decision Support AI Assistant for licensed physicians and healthcare professionals in Nepal. " +
-        "Provide direct, high-yield clinical pharmacology insights referencing UpToDate, Harrison's, KD Tripathi, and WHO guidelines. " +
+        "Provide direct, high-yield clinical pharmacology insights referencing UpToDate, Harrison's, KD Tripathi, GINA, AHA/ACC, and WHO/EDCD Nepal guidelines. " +
         "Address drug interactions, organ dosage adjustments, mechanism of action, black box warnings, and local Nepal/India brand equivalents. " +
-        "Format with clear headings, bullet points, and high clinical precision."
+        "Format with clear headings, bold key values, bullet points, and high clinical precision."
 
-    suspend fun queryClinicalAi(
+    private fun getSpecializedSystemPrompt(mode: String?): String {
+        return when (mode) {
+            "Polypharmacy Check", "Drug Interactions" ->
+                "You are an expert Clinical Pharmacologist specializing in Polypharmacy and Drug-Drug Interactions. " +
+                "Evaluate pharmacokinetic (CYP3A4, CYP2C19, CYP2D6, P-glycoprotein) and pharmacodynamic interactions. " +
+                "Highlight additive QT prolongation, synergistic nephrotoxicity, bleeding risks, and electrolyte abnormalities. " +
+                "Classify each interaction into: 🔴 Contraindicated, 🟠 Major/Severe, 🟡 Moderate, or 🟢 Minor, with actionable clinical management and safer alternative molecules."
+            "Renal & Hepatic Dosing", "Organ Dosing" ->
+                "You are an expert Nephro-Pharmacology and Hepatic Dosing Clinical Specialist. " +
+                "Provide precise dosage titration according to Cockcroft-Gault CrCl and CKD-EPI eGFR tiers (≥60, 45-59, 30-44, 15-29, <15 mL/min), " +
+                "hemodialysis supplemental doses post-dialysis, and Child-Pugh Class A/B/C hepatic restrictions."
+            "Pediatric Dosing", "Pediatric" ->
+                "You are an expert Pediatric Clinical Pharmacologist. " +
+                "Provide accurate weight-based mg/kg/dose or mg/kg/day dosing, division intervals (q6h, q8h, q12h), " +
+                "maximum adult ceiling cutoffs, suspension concentration conversions (e.g., mg to mL), and strict pediatric contraindications (e.g. fluoroquinolones, tetracyclines in <8yo, aspirin in viral syndromes)."
+            "Emergency & Antidotes", "Emergency / Toxicology" ->
+                "You are an Emergency Medicine & Clinical Toxicology Specialist. " +
+                "Provide rapid resuscitation algorithms (ACLS, PALS, ATLS), primary antidote dosing, dilution, infusion rates, " +
+                "endpoints of resuscitation (e.g., atropinization in OP poisoning, NAC 3-bag in paracetamol), and life-threatening red flags."
+            "Nepal MoHP Protocols", "Nepal Guidelines" ->
+                "You are an authority on Government of Nepal Ministry of Health & Population (MoHP), Epidemiology and Disease Control Division (EDCD), " +
+                "and WHO SEARO Clinical Guidelines. Detail national clinical algorithms (Dengue case management, Scrub Typhus doxycycline protocols, " +
+                "Leprosy WHO MDT blister packs, Kala-azar single-dose Liposomal Amphotericin B, Rabies 2-site ID PEP, Malaria ACT), standard referral pathways, and drugs on the Nepal National List of Essential Medicines."
+            else -> SYSTEM_PROMPT
+        }
+    }
+
+    suspend fun queryClinicalAiResponse(
         userQuery: String,
+        conversationHistory: List<ChatMessage> = emptyList(),
         model: String = "gemini-3.5-flash",
-        enableSearchGrounding: Boolean = true
-    ): String = withContext(Dispatchers.IO) {
+        enableSearchGrounding: Boolean = true,
+        consultationMode: String? = null
+    ): GeminiClinicalResponse = withContext(Dispatchers.IO) {
         val apiKey = try {
             BuildConfig.GEMINI_API_KEY
         } catch (e: Exception) {
@@ -42,27 +81,63 @@ object GeminiClinicalService {
         }
 
         val hasValidKey = apiKey.isNotBlank() && apiKey != "MY_GEMINI_API_KEY"
+        val targetModel = when {
+            model.contains("pro") -> "gemini-3.1-pro-preview"
+            model.contains("lite") -> "gemini-3.1-flash-lite-preview"
+            else -> "gemini-3.5-flash"
+        }
 
         if (hasValidKey) {
             try {
                 val jsonBody = JSONObject().apply {
                     val contentsArr = JSONArray()
-                    val userTurn = JSONObject().apply {
-                        val partsArr = JSONArray()
-                        partsArr.put(JSONObject().put("text", userQuery))
-                        put("role", "user")
-                        put("parts", partsArr)
+
+                    // Multi-turn context preservation (up to last 6 messages)
+                    val pastTurns = conversationHistory.takeLast(6)
+                    for (pastMsg in pastTurns) {
+                        if (pastMsg.text.isNotBlank()) {
+                            val role = if (pastMsg.sender == MessageSender.USER) "user" else "model"
+                            contentsArr.put(JSONObject().apply {
+                                put("role", role)
+                                val partsArr = JSONArray().apply {
+                                    put(JSONObject().put("text", pastMsg.text))
+                                }
+                                put("parts", partsArr)
+                            })
+                        }
                     }
-                    contentsArr.put(userTurn)
+
+                    // Append current user turn
+                    contentsArr.put(JSONObject().apply {
+                        put("role", "user")
+                        val partsArr = JSONArray().apply {
+                            put(JSONObject().put("text", userQuery))
+                        }
+                        put("parts", partsArr)
+                    })
                     put("contents", contentsArr)
 
+                    // Specialized System Instructions
+                    val sysPrompt = getSpecializedSystemPrompt(consultationMode)
                     val sysContent = JSONObject().apply {
-                        val partsArr = JSONArray()
-                        partsArr.put(JSONObject().put("text", SYSTEM_PROMPT))
+                        val partsArr = JSONArray().apply {
+                            put(JSONObject().put("text", sysPrompt))
+                        }
                         put("parts", partsArr)
                     }
                     put("systemInstruction", sysContent)
 
+                    // Generation Config
+                    val genConfig = JSONObject().apply {
+                        put("temperature", 0.25)
+                        put("topP", 0.95)
+                        if (targetModel.contains("pro")) {
+                            put("thinkingConfig", JSONObject().put("thinkingLevel", "low"))
+                        }
+                    }
+                    put("generationConfig", genConfig)
+
+                    // Real-Time Google Search Grounding Tool
                     if (enableSearchGrounding) {
                         val toolsArr = JSONArray().apply {
                             put(JSONObject().apply {
@@ -75,7 +150,6 @@ object GeminiClinicalService {
 
                 val mediaType = "application/json; charset=utf-8".toMediaType()
                 val requestBody = jsonBody.toString().toRequestBody(mediaType)
-                val targetModel = if (model.isNotBlank()) model else "gemini-3.5-flash"
                 val url = "https://generativelanguage.googleapis.com/v1beta/models/$targetModel:generateContent?key=$apiKey"
 
                 val request = Request.Builder()
@@ -89,13 +163,56 @@ object GeminiClinicalService {
                     val rootJson = JSONObject(respStr)
                     val candidates = rootJson.optJSONArray("candidates")
                     if (candidates != null && candidates.length() > 0) {
-                        val content = candidates.getJSONObject(0).optJSONObject("content")
+                        val candidate = candidates.getJSONObject(0)
+                        val content = candidate.optJSONObject("content")
                         val parts = content?.optJSONArray("parts")
+
+                        var responseText = ""
                         if (parts != null && parts.length() > 0) {
-                            val text = parts.getJSONObject(0).optString("text")
-                            if (text.isNotBlank()) {
-                                return@withContext text
+                            val sb = StringBuilder()
+                            for (i in 0 until parts.length()) {
+                                val t = parts.getJSONObject(i).optString("text")
+                                if (t.isNotBlank()) sb.append(t)
                             }
+                            responseText = sb.toString()
+                        }
+
+                        // Parse Grounding Metadata & Verified Web Sources
+                        val extractedSources = mutableListOf<GroundingSource>()
+                        val searchQueriesList = mutableListOf<String>()
+                        val groundingMeta = candidate.optJSONObject("groundingMetadata")
+                        if (groundingMeta != null) {
+                            val queriesArr = groundingMeta.optJSONArray("webSearchQueries")
+                            if (queriesArr != null) {
+                                for (i in 0 until queriesArr.length()) {
+                                    val q = queriesArr.optString(i)
+                                    if (!q.isNullOrBlank()) searchQueriesList.add(q)
+                                }
+                            }
+                            val chunksArr = groundingMeta.optJSONArray("groundingChunks")
+                            if (chunksArr != null) {
+                                for (i in 0 until chunksArr.length()) {
+                                    val chunk = chunksArr.optJSONObject(i)
+                                    val web = chunk?.optJSONObject("web")
+                                    if (web != null) {
+                                        val uri = web.optString("uri")
+                                        val title = web.optString("title").ifBlank { uri }
+                                        if (uri.isNotBlank()) {
+                                            extractedSources.add(GroundingSource(title = title, url = uri))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (responseText.isNotBlank()) {
+                            return@withContext GeminiClinicalResponse(
+                                text = responseText,
+                                webSources = extractedSources,
+                                modelUsed = targetModel,
+                                isLiveGrounded = extractedSources.isNotEmpty() || enableSearchGrounding,
+                                searchQueries = searchQueriesList
+                            )
                         }
                     }
                 }
@@ -104,13 +221,173 @@ object GeminiClinicalService {
             }
         }
 
-        // Context-aware Clinical Pharmacology Knowledge Base
-        return@withContext generateLocalClinicalInsight(userQuery)
+        // Context-aware Clinical Pharmacology Knowledge Base fallback
+        val localText = generateLocalClinicalInsight(userQuery)
+        val defaultSources = getClinicalReferenceSources(userQuery)
+        return@withContext GeminiClinicalResponse(
+            text = localText,
+            webSources = defaultSources,
+            modelUsed = targetModel,
+            isLiveGrounded = false,
+            searchQueries = listOf(userQuery)
+        )
+    }
+
+    suspend fun queryClinicalAi(
+        userQuery: String,
+        model: String = "gemini-3.5-flash",
+        enableSearchGrounding: Boolean = true
+    ): String {
+        return queryClinicalAiResponse(
+            userQuery = userQuery,
+            model = model,
+            enableSearchGrounding = enableSearchGrounding
+        ).text
     }
 
     private fun generateLocalClinicalInsight(query: String): String {
         val lower = query.lowercase()
         return when {
+            lower.contains("dengue") && (lower.contains("fluid") || lower.contains("warning") || lower.contains("protocol") || lower.contains("treatment") || lower.contains("management")) -> {
+                "🦟 **DENGUE CLINICAL CASE MANAGEMENT & FLUID PROTOCOL (EDCD NEPAL / WHO SEARO)**\n\n" +
+                "1. **Clinical Warning Signs (Mandatory Hospital Admission):**\n" +
+                "   • Severe abdominal pain or persistent tenderness\n" +
+                "   • Persistent vomiting (≥3 episodes in 1 hour or ≥4 in 6 hours)\n" +
+                "   • Mucosal bleeding (epistaxis, gingival, hematemesis, melena)\n" +
+                "   • Lethargy, restlessness, or altered sensorium\n" +
+                "   • Hepatomegaly (>2 cm below right costal margin)\n" +
+                "   • Laboratory: Progressive hematocrit (HCT) rise concurrent with rapid platelet drop (<100,000/μL).\n\n" +
+                "2. **Group B Fluid Titration Protocol (Warning Signs Present):**\n" +
+                "   • Fluid of Choice: Isotonic crystalloid (Ringer's Lactate or 0.9% Normal Saline).\n" +
+                "   • Hours 1–2: Start at **5 to 7 mL/kg/hr**.\n" +
+                "   • Hours 3–4: Reduce to **3 to 5 mL/kg/hr** if vital signs and urine output (>0.5 mL/kg/hr) improve.\n" +
+                "   • Hours 5–48: Further taper to **2 to 3 mL/kg/hr** maintenance rate.\n" +
+                "   • Recheck HCT every 6 hours; match fluid rate strictly to hematocrit trends.\n\n" +
+                "3. **Group C (Severe Dengue Shock / Hemorrhage):**\n" +
+                "   • Fluid Resuscitation: Crystalloid bolus **10 to 20 mL/kg over 15 to 30 minutes**.\n" +
+                "   • If refractory: Colloid (e.g. 6% HES or Dextran-40) 10 to 20 mL/kg. Initiate blood transfusion if HCT falls with unstable vitals.\n\n" +
+                "4. **Strict Safety Rules:**\n" +
+                "   • 🚫 **ABSOLUTELY CONTRAINDICATED:** Aspirin, Ibuprofen, Diclofenac, Ketorolac (precipitates catastrophic gastric bleed & Reye syndrome).\n" +
+                "   • 🚫 **NO IM Injections:** Causes large intramuscular hematomas.\n" +
+                "   • Antipyretic: Oral Paracetamol only (Max 3,000 mg/24h in adults; 10–15 mg/kg/dose in children q6h PRN)."
+            }
+            lower.contains("scrub") || (lower.contains("typhus") && (lower.contains("doxy") || lower.contains("orientia") || lower.contains("eschar"))) -> {
+                "🌿 **SCRUB TYPHUS CLINICAL PROTOCOL (EDCD NEPAL / WHO SEARO)**\n\n" +
+                "• **Etiology & Hallmarks:** *Orientia tsutsugamushi* transmitted by *Leptotrombidium* mite (chigger). Classic triad: Persistent high fever, headache, and diagnostic painless **Eschar** (cigarette-burn appearance with black crust in axilla, groin, neck, or waistband).\n\n" +
+                "• **First-Line Pharmacotherapy:**\n" +
+                "   - **Adults & Children >8 years:** **Doxycycline 100 mg PO BID x 7 days** (or 200 mg loading on Day 1). Defervescence typically occurs within 24–48 hours.\n" +
+                "   - **Severe Inpatient / Refractory:** IV Doxycycline 100 mg q12h OR IV Azithromycin 500 mg daily.\n\n" +
+                "• **Pregnancy & Young Children (<8 years):**\n" +
+                "   - **Azithromycin 500 mg PO daily x 5 to 7 days** (Pediatric: 10 mg/kg/day single daily dose, max 500 mg).\n" +
+                "   - Alternative: Chloramphenicol 500 mg PO/IV q6h x 7 days (monitor CBC).\n\n" +
+                "• **Complications to Monitor:** Acute Respiratory Distress Syndrome (ARDS), acute kidney injury, myocarditis, and meningoencephalitis."
+            }
+            lower.contains("leprosy") || lower.contains("hansen") || lower.contains("mdt") -> {
+                "🩺 **LEPROSY MULTIDRUG THERAPY (MDT) (WHO / MOHP NEPAL GUIDELINES)**\n\n" +
+                "• **Paucibacillary (PB) Leprosy (1 to 5 skin lesions, single nerve trunk involvement) — 6 Blister Packs over 9 Months:**\n" +
+                "   - Day 1 (Monthly Supervised): Rifampicin 600 mg + Dapsone 100 mg.\n" +
+                "   - Days 2–28 (Daily Self-Administered): Dapsone 100 mg daily.\n" +
+                "   - Pediatric (10–14 years): Rifampicin 450 mg monthly, Dapsone 50 mg daily.\n\n" +
+                "• **Multibacillary (MB) Leprosy (≥6 skin lesions, multiple nerves, or slit-skin smear positive) — 12 Blister Packs over 18 Months:**\n" +
+                "   - Day 1 (Monthly Supervised): Rifampicin 600 mg + Clofazimine 300 mg + Dapsone 100 mg.\n" +
+                "   - Days 2–28 (Daily Self-Administered): Clofazimine 50 mg daily + Dapsone 100 mg daily.\n" +
+                "   - Pediatric (10–14 years): Rifampicin 450 mg, Clofazimine 150 mg monthly (Clofazimine 50 mg every other day) + Dapsone 50 mg daily.\n\n" +
+                "• **Reactions Management:** Type 1 (Reversal) Reaction → Oral Prednisolone 40 mg daily tapered over 12–24 weeks. Type 2 (ENL) Reaction → High-dose Prednisolone or Thalidomide (under strict teratogenicity protocol)."
+            }
+            lower.contains("kala") || lower.contains("leishmaniasis") || lower.contains("amphotericin") -> {
+                "🩸 **VISCERAL LEISHMANIASIS / KALA-AZAR (EDCD NEPAL / WHO SEARO PROTOCOL)**\n\n" +
+                "• **Etiology:** *Leishmania donovani* transmitted by *Phlebotomus argentipes* sandfly. Triad: Prolonged undulating fever (>2 weeks), massive splenomegaly, and progressive pancytopenia / wasting.\n\n" +
+                "• **First-Line National Regimen:**\n" +
+                "   - **Single-Dose Liposomal Amphotericin B (AmBisome):** **10 mg/kg IV infusion in 5% Dextrose over 2 hours** as a single dose.\n" +
+                "   - High cure rate (>96%), minimal nephrotoxicity, and zero hospital stay burden.\n\n" +
+                "• **Combination Second-Line (if AmBisome single-dose unavailable):**\n" +
+                "   - Liposomal Amphotericin B 5 mg/kg IV single dose PLUS Oral Miltefosine (2.5 mg/kg/day, adults 100 mg/day divided BID) x 7 days.\n" +
+                "   - Or Oral Miltefosine x 10 days PLUS Paromomycin 15 mg/kg/day IM x 10 days.\n\n" +
+                "• **Post-Kala-azar Dermal Leishmaniasis (PKDL):** Oral Miltefosine for 12 weeks or Liposomal Amphotericin B 2.5 mg/kg/day x 20 days."
+            }
+            lower.contains("rabies") || lower.contains("dog bite") || lower.contains("erig") || lower.contains("hrig") -> {
+                "🐕 **RABIES POST-EXPOSURE PROPHYLAXIS (PEP) (EDCD NEPAL / WHO GUIDELINES)**\n\n" +
+                "1. **Immediate Wound Cleansing (Lifesaving First Step):**\n" +
+                "   • Flush and wash wound vigorously with running water and soap for at least **15 continuous minutes**.\n" +
+                "   • Apply Povidone-Iodine 10% or 70% alcohol. Do NOT suture wound; if unavoidable, infiltrate RIG first and place loose coaptation sutures.\n\n" +
+                "2. **Category III Bites (Transdermal puncture/scratch, mucosal licking, bats):**\n" +
+                "   • **Rabies Immunoglobulin (RIG):**\n" +
+                "     - Equine RIG (ERIG): **40 IU/kg** OR Human RIG (HRIG): **20 IU/kg**.\n" +
+                "     - Infiltrate full calculated dose into and around wound margins. Any remainder injected IM at an anatomical site distant from vaccine.\n\n" +
+                "3. **Thai Red Cross 2-Site Intradermal (ID) Regimen (National Standard):**\n" +
+                "   • Dose: **0.1 mL ID at 2 separate deltoid sites** on:\n" +
+                "     - **Day 0, Day 3, Day 7, Day 28** (Total: 8 ID injections, requires only 1 vial per patient!).\n" +
+                "   • Achieves 100% seroprotection, saves 70% cost compared to IM Essen (Days 0, 3, 7, 14, 28)."
+            }
+            lower.contains("dka") || lower.contains("ketoacidosis") -> {
+                "🩸 **DIABETIC KETOACIDOSIS (DKA) EMERGENCY PROTOCOL (ADA / EASD)**\n\n" +
+                "1. **Initial Hydration (Hour 1):**\n" +
+                "   • 0.9% Normal Saline at **1,000 to 1,500 mL/hr** (15–20 mL/kg/hr) to restore vascular volume.\n\n" +
+                "2. **Electrolyte Gatekeeper (Check Potassium Before Insulin!):**\n" +
+                "   • If **K⁺ < 3.3 mEq/L:** **HOLD INSULIN!** Infuse KCl 20–40 mEq/hr until K⁺ > 3.3 mEq/L (prevents fatal arrhythmias/respiratory arrest).\n" +
+                "   • If **K⁺ 3.3–5.2 mEq/L:** Add 20–30 mEq KCl to each liter of IV fluid; maintain serum K⁺ between 4.0–5.0 mEq/L.\n" +
+                "   • If **K⁺ > 5.2 mEq/L:** Do not give K⁺; recheck every 2 hours.\n\n" +
+                "3. **Insulin Infusion:**\n" +
+                "   • Regular Insulin IV continuous infusion at **0.1 units/kg/hr** (or 0.14 u/kg/hr without bolus).\n" +
+                "   • Target glucose reduction: 50 to 75 mg/dL per hour.\n\n" +
+                "4. **The Glucose Transition Rule:**\n" +
+                "   • When blood glucose falls to **200–250 mg/dL**, switch IV fluids to **5% Dextrose with 0.45% NS** and reduce insulin to 0.02–0.05 units/kg/hr.\n" +
+                "   • Continue insulin until Anion Gap closes (≤12 mEq/L) and venous pH > 7.30."
+            }
+            lower.contains("hyperkalemia") || (lower.contains("potassium") && (lower.contains("peaked t") || lower.contains("emergency") || lower.contains("shift"))) -> {
+                "⚡ **EMERGENCY HYPERKALEMIA PROTOCOL (K⁺ > 6.5 mEq/L OR ECG CHANGES)**\n\n" +
+                "1. **Myocardial Membrane Stabilization (Immediate):**\n" +
+                "   • **10% Calcium Gluconate:** 10 mL (1 ampule) IV over 2–5 minutes with continuous ECG monitoring.\n" +
+                "   • Onset: 1–3 minutes; Duration: 30–60 minutes. Repeat dose in 5 minutes if peaked T waves or QRS widening persist.\n" +
+                "   *(Note: Calcium stabilizes cardiac membrane; it does NOT lower serum K⁺ level!).*\n\n" +
+                "2. **Intracellular Potassium Shift (Temporary 2–4 Hour Lowering):**\n" +
+                "   • **Regular Insulin + Dextrose:** 10 Units Regular Insulin IV push immediately followed by 50 mL 50% Dextrose (D50) or 100 mL 25% Dextrose over 15 minutes.\n" +
+                "   • **Nebulized Salbutamol:** 10 to 20 mg in 4 mL NS via nebulizer over 15 minutes (additive K⁺ reduction of ~1.0 mEq/L).\n" +
+                "   • **Sodium Bicarbonate:** 50 mEq IV over 5 minutes (primarily if concurrent severe metabolic acidosis pH < 7.15).\n\n" +
+                "3. **Elimination & Removal (True Body Potassium Loss):**\n" +
+                "   • **IV Furosemide:** 40 to 80 mg IV bolus if kidneys producing urine.\n" +
+                "   • **Cation Exchange Resins:** Calcium Polystyrene Sulfonate 15 g PO TID or Patiromer 8.4 g PO daily.\n" +
+                "   • **Hemodialysis:** Definitive gold standard for refractory hyperkalemia or end-stage renal disease."
+            }
+            lower.contains("sepsis") || lower.contains("septic shock") || lower.contains("noradrenaline") || lower.contains("norepinephrine") -> {
+                "🚨 **SEPSIS & SEPTIC SHOCK: SURVIVING SEPSIS CAMPAIGN HOUR-1 BUNDLE**\n\n" +
+                "1. **Measure Blood Lactate:** Remeasure within 2–4 hours if initial lactate > 2.0 mmol/L.\n" +
+                "2. **Blood Cultures Before Antibiotics:** 2 sets (aerobic + anaerobic) prior to initiating antimicrobials without delaying therapy beyond 45 minutes.\n" +
+                "3. **Broad-Spectrum IV Antimicrobials:** Initiate empiric therapy within 1 hour (e.g. IV Piperacillin-Tazobactam 4.5g q6h OR Meropenem 1g q8h + Vancomycin 15-20 mg/kg q12h).\n" +
+                "4. **Rapid Fluid Resuscitation:** **30 mL/kg crystalloids (Ringer's Lactate preferred)** within the first 3 hours for hypotension (MAP < 65 mmHg) or initial lactate ≥ 4.0 mmol/L.\n" +
+                "5. **Vasopressor of Choice (Norepinephrine):**\n" +
+                "   • Start **Norepinephrine 0.05 to 0.1 mcg/kg/min** titrated to maintain **Mean Arterial Pressure (MAP) ≥ 65 mmHg**.\n" +
+                "   • Second-line: Add Vasopressin 0.03 units/min fixed infusion (do not titrate).\n" +
+                "   • Refractory Shock: IV Hydrocortisone 200 mg/day (50 mg IV q6h) if vasopressors unable to maintain MAP."
+            }
+            lower.contains("hypertensive") && (lower.contains("crisis") || lower.contains("emergency") || lower.contains("urgency") || lower.contains("labetalol") || lower.contains("nicardipine")) -> {
+                "🩸 **HYPERTENSIVE CRISIS MANAGEMENT (AHA / ACC GUIDELINES)**\n\n" +
+                "• **Hypertensive Emergency (BP >180/120 WITH Acute End-Organ Damage):**\n" +
+                "   - Acute pulmonary edema, aortic dissection, ACS, stroke, acute kidney injury, or eclampsia.\n" +
+                "   - **Target:** Reduce Mean Arterial Pressure (MAP) by **NO MORE than 20% to 25% in the first hour**, then towards 160/100 mmHg over next 2–6 hours.\n" +
+                "   - *(Exception: Acute Aortic Dissection → Rapidly lower SBP < 120 mmHg and HR < 60 bpm within 20 minutes using IV Esmolol/Labetalol!).*\n" +
+                "   - **First-Line IV Drugs:**\n" +
+                "     * **IV Labetalol:** 10 to 20 mg slow IV push over 2 min; repeat doubling dose (40mg, 80mg) q10min up to 300 mg total; or infusion 1–2 mg/min.\n" +
+                "     * **IV Nicardipine:** 5 mg/hr continuous IV infusion; titrate up by 2.5 mg/hr every 15 min (Max 15 mg/hr).\n" +
+                "     * **IV Nitroglycerin:** 5 to 100 mcg/min for acute pulmonary edema or ACS.\n" +
+                "   - 🚫 **STRICTLY CONTRAINDICATED:** Sublingual Nifedipine biting (induces uncontrolled cerebral/coronary hypoperfusion and stroke).\n\n" +
+                "• **Hypertensive Urgency (BP >180/120 WITHOUT End-Organ Damage):**\n" +
+                "   - Gradual reduction over 24 to 48 hours using oral agents (Amlodipine 5-10 mg, Telmisartan 40 mg, or Labetalol 100-200 mg PO). Do not rush IV therapy."
+            }
+            lower.contains("malaria") || lower.contains("falciparum") || lower.contains("vivax") || lower.contains("act") || lower.contains("artesunate") -> {
+                "🦟 **MALARIA DIAGNOSIS & ACT TREATMENT PROTOCOL (EDCD NEPAL / WHO)**\n\n" +
+                "• **1. Plasmodium vivax (Uncomplicated):**\n" +
+                "   - **Chloroquine Phosphate:** 25 mg base/kg total over 3 days (Day 1: 10 mg/kg; Day 2: 10 mg/kg; Day 3: 5 mg/kg).\n" +
+                "   - **Radical Hypnozoite Cure (Mandatory to prevent relapse):** **Primaquine 0.25 mg base/kg daily x 14 days** (Check G6PD status; contraindicated in severe G6PD deficiency and pregnancy!).\n\n" +
+                "• **2. Plasmodium falciparum (Uncomplicated):**\n" +
+                "   - **Artemisinin-based Combination Therapy (ACT):** **Artemether-Lumefantrine (Coartem 20/120 mg)** 6-dose regimen over 3 days:\n" +
+                "     * Dose schedule: 0, 8, 24, 36, 48, and 60 hours taken with fatty food/milk.\n" +
+                "     * Adult (>35 kg): 4 tablets per dose (total 24 tablets).\n" +
+                "   - Plus **Primaquine 0.25 mg/kg single dose on Day 1** as gametocidal to block transmission.\n\n" +
+                "• **3. Severe / Complicated Malaria (Cerebral, ARDS, Acidosis, Parasitemia >5%):**\n" +
+                "   - **IV Artesunate:** **2.4 mg/kg IV at 0, 12, 24 hours**, then once daily until oral tolerance (minimum 3 IV doses).\n" +
+                "   - Followed by full 3-day oral ACT course once patient can swallow."
+            }
             lower.contains("telmisartan") && (lower.contains("spironolactone") || lower.contains("potassium")) -> {
                 "⚠️ **DRUG-DRUG INTERACTION ALERT: Telmisartan + Spironolactone**\n\n" +
                 "• **Severity Level:** Major (High Risk of Severe Hyperkalemia).\n" +
@@ -457,6 +734,61 @@ object GeminiClinicalService {
                "💡 **Next Steps:**\n" +
                "1. Tap **\"Search in App\"** below to browse our 1000+ national formulary monographs and 100+ clinical protocols.\n" +
                "2. Tap **\"Google (Chrome)\"** below to view real-time UpToDate, WHO, and CDC guidelines online."
+    }
+
+    private fun getClinicalReferenceSources(query: String): List<GroundingSource> {
+        val lower = query.lowercase()
+        val sources = mutableListOf<GroundingSource>()
+        when {
+            lower.contains("dengue") -> {
+                sources.add(GroundingSource("EDCD Nepal Dengue Clinical Case Management Guideline", "https://edcd.gov.np/resources/dengue"))
+                sources.add(GroundingSource("WHO SEARO Dengue Guidelines for Diagnosis & Management", "https://www.who.int/southeastasia/health-topics/dengue"))
+            }
+            lower.contains("scrub") || lower.contains("typhus") -> {
+                sources.add(GroundingSource("EDCD Nepal Scrub Typhus Clinical Protocol & Doxycycline Schedule", "https://edcd.gov.np/resources/scrub-typhus"))
+                sources.add(GroundingSource("CDC Scrub Typhus Clinical Care Guidelines", "https://www.cdc.gov/typhus/scrub/treatment.html"))
+            }
+            lower.contains("snake") || lower.contains("asv") || lower.contains("envenom") -> {
+                sources.add(GroundingSource("National Protocol for Snakebite Management in Nepal (EDCD)", "https://edcd.gov.np/resources/snakebite"))
+                sources.add(GroundingSource("WHO Guidelines for the Management of Snakebites SEARO", "https://www.who.int/southeastasia/health-topics/snakebite"))
+            }
+            lower.contains("rabies") -> {
+                sources.add(GroundingSource("National Guideline for Rabies Prophylaxis in Nepal (EDCD)", "https://edcd.gov.np/rabies"))
+                sources.add(GroundingSource("WHO Rabies Intradermal Immunization Position Paper", "https://www.who.int/news-room/fact-sheets/detail/rabies"))
+            }
+            lower.contains("leprosy") -> {
+                sources.add(GroundingSource("National Leprosy Elimination Programme Nepal (LCDD/MoHP)", "https://edcd.gov.np"))
+                sources.add(GroundingSource("WHO Guidelines for the Diagnosis, Treatment and Prevention of Leprosy", "https://www.who.int/publications/i/item/9789290226383"))
+            }
+            lower.contains("leishmaniasis") || lower.contains("kala") -> {
+                sources.add(GroundingSource("National Protocol for Kala-azar Elimination in Nepal (EDCD)", "https://edcd.gov.np"))
+                sources.add(GroundingSource("WHO Post-elimination Strategy for Visceral Leishmaniasis", "https://www.who.int/health-topics/leishmaniasis"))
+            }
+            lower.contains("asthma") -> {
+                sources.add(GroundingSource("Global Initiative for Asthma (GINA 2024 Strategy)", "https://ginasthma.org"))
+                sources.add(GroundingSource("WHO Pocket Book of Hospital Care / NCD Guidelines", "https://www.who.int"))
+            }
+            lower.contains("mi") || lower.contains("stemi") || lower.contains("nstemi") || lower.contains("cardiac") || lower.contains("acls") -> {
+                sources.add(GroundingSource("AHA/ACC Guideline for the Management of STEMI", "https://www.ahajournals.org"))
+                sources.add(GroundingSource("American Heart Association ACLS Resuscitation Algorithms", "https://cpr.heart.org"))
+            }
+            lower.contains("stroke") -> {
+                sources.add(GroundingSource("AHA/ASA Guidelines for the Early Management of Acute Ischemic Stroke", "https://www.stroke.org"))
+            }
+            lower.contains("tb") || lower.contains("tuberculosis") -> {
+                sources.add(GroundingSource("National Tuberculosis Control Centre Nepal (NTCC Thimi)", "https://ntc.gov.np"))
+                sources.add(GroundingSource("WHO Consolidated Guidelines on Tuberculosis Module 4", "https://www.who.int/publications/i/item/9789240048126"))
+            }
+            lower.contains("sepsis") -> {
+                sources.add(GroundingSource("Surviving Sepsis Campaign: International Guidelines 2021", "https://www.sccm.org/survivingsepsisguidelines"))
+            }
+            else -> {
+                sources.add(GroundingSource("WHO Model List of Essential Medicines", "https://www.who.int/groups/expert-committee-on-selection-and-use-of-essential-medicines/essential-medicines-lists"))
+                sources.add(GroundingSource("Ministry of Health and Population Nepal (MoHP)", "https://mohp.gov.np"))
+                sources.add(GroundingSource("Epidemiology and Disease Control Division (EDCD Nepal)", "https://edcd.gov.np"))
+            }
+        }
+        return sources
     }
 
     suspend fun fetchLiveNepalMedicalNews(category: String = "All"): MedicalNewsFetchResult = withContext(Dispatchers.IO) {

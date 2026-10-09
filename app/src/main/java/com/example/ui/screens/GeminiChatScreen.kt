@@ -61,11 +61,20 @@ fun GeminiChatScreen(
     }
 
     val categories = remember {
-        listOf("💊 Drug Dosing", "🏥 Disease Treatment", "⚡ Emergency", "🐍 Toxicology", "📋 Guidelines", "🔍 Interactions", "⚖️ Renal/Dosing", "🧬 MOA Guide")
+        listOf("🇳🇵 Nepal Protocols", "💊 Drug Dosing", "🏥 Disease Treatment", "⚡ Emergency", "👶 Pediatric Dosing", "🐍 Toxicology", "📋 Guidelines", "🔍 Interactions", "⚖️ Renal/Dosing", "🧬 MOA Guide")
     }
 
     val categoryPrompts = remember {
         mapOf(
+            "🇳🇵 Nepal Protocols" to listOf(
+                "Dengue warning signs & fluid titration (EDCD Nepal)",
+                "Scrub Typhus Doxycycline schedule & eschar hallmarks",
+                "Leprosy WHO MDT PB & MB blister pack regimens",
+                "Kala-azar single-dose Liposomal Amphotericin B (EDCD)",
+                "Rabies Thai Red Cross 2-site ID PEP regimen",
+                "Malaria vivax vs falciparum ACT protocol (EDCD)",
+                "Short-course BPaLM regimen for MDR-TB in Nepal"
+            ),
             "💊 Drug Dosing" to listOf(
                 "Paracetamol pediatric dose mg/kg and interval",
                 "Metformin adult dose, max limits & renal cutoffs",
@@ -81,7 +90,7 @@ fun GeminiChatScreen(
                 "Sepsis hour-1 bundle & noradrenaline protocol",
                 "Acute severe asthma hospital management",
                 "Cirrhosis with ascites & SBP treatment",
-                "Spontaneous Bacterial Peritonitis (SBP) prophylaxis",
+                "Diabetic Ketoacidosis (DKA) insulin & potassium protocol",
                 "Type 2 Diabetes ADA/EASD dual-therapy algorithm"
             ),
             "⚡ Emergency" to listOf(
@@ -89,7 +98,16 @@ fun GeminiChatScreen(
                 "ACLS Pulseless VT/VF Algorithm & Amiodarone",
                 "PSVT Adenosine Protocol & Modified Valsalva",
                 "Status Epilepticus AES Protocol (Lorazepam + Levetiracetam)",
+                "Emergency Hyperkalemia Calcium & Shift Protocol",
                 "Severe Hypertensive Emergency Labetalol & Nicardipine"
+            ),
+            "👶 Pediatric Dosing" to listOf(
+                "Paracetamol pediatric 15 mg/kg oral interval",
+                "Amoxicillin-Clavulanate pediatric high-dose 90 mg/kg/day",
+                "Azithromycin 10 mg/kg pediatric dosing schedule",
+                "Ceftriaxone 100 mg/kg pediatric meningitis dosing",
+                "Ibuprofen pediatric dose mg/kg (avoid in dengue)",
+                "Salbutamol nebulization dose in pediatric asthma"
             ),
             "🐍 Toxicology" to listOf(
                 "Snakebite Polyvalent ASV Protocol (WHO & Nepal)",
@@ -177,20 +195,30 @@ fun GeminiChatScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = Indigo400
                                 )
+                                val currentModel = state.aiSelectedModel
+                                val (modelBadgeText, modelBadgeColor, modelTextColor) = when {
+                                    currentModel.contains("pro") -> Triple("🧠 3.1 Pro Reasoner ▾", Color(0xFFA855F7).copy(alpha = 0.25f), Color(0xFFC084FC))
+                                    currentModel.contains("lite") -> Triple("⚡ 3.1 Flash-Lite ▾", Color(0xFF0284C7).copy(alpha = 0.25f), Color(0xFF38BDF8))
+                                    else -> Triple("✨ 3.5 Flash ▾", Emerald600.copy(alpha = 0.2f), Emerald400)
+                                }
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
-                                    color = if (state.aiSelectedModel.contains("pro")) Color(0xFFA855F7).copy(alpha = 0.25f) else Emerald600.copy(alpha = 0.2f),
-                                    border = BorderStroke(1.dp, if (state.aiSelectedModel.contains("pro")) Color(0xFFA855F7).copy(alpha = 0.5f) else Emerald400.copy(alpha = 0.4f)),
+                                    color = modelBadgeColor,
+                                    border = BorderStroke(1.dp, modelTextColor.copy(alpha = 0.5f)),
                                     modifier = Modifier.clickable {
-                                        val next = if (state.aiSelectedModel.contains("pro")) "gemini-3.5-flash" else "gemini-3.1-pro-preview"
+                                        val next = when {
+                                            currentModel.contains("lite") -> "gemini-3.5-flash"
+                                            currentModel.contains("pro") -> "gemini-3.1-flash-lite-preview"
+                                            else -> "gemini-3.1-pro-preview"
+                                        }
                                         viewModel.setAiModel(next)
                                     }
                                 ) {
                                     Text(
-                                        text = if (state.aiSelectedModel.contains("pro")) "3.1 Pro Reasoner ▾" else "3.5 Flash ▾",
+                                        text = modelBadgeText,
                                         fontSize = 9.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (state.aiSelectedModel.contains("pro")) Color(0xFFC084FC) else Emerald400,
+                                        color = modelTextColor,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                     )
                                 }
@@ -300,6 +328,51 @@ fun GeminiChatScreen(
                             )
                         }
                     }
+                }
+            }
+        }
+
+        // Clinical AI Consultation Modes Strip
+        val consultationModes = remember {
+            listOf(
+                "💡 General Guidance",
+                "🔍 Polypharmacy Check",
+                "⚖️ Renal & Hepatic Dosing",
+                "👶 Pediatric Dosing",
+                "⚡ Emergency & Antidotes",
+                "🇳🇵 Nepal MoHP Protocols"
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            consultationModes.forEach { mode ->
+                val cleanMode = mode.substringAfter(" ").trim()
+                val isSelected = state.aiConsultationMode.contains(cleanMode, ignoreCase = true)
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isSelected) Indigo600.copy(alpha = 0.35f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                    border = BorderStroke(1.dp, if (isSelected) Indigo400 else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+                    modifier = Modifier.clickable {
+                        viewModel.setAiConsultationMode(cleanMode)
+                        if (cleanMode.contains("Nepal", ignoreCase = true)) selectedCategory = "🇳🇵 Nepal Protocols"
+                        else if (cleanMode.contains("Pediatric", ignoreCase = true)) selectedCategory = "👶 Pediatric Dosing"
+                        else if (cleanMode.contains("Emergency", ignoreCase = true)) selectedCategory = "⚡ Emergency"
+                        else if (cleanMode.contains("Polypharmacy", ignoreCase = true)) selectedCategory = "🔍 Interactions"
+                        else if (cleanMode.contains("Renal", ignoreCase = true)) selectedCategory = "⚖️ Renal/Dosing"
+                    }
+                ) {
+                    Text(
+                        text = mode,
+                        fontSize = 10.5.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
+                    )
                 }
             }
         }
@@ -572,6 +645,7 @@ private fun ChatBubble(
     onGoogleSearch: (String) -> Unit,
     onPubMedSearch: (String) -> Unit
 ) {
+    val context = LocalContext.current
     val isUser = message.sender == MessageSender.USER
     val clipboardManager = LocalClipboardManager.current
     var copied by remember { mutableStateOf(false) }
@@ -612,9 +686,57 @@ private fun ChatBubble(
             ),
             color = if (isUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
             border = if (!isUser) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)) else null,
-            modifier = Modifier.widthIn(max = 330.dp)
+            modifier = Modifier.widthIn(max = 340.dp)
         ) {
             Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+                if (!isUser) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val modelLabel = when {
+                            message.modelUsed?.contains("pro") == true -> "🧠 3.1 Pro Reasoner"
+                            message.modelUsed?.contains("lite") == true -> "⚡ 3.1 Flash-Lite"
+                            else -> "✨ 3.5 Flash"
+                        }
+                        Text(
+                            text = modelLabel,
+                            fontSize = 9.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Indigo400
+                        )
+
+                        if (message.isGrounded) {
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = Color(0xFF0284C7).copy(alpha = 0.2f)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Public,
+                                        contentDescription = null,
+                                        tint = Color(0xFF38BDF8),
+                                        modifier = Modifier.size(10.dp)
+                                    )
+                                    Text(
+                                        text = "Grounded",
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF38BDF8)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 Text(
                     text = message.text,
                     style = MaterialTheme.typography.bodyMedium,
@@ -624,9 +746,67 @@ private fun ChatBubble(
                 )
 
                 if (!isUser) {
+                    if (message.webSources.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "Verified Guidelines & Sources:",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            message.webSources.take(3).forEach { source ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                                    border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            try {
+                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(source.url))
+                                                context.startActivity(intent)
+                                            } catch (e: Exception) {
+                                                Toast.makeText(context, "Could not open source", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Language,
+                                            contentDescription = null,
+                                            tint = Color(0xFF38BDF8),
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                        Text(
+                                            text = source.title,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = Color(0xFF38BDF8),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                                            contentDescription = null,
+                                            tint = Color(0xFF38BDF8),
+                                            modifier = Modifier.size(11.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Action Toolbar: Search in App + Google Search in Chrome + PubMed + Copy
+                    // Action Toolbar: Search in App + Google Search in Chrome + PubMed + Copy + Share
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -685,7 +865,7 @@ private fun ChatBubble(
                         }
 
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             // PubMed Quick Link
@@ -696,13 +876,34 @@ private fun ChatBubble(
                                     containerColor = Color(0xFF6366F1).copy(alpha = 0.2f),
                                     contentColor = Color(0xFFA5B4FC)
                                 ),
-                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
+                                contentPadding = PaddingValues(horizontal = 5.dp, vertical = 2.dp),
                                 modifier = Modifier.height(28.dp)
                             ) {
                                 Text(
                                     text = "PubMed",
-                                    fontSize = 10.sp,
+                                    fontSize = 9.5.sp,
                                     fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            // Share response button
+                            IconButton(
+                                onClick = {
+                                    val sendIntent = Intent().apply {
+                                        action = Intent.ACTION_SEND
+                                        putExtra(Intent.EXTRA_TEXT, message.text)
+                                        type = "text/plain"
+                                    }
+                                    val shareIntent = Intent.createChooser(sendIntent, "Share Clinical Note")
+                                    context.startActivity(shareIntent)
+                                },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = "Share",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(13.dp)
                                 )
                             }
 
@@ -718,7 +919,7 @@ private fun ChatBubble(
                                     imageVector = if (copied) Icons.Default.Check else Icons.Default.ContentCopy,
                                     contentDescription = "Copy Response",
                                     tint = if (copied) Emerald400 else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                    modifier = Modifier.size(14.dp)
+                                    modifier = Modifier.size(13.dp)
                                 )
                             }
                         }

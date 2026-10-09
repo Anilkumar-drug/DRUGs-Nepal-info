@@ -48,7 +48,10 @@ data class ChatMessage(
     val sender: MessageSender,
     val text: String,
     val timestamp: Long = System.currentTimeMillis(),
-    val searchQuerySuggestion: String? = null
+    val searchQuerySuggestion: String? = null,
+    val webSources: List<GroundingSource> = emptyList(),
+    val modelUsed: String? = null,
+    val isGrounded: Boolean = false
 )
 
 enum class MessageSender {
