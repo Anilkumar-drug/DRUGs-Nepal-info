@@ -1024,9 +1024,9 @@ fun DrugDetailModal(
                 ) {
                     if (drug.brandsNepal.isNotEmpty()) {
                         Text(
-                            text = "🇳🇵 Nepal Brands",
+                            text = "🇳🇵 Nepal Domestic Manufacturers (DJPL, NPL, Quest, Asian, Lomus, etc.)",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             color = DimsTealPrimary
                         )
                         drug.brandsNepal.forEach { brand ->
@@ -1043,9 +1043,9 @@ fun DrugDetailModal(
 
                     if (drug.brandsIndia.isNotEmpty()) {
                         Text(
-                            text = "🇮🇳 India Brands",
+                            text = "🌏 Registered Imported Brands in Nepal (Sun, Cipla, Alkem, GSK, etc.)",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             color = Indigo400
                         )
                         drug.brandsIndia.forEach { brand ->

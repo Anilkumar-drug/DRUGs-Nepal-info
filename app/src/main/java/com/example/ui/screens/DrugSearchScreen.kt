@@ -444,6 +444,7 @@ fun DrugSearchScreen(
                                     DrugCard(
                                         drug = drug,
                                         isBookmarked = bookmarkedDrugIds.contains(drug.id),
+                                        searchQuery = searchQuery,
                                         onClick = { onDrugClick(drug) },
                                         onBookmarkToggle = { onBookmarkToggle(drug.id) }
                                     )
@@ -522,6 +523,7 @@ fun DrugSearchScreen(
                                 DrugCard(
                                     drug = drug,
                                     isBookmarked = bookmarkedDrugIds.contains(drug.id),
+                                    searchQuery = searchQuery,
                                     onClick = { onDrugClick(drug) },
                                     onBookmarkToggle = { onBookmarkToggle(drug.id) }
                                 )
@@ -1076,6 +1078,7 @@ fun DrugSearchScreen(
                     DrugCard(
                         drug = drug,
                         isBookmarked = bookmarkedDrugIds.contains(drug.id),
+                        searchQuery = searchQuery,
                         onClick = { onDrugClick(drug) },
                         onBookmarkToggle = { onBookmarkToggle(drug.id) }
                     )
@@ -1204,10 +1207,23 @@ private fun MascotMagnifyingGlass(modifier: Modifier = Modifier) {
 private fun DrugCard(
     drug: Drug,
     isBookmarked: Boolean,
+    searchQuery: String = "",
     onClick: () -> Unit,
     onBookmarkToggle: () -> Unit
 ) {
     val systemColor = remember(drug.system) { getSystemColor(drug.system) }
+
+    val matchedBrand = remember(drug, searchQuery) {
+        if (searchQuery.isBlank()) null
+        else {
+            val q = searchQuery.trim().lowercase()
+            val allBrands = drug.brandsNepal + drug.brandsIndia
+            allBrands.firstOrNull { b ->
+                val bName = b.name.lowercase()
+                bName.contains(q) || q.contains(bName) || bName.replace("-", " ").contains(q)
+            }
+        }
+    }
 
     Card(
         modifier = Modifier
@@ -1251,6 +1267,37 @@ private fun DrugCard(
                         tint = if (isBookmarked) Amber500 else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
+                }
+            }
+
+            // Matched Brand Highlight (if user searched by brand name)
+            if (matchedBrand != null) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Amber500.copy(alpha = 0.12f),
+                    border = BorderStroke(1.dp, Amber500.copy(alpha = 0.45f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "🎯 Matched Brand: ${matchedBrand.name}",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Amber400
+                        )
+                        Text(
+                            text = "(${matchedBrand.company} • ${matchedBrand.form} ${matchedBrand.strength})",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
 
@@ -1461,34 +1508,62 @@ private fun DrugCard(
                 }
             }
 
-            // Nepal Brands Preview
-            if (drug.brandsNepal.isNotEmpty()) {
+            // Nepal & Imported Brands Preview
+            if (drug.brandsNepal.isNotEmpty() || drug.brandsIndia.isNotEmpty()) {
                 Surface(
                     shape = RoundedCornerShape(6.dp),
                     color = Color(0xFF0284C7).copy(alpha = 0.08f),
                     border = BorderStroke(0.8.dp, Color(0xFF0284C7).copy(alpha = 0.25f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    Column(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                        verticalArrangement = Arrangement.spacedBy(3.dp)
                     ) {
-                        Text(
-                            text = "🇳🇵 Nepal Brands:",
-                            fontSize = 10.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0284C7)
-                        )
-                        Text(
-                            text = drug.brandsNepal.take(4).joinToString(", ") { "${it.name} (${it.form})" },
-                            fontSize = 10.5.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f)
-                        )
+                        if (drug.brandsNepal.isNotEmpty()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "🇳🇵 Nepal Brands:",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF0284C7)
+                                )
+                                Text(
+                                    text = drug.brandsNepal.take(5).joinToString(", ") { "${it.name} (${it.form})" } + if (drug.brandsNepal.size > 5) " +${drug.brandsNepal.size - 5} more" else "",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                        if (drug.brandsIndia.isNotEmpty()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "🌏 Imported / Reg:",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Slate400
+                                )
+                                Text(
+                                    text = drug.brandsIndia.take(4).joinToString(", ") { "${it.name} (${it.company})" } + if (drug.brandsIndia.size > 4) " +${drug.brandsIndia.size - 4} more" else "",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    color = Slate400,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
                     }
                 }
             }

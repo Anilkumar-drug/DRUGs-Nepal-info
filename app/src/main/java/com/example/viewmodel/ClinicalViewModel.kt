@@ -213,8 +213,12 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
 
     private val indexedDrugs: List<IndexedDrug> by lazy {
         ClinicalRepository.drugs.map { drug ->
-            val nepBrands = drug.brandsNepal.joinToString(" ") { "${it.name} ${it.company}" }
-            val indBrands = drug.brandsIndia.joinToString(" ") { "${it.name} ${it.company}" }
+            val nepBrands = drug.brandsNepal.joinToString(" ") { 
+                "${it.name} ${it.company} ${it.form} ${it.strength} ${it.name.replace("-", " ")}"
+            }
+            val indBrands = drug.brandsIndia.joinToString(" ") { 
+                "${it.name} ${it.company} ${it.form} ${it.strength} ${it.name.replace("-", " ")}"
+            }
             val brandText = "$nepBrands $indBrands ${drug.genericName}".lowercase()
             val genericText = "${drug.genericName} ${drug.drugClass} ${drug.specialInstructions} ${drug.researchNotes}".lowercase()
             val indicationText = drug.indications.lowercase()
@@ -1258,6 +1262,74 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
             .replace("tiniba", "tinidazole")
             .replace("pexep", "paroxetine")
             .replace("paxil", "paroxetine")
+            // Popular Nepal brand & colloquial abbreviations
+            .replace("pcm", "paracetamol")
+            .replace("cetmol", "paracetamol")
+            .replace("cetriz", "cetirizine")
+            .replace("alatrol", "cetirizine")
+            .replace("pantocid", "pantoprazole")
+            .replace("pantop", "pantoprazole")
+            .replace("novamox", "amoxicillin")
+            .replace("moxikind", "amoxicillin clavulanate")
+            .replace("augmentin", "amoxicillin clavulanate")
+            .replace("clavam", "amoxicillin clavulanate")
+            .replace("combiflam", "ibuprofen")
+            .replace("flexon", "ibuprofen")
+            .replace("zerodol", "aceclofenac")
+            .replace("voveran", "diclofenac")
+            .replace("dynapar", "diclofenac")
+            .replace("ecosprin", "aspirin")
+            .replace("disprin", "aspirin")
+            .replace("telma", "telmisartan")
+            .replace("teltan", "telmisartan")
+            .replace("amlip", "amlodipine")
+            .replace("stamlo", "amlodipine")
+            .replace("glycomet", "metformin")
+            .replace("metphage", "metformin")
+            .replace("galvus", "vildagliptin")
+            .replace("forxiga", "dapagliflozin")
+            .replace("jardiance", "empagliflozin")
+            .replace("thyronorm", "levothyroxine")
+            .replace("eltroxin", "levothyroxine")
+            .replace("atorva", "atorvastatin")
+            .replace("rosuvas", "rosuvastatin")
+            .replace("montair", "montelukast")
+            .replace("telekast", "montelukast")
+            .replace("asthalin", "salbutamol")
+            .replace("foracort", "budesonide")
+            .replace("budecort", "budesonide")
+            .replace("duolin", "ipratropium")
+            .replace("nexpro", "esomeprazole")
+            .replace("sompraz", "esomeprazole")
+            .replace("aciloc", "famotidine")
+            .replace("emeset", "ondansetron")
+            .replace("ondem", "ondansetron")
+            .replace("domstal", "domperidone")
+            .replace("perinorm", "metoclopramide")
+            .replace("dulcolax", "bisacodyl")
+            .replace("duphalac", "lactulose")
+            .replace("taxim-o", "cefixime")
+            .replace("monocef", "ceftriaxone")
+            .replace("pipzo", "piperacillin")
+            .replace("meronem", "meropenem")
+            .replace("sinarest", "chlorpheniramine")
+            .replace("ultracet", "tramadol")
+            .replace("alprax", "alprazolam")
+            .replace("restyl", "alprazolam")
+            .replace("zapiz", "clonazepam")
+            .replace("eptoin", "phenytoin")
+            .replace("tegretol", "carbamazepine")
+            .replace("valparin", "valproate")
+            .replace("encorate", "valproate")
+            .replace("levipil", "levetiracetam")
+            .replace("gabapin", "gabapentin")
+            .replace("nexito", "escitalopram")
+            .replace("syndopa", "levodopa")
+            .replace("lasix", "furosemide")
+            .replace("dytor", "torsemide")
+            .replace("aldactone", "spironolactone")
+            .replace("betadine", "povidone iodine")
+            .replace("betnovate", "betamethasone")
     }
 
     fun filterProtocols(query: String): List<DiseaseProtocol> {
@@ -1302,9 +1374,14 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
     ): List<Drug> {
         val q = searchQuery.trim().lowercase()
         val normQ = normalizeMedicalQuery(q)
+        val tokens = q.split(" ", "-", "/").filter { it.isNotBlank() }
 
-        fun String.matchesQuery(): Boolean =
-            this.contains(q) || (normQ.isNotBlank() && this.contains(normQ))
+        fun String.matchesQuery(): Boolean {
+            if (this.contains(q)) return true
+            if (normQ.isNotBlank() && this.contains(normQ)) return true
+            if (tokens.size > 1 && tokens.all { this.contains(it) }) return true
+            return false
+        }
 
         return indexedDrugs.asSequence().filter { item ->
             val drug = item.drug
