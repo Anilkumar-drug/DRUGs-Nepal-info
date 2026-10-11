@@ -106,15 +106,36 @@ fun DrugSearchScreen(
     val isSearchActive = searchQuery.isNotBlank()
 
     var selectedSpecialtyTag by remember { mutableStateOf<String?>(null) }
+    var selectedAlphabetLetter by remember { mutableStateOf<Char?>(null) }
 
-    val effectiveDrugs = remember(filteredDrugs, selectedSpecialtyTag) {
-        filteredDrugs.filter { drug ->
-            if (selectedSpecialtyTag == null) true else {
+    val effectiveDrugs = remember(filteredDrugs, selectedSpecialtyTag, searchQuery, selectedAlphabetLetter) {
+        val base = filteredDrugs.filter { drug ->
+            val matchesSpecialty = if (selectedSpecialtyTag == null) true else {
                 drug.therapeuticClassTag.contains(selectedSpecialtyTag!!, ignoreCase = true) ||
                 drug.drugClass.contains(selectedSpecialtyTag!!, ignoreCase = true) ||
                 drug.indications.contains(selectedSpecialtyTag!!, ignoreCase = true)
             }
+            val matchesLetter = if (selectedAlphabetLetter == null) true else {
+                drug.genericName.trim().startsWith(selectedAlphabetLetter!!, ignoreCase = true)
+            }
+            matchesSpecialty && matchesLetter
         }.distinctBy { it.id }
+
+        if (searchQuery.isBlank()) {
+            base.sortedBy { it.genericName.trim().lowercase() }
+        } else {
+            val q = searchQuery.trim().lowercase()
+            base.sortedWith(
+                compareBy<Drug> { drug ->
+                    val g = drug.genericName.trim().lowercase()
+                    if (g == q) 0
+                    else if (g.startsWith(q)) 1
+                    else if (drug.brandsNepal.any { it.name.trim().lowercase().startsWith(q) } ||
+                             drug.brandsIndia.any { it.name.trim().lowercase().startsWith(q) }) 2
+                    else 3
+                }.thenBy { it.genericName.trim().lowercase() }
+            )
+        }
     }
 
     val distinctCalculators = remember(filteredCalculators) {
@@ -986,6 +1007,86 @@ fun DrugSearchScreen(
                 }
             }
 
+            // Alphabet A-Z Fast Selector Strip
+            if (!isSearchActive) {
+                item(key = "home_alphabet_fast_selector") {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "A to Z Alphabetical Directory",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            if (selectedAlphabetLetter != null) {
+                                Text(
+                                    text = "Clear Letter Filter",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DimsTealPrimary,
+                                    modifier = Modifier.clickable { selectedAlphabetLetter = null }
+                                )
+                            }
+                        }
+
+                        androidx.compose.foundation.lazy.LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            item {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (selectedAlphabetLetter == null) DimsTealPrimary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    border = BorderStroke(0.8.dp, if (selectedAlphabetLetter == null) DimsTealPrimary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                                    modifier = Modifier
+                                        .clickable { selectedAlphabetLetter = null }
+                                        .testTag("alphabet_chip_all")
+                                ) {
+                                    Text(
+                                        text = "All (A-Z)",
+                                        fontSize = 12.sp,
+                                        fontWeight = if (selectedAlphabetLetter == null) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (selectedAlphabetLetter == null) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                    )
+                                }
+                            }
+
+                            items(('A'..'Z').toList()) { letter ->
+                                val isSelected = selectedAlphabetLetter == letter
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isSelected) DimsTealPrimary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    border = BorderStroke(0.8.dp, if (isSelected) DimsTealPrimary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                                    modifier = Modifier
+                                        .clickable {
+                                            selectedAlphabetLetter = if (isSelected) null else letter
+                                        }
+                                        .testTag("alphabet_chip_$letter")
+                                ) {
+                                    Text(
+                                        text = letter.toString(),
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // Results Header for default drug list
             item(key = "home_drugs_results_header") {
                 Row(
@@ -994,9 +1095,12 @@ fun DrugSearchScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${effectiveDrugs.size} drugs in database",
+                        text = if (selectedAlphabetLetter != null) 
+                            "Letter '${selectedAlphabetLetter}' • ${effectiveDrugs.size} drugs (A-Z)" 
+                        else 
+                            "${effectiveDrugs.size} drugs • Arranged Alphabetically (A-Z)",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Row(
@@ -1010,7 +1114,7 @@ fun DrugSearchScreen(
                             modifier = Modifier.size(13.dp)
                         )
                         Text(
-                            text = "Tap card for full monograph",
+                            text = "Tap card for monograph",
                             style = MaterialTheme.typography.labelSmall,
                             color = DimsTealPrimary,
                             fontWeight = FontWeight.Medium
@@ -1204,7 +1308,7 @@ private fun MascotMagnifyingGlass(modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun DrugCard(
+fun DrugCard(
     drug: Drug,
     isBookmarked: Boolean,
     searchQuery: String = "",

@@ -40,38 +40,46 @@ object CuttingEdgeClinicalDrugsData {
             pediatricInterval = "Safety and efficacy not established in pediatric patients under 18 years"
         ),
 
-        // 2. Vonoprazan
+        // 2. Vonoprazan (Vonopran / P-CAB)
         Drug(
             id = "d_cut_2",
-            genericName = "Vonoprazan",
+            genericName = "Vonoprazan (Vonopran)",
             system = "Gastrointestinal & Hepatobiliary",
-            drugClass = "Potassium-Competitive Acid Blocker (P-CAB)",
+            drugClass = "Potassium-Competitive Acid Blocker (P-CAB) / Novel PPI Class",
             blackBoxWarning = null,
-            indications = "Severe Erosive Esophagitis (healing and maintenance), Refractory Gastroesophageal Reflux Disease (GERD), Helicobacter pylori eradication (in combination with Amoxicillin ± Clarithromycin), Gastric and duodenal ulcer healing and prevention of NSAID-induced ulcers.",
-            doses = "Erosive Esophagitis Healing: 20 mg PO once daily for 8 weeks. Maintenance of healed EE: 10 mg PO once daily for up to 6 months. H. pylori Dual Therapy: Vonoprazan 20 mg BID + Amoxicillin 1000 mg TID for 14 days. H. pylori Triple Therapy: Vonoprazan 20 mg BID + Amoxicillin 1000 mg BID + Clarithromycin 500 mg BID for 14 days.",
-            administration = "Take orally once or twice daily without regard to food. Swallow tablets whole; do not crush or chew.",
-            timing = "Morning or morning and evening (consistent daily).",
-            specialInstructions = "Achieves rapid and sustained 24-hour acid suppression from day 1 without requiring acid activation like conventional PPIs. Does not depend on CYP2C19 extensive/poor metabolizer genetics.",
+            indications = "Severe Erosive Esophagitis (healing and maintenance), Refractory Gastroesophageal Reflux Disease (GERD), Helicobacter pylori eradication (in combination with Amoxicillin ± Clarithromycin / Vonopran AM Kit), Gastric and duodenal ulcer healing, and prevention of NSAID-induced ulcers. Novel potent alternative to conventional proton pump inhibitors (PPIs like Pantoprazole, Omeprazole).",
+            doses = "• Erosive Esophagitis (EE) Healing: 20 mg PO once daily for 8 weeks.\n• Maintenance of Healed EE: 10 mg PO once daily for up to 6 months.\n• Non-Erosive GERD: 10-20 mg PO once daily.\n• H. pylori Dual Therapy: Vonoprazan (Vonopran) 20 mg BID + Amoxicillin 1000 mg TID for 14 days.\n• H. pylori Triple Therapy: Vonoprazan (Vonopran) 20 mg BID + Amoxicillin 1000 mg BID + Clarithromycin 500 mg BID for 14 days.",
+            administration = "Take orally once or twice daily with or without food. Swallow tablets whole; do not crush or chew.",
+            timing = "Morning or morning and evening (खाना खाएर वा नखाई लिन सकिने).",
+            specialInstructions = "Vonoprazan (widely marketed as Vonopran / P-CAB) achieves rapid and sustained 24-hour acid suppression from Day 1 without requiring meal-stimulated gastric acid activation like conventional PPIs. Does not depend on CYP2C19 extensive/poor metabolizer genetics.",
             pkPd = "Bioavailability ~80%. Rapid peak plasma concentration within 1.5-2 hours. Accumulates in gastric parietal cell secretory canaliculi with slow dissociation; elimination half-life ~7-9 hours. Primary metabolism via CYP3A4/5, CYP2B6, CYP2C19, and SULT2A1.",
-            renalAdj = "eGFR 15-29 mL/min: Max 10 mg PO daily for maintenance (or 20 mg daily with monitoring). eGFR <15 mL/min or dialysis: Not well studied; use lowest effective dose.",
+            renalAdj = "eGFR 15-29 mL/min: Max 10 mg PO daily for maintenance (or 20 mg daily with monitoring). eGFR <15 mL/min or dialysis: Use lowest effective dose.",
             hepaticAdj = "Moderate to severe hepatic impairment (Child-Pugh B or C): Max 10 mg PO daily for EE maintenance, monitor closely.",
-            pregnancy = "Category B3 / Caution (Limited human data; use only if clinically indicated)",
+            pregnancy = "Category B3 / Caution (Limited human data; use only if clinically indicated).",
             lactation = "Excreted in animal milk; weigh clinical benefit to mother against theoretical risk to infant.",
             sideEffects = "Diarrhea, abdominal pain, dyspepsia, headache, nasopharyngitis, benign gastric fundic gland polyps (with long-term suppression).",
             priceNpr = "NPR 35.00 - 55.00 per tab (20mg)",
             priceInr = "INR 22.00 - 38.00 per tab (20mg)",
             brandsNepal = listOf(
-                BrandInfo("Vonozap", "Nepal Pharmaceuticals Lab", "Tab", "10 mg / 20 mg"),
-                BrandInfo("P-Cab", "Deurali-Janta Pharmaceuticals", "Tab", "20 mg")
+                BrandInfo("Vonopran", "Lomus Pharmaceuticals", "Tablet", "10 mg / 20 mg"),
+                BrandInfo("Vonafresh", "Asian Pharmaceuticals", "Tablet", "10 mg / 20 mg"),
+                BrandInfo("Vonasafe", "Quest Pharmaceuticals", "Tablet", "10 mg / 20 mg"),
+                BrandInfo("Vonozap", "Nepal Pharmaceuticals Lab", "Tablet", "10 mg / 20 mg"),
+                BrandInfo("P-Cab", "Deurali-Janta Pharmaceuticals", "Tablet", "20 mg")
             ),
             brandsIndia = listOf(
-                BrandInfo("Voquezna", "Phathom Pharmaceuticals / Dr. Reddy's", "Tab", "10 mg / 20 mg"),
-                BrandInfo("Vonopraz", "Sun Pharma", "Tab", "10 mg / 20 mg"),
-                BrandInfo("Lupivon", "Lupin Ltd.", "Tab", "20 mg"),
-                BrandInfo("Macpraz", "Macleods Pharmaceuticals", "Tab", "20 mg")
+                BrandInfo("Vonopran", "Alkem Laboratories", "Tablet", "10 mg / 20 mg"),
+                BrandInfo("Voquezna", "Phathom Pharmaceuticals / Dr. Reddy's", "Tablet", "10 mg / 20 mg"),
+                BrandInfo("Vonopraz", "Sun Pharma", "Tablet", "10 mg / 20 mg"),
+                BrandInfo("Lupivon", "Lupin Ltd.", "Tablet", "20 mg"),
+                BrandInfo("Macpraz", "Macleods Pharmaceuticals", "Tablet", "20 mg"),
+                BrandInfo("Takecab", "Takeda Pharmaceuticals", "Tablet", "10 mg / 20 mg")
             ),
             pediatricDosePerKg = 0.0,
-            pediatricInterval = "Not established in pediatric patients <18 years"
+            pediatricInterval = "Not established in pediatric patients <18 years",
+            therapeuticClassTag = "Proton Pump Inhibitor (PPI) / Novel P-CAB / Acid Blocker / Gastroenterology",
+            counselingNepali = "खाली पेट वा खानापछि दिनको १ पटक खान सकिन्छ। परम्परागत PPI (प्यान्टोप्राजोल, ओमेप्राजोल) भन्दा छिटो र २४ सै घण्टा एसिड नियन्त्रण गर्छ।",
+            counselingEnglish = "Take once daily with or without food. Novel potassium-competitive acid blocker (P-CAB/PPI) providing faster and longer acid control than traditional PPIs."
         ),
 
         // 3. Baloxavir Marboxil

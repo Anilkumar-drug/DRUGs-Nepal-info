@@ -66,7 +66,7 @@ fun SavedScreen(
                 item.category.lowercase().contains(q)
             }
             matchesCategory && matchesQuery
-        }
+        }.sortedBy { it.title.trim().lowercase() }
     }
 
     Column(

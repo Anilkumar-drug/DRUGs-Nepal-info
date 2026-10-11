@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.AclsCardiacSocietyChartSection
 import com.example.ui.theme.*
 import kotlinx.coroutines.delay
 import java.util.Locale
@@ -146,6 +147,7 @@ fun EmergencyCodeBlueScreen(
             ) {
                 listOf(
                     "ACLS" to "⚡ ACLS Arrest",
+                    "CHART" to "📊 Cardiac Chart",
                     "ANAPHYLAXIS" to "🐝 Anaphylaxis",
                     "PEDIATRIC" to "👶 Peds Resus",
                     "HT" to "🔍 H's & T's"
@@ -161,7 +163,7 @@ fun EmergencyCodeBlueScreen(
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(vertical = 8.dp)) {
                             Text(
                                 text = label,
-                                fontSize = 10.sp,
+                                fontSize = 9.5.sp,
                                 fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium,
                                 color = if (isSel) Color.White else Slate400,
                                 maxLines = 1
@@ -195,6 +197,16 @@ fun EmergencyCodeBlueScreen(
                         shocksDelivered = 0
                     }
                 )
+
+                "CHART" -> LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(bottom = 60.dp)
+                ) {
+                    item {
+                        AclsCardiacSocietyChartSection()
+                    }
+                }
 
                 "ANAPHYLAXIS" -> AnaphylaxisShockView()
 
@@ -423,6 +435,11 @@ private fun AclsArrestTimerView(
                     )
                 }
             }
+        }
+
+        // Official Cardiac Society Adult Cardiac Arrest Algorithm Chart & High-Quality CPR Protocol
+        item {
+            AclsCardiacSocietyChartSection()
         }
     }
 }

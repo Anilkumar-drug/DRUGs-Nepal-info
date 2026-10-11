@@ -1219,6 +1219,479 @@ object NepalBrandCatalog {
                 BrandInfo("Permite", "Galderma", "Cream (Permethrin)", "5% / 30g"),
                 BrandInfo("Calamine / Caladryl", "Piramal Healthcare", "Lotion", "120 mL")
             )
+        ),
+
+        // 72. Lansoprazole
+        BrandEnrichment(
+            genericKey = "lansoprazole",
+            nepalBrands = listOf(
+                BrandInfo("Junior Lanzol", "Cipla Nepal", "DT Tablet", "15 mg"),
+                BrandInfo("Lanzol", "Cipla Nepal", "Capsule", "15 mg / 30 mg"),
+                BrandInfo("Lanpro", "Deurali-Janta Pharmaceuticals", "Capsule", "30 mg"),
+                BrandInfo("Lan-30", "Quest Pharmaceuticals", "Capsule", "30 mg"),
+                BrandInfo("Lanzop", "Nepal Pharmaceuticals Lab", "Capsule", "30 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Lanzol", "Cipla Ltd.", "Capsule", "15 mg / 30 mg"),
+                BrandInfo("Junior Lanzol", "Cipla Ltd.", "Dispersible Tab", "15 mg"),
+                BrandInfo("Prevacid", "Takeda", "Delayed-Release Cap", "15 mg / 30 mg"),
+                BrandInfo("Lan", "Intas Pharmaceuticals", "Capsule", "30 mg")
+            )
+        ),
+
+        // 73. Dexlansoprazole
+        BrandEnrichment(
+            genericKey = "dexlansoprazole",
+            nepalBrands = listOf(
+                BrandInfo("Dexpure", "Asian Pharmaceuticals", "DDR Capsule", "30 mg / 60 mg"),
+                BrandInfo("Dexilant-NP", "Quest Pharmaceuticals", "DDR Capsule", "30 mg / 60 mg"),
+                BrandInfo("Dexla", "Deurali-Janta Pharmaceuticals", "DDR Capsule", "30 mg / 60 mg"),
+                BrandInfo("D-Lans", "Nepal Pharmaceuticals Lab", "DDR Capsule", "60 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Dexilant", "Takeda", "DDR Capsule", "30 mg / 60 mg"),
+                BrandInfo("Delprazol", "Macleods", "DDR Capsule", "30 mg / 60 mg"),
+                BrandInfo("Dexla", "Lupin", "DDR Capsule", "30 mg / 60 mg")
+            )
+        ),
+
+        // 74. Ilaprazole
+        BrandEnrichment(
+            genericKey = "ilaprazole",
+            nepalBrands = listOf(
+                BrandInfo("Ila-P", "Lomus Pharmaceuticals", "Tablet", "10 mg"),
+                BrandInfo("Ilapro", "Quest Pharmaceuticals", "Tablet", "10 mg"),
+                BrandInfo("Ilapra", "Nepal Pharmaceuticals Lab", "Tablet", "10 mg"),
+                BrandInfo("Ila-D", "Deurali-Janta Pharmaceuticals", "Tablet", "10 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Iladac", "Zydus Cadila", "Tablet", "10 mg"),
+                BrandInfo("Blokacid", "Ajanta Pharma", "Tablet", "10 mg"),
+                BrandInfo("Lupila", "Lupin", "Tablet", "10 mg")
+            )
+        ),
+
+        // 75. Granisetron
+        BrandEnrichment(
+            genericKey = "granisetron",
+            nepalBrands = listOf(
+                BrandInfo("Granicip", "Cipla Nepal", "Injection / Tab", "1 mg/mL, 1 mg tab"),
+                BrandInfo("Graniforce", "Mankind Pharma Nepal", "Injection / Tab", "1 mg/mL, 1 mg tab"),
+                BrandInfo("Granitron", "Deurali-Janta Pharmaceuticals", "Tablet", "1 mg / 2 mg"),
+                BrandInfo("Graniset-Quest", "Quest Pharmaceuticals", "Injection", "1 mg / 3 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Kytril", "Roche", "Injection / Tab", "1 mg, 2 mg"),
+                BrandInfo("Granicip", "Cipla", "Injection / Tab", "1 mg/mL, 1 mg tab"),
+                BrandInfo("Graniforce", "Mankind", "Tablet / Inj", "1 mg, 2 mg")
+            )
+        ),
+
+        // 76. Palonosetron
+        BrandEnrichment(
+            genericKey = "palonosetron",
+            nepalBrands = listOf(
+                BrandInfo("Palostar", "Quest Pharmaceuticals", "Injection", "0.25 mg / 5 mL"),
+                BrandInfo("Palonox", "Nepal Pharmaceuticals Lab", "Injection", "0.25 mg / 5 mL"),
+                BrandInfo("Palnox", "Lomus Pharmaceuticals", "Injection", "0.25 mg / 5 mL"),
+                BrandInfo("Palosafe-NP", "Asian Pharmaceuticals", "Injection", "0.25 mg / 5 mL")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Aloxi", "Helsinn / Eisai", "Injection", "0.25 mg / 5 mL"),
+                BrandInfo("Palosafe", "Mankind", "Injection", "0.25 mg / 5 mL"),
+                BrandInfo("Palonext", "Dr. Reddy's", "Injection", "0.25 mg / 5 mL")
+            )
+        ),
+
+        // 77. Aprepitant
+        BrandEnrichment(
+            genericKey = "aprepitant",
+            nepalBrands = listOf(
+                BrandInfo("Aprecap", "Glenmark Nepal", "Capsule Pack", "125 mg + 2x 80 mg"),
+                BrandInfo("Emend-NP", "MSD / Quest Pharma", "Capsule Pack", "125 mg + 2x 80 mg"),
+                BrandInfo("Aprepep", "Asian Pharmaceuticals", "Capsule Pack", "125 mg + 2x 80 mg"),
+                BrandInfo("Apriset", "Nepal Pharmaceuticals Lab", "Capsule Pack", "125 mg + 2x 80 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Emend", "Merck Sharp & Dohme (MSD)", "Capsule Pack", "125 mg + 2x 80 mg"),
+                BrandInfo("Aprecap", "Glenmark", "Capsule Pack", "125 mg + 2x 80 mg"),
+                BrandInfo("Apriset", "Dr. Reddy's", "Capsule Pack", "125 mg + 2x 80 mg")
+            )
+        ),
+
+        // 78. Ispaghula Husk (Psyllium)
+        BrandEnrichment(
+            genericKey = "ispaghula",
+            nepalBrands = listOf(
+                BrandInfo("Fybogel", "Reckitt Benckiser Nepal", "Effervescent Granules", "3.5 g sachet"),
+                BrandInfo("Ispabowel", "Lomus Pharmaceuticals", "Granules/Husk", "100 g jar"),
+                BrandInfo("Isabgol-NPL", "Nepal Pharmaceuticals Lab", "Pure Husk", "100 g / 200 g"),
+                BrandInfo("Naturelax", "Deurali-Janta Pharmaceuticals", "Husk Powder", "100 g jar")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Fybogel Orange", "Reckitt", "Sachet", "3.5 g"),
+                BrandInfo("Softovac", "Lupin", "Powder", "100 g / 250 g"),
+                BrandInfo("Isabgol", "Baidyanath / Dabur", "Pure Husk", "100 g"),
+                BrandInfo("Metamucil", "Procter & Gamble", "Powder", "Pack")
+            )
+        ),
+
+        // 79. Milk of Magnesia / Magnesium Hydroxide
+        BrandEnrichment(
+            genericKey = "magnesium hydroxide",
+            nepalBrands = listOf(
+                BrandInfo("Cremaffin", "Abbott Nepal", "Suspension", "Magnesium Hydroxide + Liq Paraffin"),
+                BrandInfo("Phillips MOM", "GSK Nepal", "Suspension", "Magnesium Hydroxide 8% w/v"),
+                BrandInfo("Magnesia-Lomus", "Lomus Pharmaceuticals", "Suspension", "400 mg / 5 mL"),
+                BrandInfo("MOM-NPL", "Nepal Pharmaceuticals Lab", "Suspension", "Magnesium Hydroxide Oral"),
+                BrandInfo("Gelusil-M", "Pfizer Nepal", "Suspension", "Magnesium Hydroxide Antacid")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Phillips Milk of Magnesia", "Bayer / GSK", "Suspension", "Magnesium Hydroxide"),
+                BrandInfo("Cremaffin", "Abbott", "Suspension", "Mag Hydroxide + Liq Paraffin"),
+                BrandInfo("Gelusil", "Pfizer", "Suspension", "Mag Hydroxide + Alum Hydroxide")
+            )
+        ),
+
+        // 80. Sodium Alginate + Sodium Bicarbonate (Gaviscon)
+        BrandEnrichment(
+            genericKey = "sodium alginate",
+            nepalBrands = listOf(
+                BrandInfo("Gaviscon", "Reckitt Benckiser Nepal", "Suspension / Chew Tab", "500mg/267mg per 10mL"),
+                BrandInfo("Refluxid", "Quest Pharmaceuticals", "Suspension", "Sodium Alginate Reflux"),
+                BrandInfo("Algigel", "Deurali-Janta Pharmaceuticals", "Suspension", "Alginate Raft Formula"),
+                BrandInfo("Gastrocid-A", "Nepal Pharmaceuticals Lab", "Chewable Tablet", "Alginate + Bicarbonate")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Gaviscon Double Action", "Reckitt", "Liquid / Chew Tab", "Alginate 500mg + Bicarb"),
+                BrandInfo("Algiscon", "Abbott", "Suspension", "Sodium Alginate + Bicarbonate"),
+                BrandInfo("Refluxoff", "Mankind", "Suspension", "Alginate Formula")
+            )
+        ),
+
+        // 81. Simethicone
+        BrandEnrichment(
+            genericKey = "simethicone",
+            nepalBrands = listOf(
+                BrandInfo("Colinorm", "Lomus Pharmaceuticals", "Drops / Tablets", "40 mg/mL, 80 mg tab"),
+                BrandInfo("Degas", "Quest Pharmaceuticals", "Chewable Tab / Drops", "80 mg, 40 mg/mL"),
+                BrandInfo("Gas-Free", "Deurali-Janta Pharmaceuticals", "Chewable Tablet", "40 mg / 80 mg"),
+                BrandInfo("Flatu-Nil", "Nepal Pharmaceuticals Lab", "Drops / Tab", "40 mg/mL"),
+                BrandInfo("Colicaid", "Meyer / Quest Nepal", "Paediatric Drops", "Simethicone + Dill Oil")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Gas-X", "GSK", "Chewable Tab / Softgel", "80 mg, 125 mg"),
+                BrandInfo("Polycrol", "Piramal Healthcare", "Liquid / Chew Tab", "Simethicone + Antacids"),
+                BrandInfo("Gelusil MPS", "Pfizer", "Tablet / Liquid", "Simethicone Antacid"),
+                BrandInfo("Colicaid", "Meyer Organics", "Infant Drops", "Simethicone 40mg/mL")
+            )
+        ),
+
+        // 82. Diphenoxylate + Atropine
+        BrandEnrichment(
+            genericKey = "diphenoxylate",
+            nepalBrands = listOf(
+                BrandInfo("Lomotil", "RPG / Sanofi Nepal", "Tablet", "2.5 mg / 0.025 mg"),
+                BrandInfo("Lomofen", "RPG Life Sciences Nepal", "Tablet", "2.5 mg / 0.025 mg"),
+                BrandInfo("Dia-Stop", "Lomus Pharmaceuticals", "Tablet", "2.5 mg / 0.025 mg"),
+                BrandInfo("Difen-NPL", "Nepal Pharmaceuticals Lab", "Tablet", "2.5 mg / 0.025 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Lomotil", "RPG Life Sciences", "Tablet", "2.5 mg / 0.025 mg"),
+                BrandInfo("Lomofen", "RPG", "Tablet", "2.5 mg / 0.025 mg"),
+                BrandInfo("Diarlop", "Cipla", "Tablet", "2.5 mg / 0.025 mg")
+            )
+        ),
+
+        // 83. Silymarin
+        BrandEnrichment(
+            genericKey = "silymarin",
+            nepalBrands = listOf(
+                BrandInfo("Silybon", "Micro Labs Nepal", "Tablet / Capsule", "70 mg / 140 mg"),
+                BrandInfo("Silymar", "Deurali-Janta Pharmaceuticals", "Capsule", "140 mg"),
+                BrandInfo("Hepaliv-S", "Lomus Pharmaceuticals", "Capsule", "140 mg"),
+                BrandInfo("Livercare-S", "Quest Pharmaceuticals", "Tablet", "140 mg"),
+                BrandInfo("Sily-NPL", "Nepal Pharmaceuticals Lab", "Capsule", "140 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Silybon", "Micro Labs", "Suspension / Tab", "70 mg, 140 mg"),
+                BrandInfo("Hepa-Merz", "Sun Pharma / Merz", "Granules / Infusion", "LOLA + Silymarin"),
+                BrandInfo("Legalon", "Madaus", "Capsule", "140 mg"),
+                BrandInfo("Liv-52", "Himalaya", "Syrup / Tablet", "Herbal Hepatoprotective")
+            )
+        ),
+
+        // 85. Vonoprazan / Vonopran
+        BrandEnrichment(
+            genericKey = "vonoprazan",
+            nepalBrands = listOf(
+                BrandInfo("Vonopran", "Lomus Pharmaceuticals", "Tablet (P-CAB)", "10 mg / 20 mg"),
+                BrandInfo("Vonafresh", "Asian Pharmaceuticals", "Tablet", "10 mg / 20 mg"),
+                BrandInfo("Vonasafe", "Quest Pharmaceuticals", "Tablet", "10 mg / 20 mg"),
+                BrandInfo("Vonozap", "Nepal Pharmaceuticals Lab", "Tablet", "10 mg / 20 mg"),
+                BrandInfo("P-Cab", "Deurali-Janta Pharmaceuticals", "Tablet", "20 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Vonopran", "Alkem Laboratories", "Tablet", "10 mg / 20 mg"),
+                BrandInfo("Voquezna", "Phathom Pharmaceuticals / Dr. Reddy's", "Tablet", "10 mg / 20 mg"),
+                BrandInfo("Vonopraz", "Sun Pharma", "Tablet", "10 mg / 20 mg"),
+                BrandInfo("Lupivon", "Lupin Ltd.", "Tablet", "20 mg"),
+                BrandInfo("Macpraz", "Macleods Pharmaceuticals", "Tablet", "20 mg"),
+                BrandInfo("Takecab", "Takeda Pharmaceuticals", "Tablet", "10 mg / 20 mg")
+            )
+        ),
+
+        BrandEnrichment(
+            genericKey = "vonopran",
+            nepalBrands = listOf(
+                BrandInfo("Vonopran", "Lomus Pharmaceuticals", "Tablet (P-CAB)", "10 mg / 20 mg"),
+                BrandInfo("Vonafresh", "Asian Pharmaceuticals", "Tablet", "10 mg / 20 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Vonopran", "Alkem Laboratories", "Tablet", "10 mg / 20 mg")
+            )
+        ),
+
+        // 86. Azilsartan Medoxomil
+        BrandEnrichment(
+            genericKey = "azilsartan",
+            nepalBrands = listOf(
+                BrandInfo("Azildac", "Zydus Nepal", "Tablet", "40 mg / 80 mg"),
+                BrandInfo("Abel", "Lupin Nepal", "Tablet", "40 mg / 80 mg"),
+                BrandInfo("Zilpres", "Asian Pharmaceuticals", "Tablet", "40 mg / 80 mg"),
+                BrandInfo("Azilsan", "Quest Pharmaceuticals", "Tablet", "40 mg / 80 mg"),
+                BrandInfo("Aziltor", "Torrent Nepal", "Tablet", "40 mg / 80 mg"),
+                BrandInfo("Azil-NPL", "Nepal Pharmaceuticals Lab", "Tablet", "40 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Edarbi", "Takeda / Lupin", "Tablet", "40 mg / 80 mg"),
+                BrandInfo("Azildac", "Zydus Cadila", "Tablet", "40 mg / 80 mg"),
+                BrandInfo("Abel", "Lupin Ltd.", "Tablet", "40 mg / 80 mg"),
+                BrandInfo("Zilarbi", "Sun Pharma", "Tablet", "40 mg / 80 mg")
+            )
+        ),
+
+        // 87. Vericiguat
+        BrandEnrichment(
+            genericKey = "vericiguat",
+            nepalBrands = listOf(
+                BrandInfo("Verquvo", "Bayer Nepal", "Tablet", "2.5 mg / 5 mg / 10 mg"),
+                BrandInfo("Veriheart", "Sun Pharma Nepal", "Tablet", "2.5 mg / 5 mg / 10 mg"),
+                BrandInfo("Vericip", "Cipla Nepal", "Tablet", "2.5 mg / 5 mg / 10 mg"),
+                BrandInfo("Veric-DJPL", "Deurali-Janta Pharmaceuticals", "Tablet", "2.5 mg / 5 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Verquvo", "Bayer / MSD", "Tablet", "2.5 mg / 5 mg / 10 mg"),
+                BrandInfo("Verifast", "Lupin Ltd.", "Tablet", "2.5 mg / 5 mg / 10 mg"),
+                BrandInfo("Veritas", "Intas Pharmaceuticals", "Tablet", "2.5 mg / 5 mg / 10 mg")
+            )
+        ),
+
+        // 88. Bempedoic Acid + Ezetimibe
+        BrandEnrichment(
+            genericKey = "bempedoic",
+            nepalBrands = listOf(
+                BrandInfo("Bemdac-EZ", "Zydus Nepal", "Tablet", "180 mg + 10 mg"),
+                BrandInfo("Brillo-EZ", "Sun Pharma Nepal", "Tablet", "180 mg + 10 mg"),
+                BrandInfo("Bempro-EZ", "Quest Pharmaceuticals", "Tablet", "180 mg + 10 mg"),
+                BrandInfo("Bempo-EZ", "Asian Pharmaceuticals", "Tablet", "180 mg + 10 mg"),
+                BrandInfo("Bemlip-EZ", "Deurali-Janta Pharmaceuticals", "Tablet", "180 mg + 10 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Nexlizet", "Esperion / Daiichi Sankyo", "Tablet", "180 mg + 10 mg"),
+                BrandInfo("Bemdac-EZ", "Zydus Cadila", "Tablet", "180 mg + 10 mg"),
+                BrandInfo("Brillo-EZ", "Sun Pharma", "Tablet", "180 mg + 10 mg"),
+                BrandInfo("Bemzet", "Cipla Ltd.", "Tablet", "180 mg + 10 mg")
+            )
+        ),
+
+        // 89. Remogliflozin Etabonate
+        BrandEnrichment(
+            genericKey = "remogliflozin",
+            nepalBrands = listOf(
+                BrandInfo("Remo", "Glenmark Nepal", "Tablet", "100 mg"),
+                BrandInfo("Remozul", "Torrent Nepal", "Tablet", "100 mg"),
+                BrandInfo("Remo-M", "Glenmark Nepal", "Tablet", "100mg + 500mg Metformin"),
+                BrandInfo("Zucara", "Quest Pharmaceuticals", "Tablet", "100 mg"),
+                BrandInfo("Remofit", "Asian Pharmaceuticals", "Tablet", "100 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Remo", "Glenmark Pharmaceuticals", "Tablet", "100 mg"),
+                BrandInfo("Zucara", "Torrent Pharmaceuticals", "Tablet", "100 mg"),
+                BrandInfo("Remozen", "Mankind Pharma", "Tablet", "100 mg")
+            )
+        ),
+
+        // 90. Dapagliflozin + Vildagliptin
+        BrandEnrichment(
+            genericKey = "vildagliptin",
+            nepalBrands = listOf(
+                BrandInfo("Galvus-Dapa", "Novartis Nepal", "Tablet", "10 mg / 100 mg SR"),
+                BrandInfo("Zita-D", "Glenmark Nepal", "Tablet", "10 mg / 100 mg"),
+                BrandInfo("Vildaprime-D", "Quest Pharmaceuticals", "Tablet", "10 mg / 100 mg"),
+                BrandInfo("Dapavin", "Asian Pharmaceuticals", "Tablet", "10 mg / 100 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Galvus-Dapa", "Novartis India", "Tablet", "10 mg / 100 mg SR"),
+                BrandInfo("Zita-D", "Glenmark Pharmaceuticals", "Tablet", "10 mg / 100 mg"),
+                BrandInfo("Jalra-D", "USV Pvt Ltd", "Tablet", "10 mg / 100 mg"),
+                BrandInfo("Vysov-D", "Intas Pharmaceuticals", "Tablet", "10 mg / 100 mg")
+            )
+        ),
+
+        // 91. Rimegepant
+        BrandEnrichment(
+            genericKey = "rimegepant",
+            nepalBrands = listOf(
+                BrandInfo("Nurtec ODT", "Pfizer Nepal", "ODT Tablet", "75 mg"),
+                BrandInfo("Rimegep", "Sun Pharma Nepal", "ODT Tablet", "75 mg"),
+                BrandInfo("Rimepan", "Cipla Nepal", "ODT Tablet", "75 mg"),
+                BrandInfo("Rimez", "Lupin Nepal", "ODT Tablet", "75 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Nurtec ODT", "Pfizer India", "ODT Tablet", "75 mg"),
+                BrandInfo("Rimegep", "Sun Pharma", "ODT Tablet", "75 mg"),
+                BrandInfo("Rimecure", "Intas Pharmaceuticals", "ODT Tablet", "75 mg")
+            )
+        ),
+
+        // 92. Vilazodone
+        BrandEnrichment(
+            genericKey = "vilazodone",
+            nepalBrands = listOf(
+                BrandInfo("Vilano", "Sun Pharma Nepal", "Tablet", "10 mg / 20 mg / 40 mg"),
+                BrandInfo("Vilazine", "Intas Nepal", "Tablet", "10 mg / 20 mg / 40 mg"),
+                BrandInfo("Viladep", "Torrent Nepal", "Tablet", "20 mg / 40 mg"),
+                BrandInfo("Vilazod", "Quest Pharmaceuticals", "Tablet", "20 mg / 40 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Viibryd", "AbbVie / Allergan", "Tablet", "10 mg / 20 mg / 40 mg"),
+                BrandInfo("Vilano", "Sun Pharma", "Tablet", "10 mg / 20 mg / 40 mg"),
+                BrandInfo("Vilazine", "Intas Pharmaceuticals", "Tablet", "10 mg / 20 mg / 40 mg")
+            )
+        ),
+
+        // 93. Lemborexant
+        BrandEnrichment(
+            genericKey = "lemborexant",
+            nepalBrands = listOf(
+                BrandInfo("Dayvigo", "Eisai Nepal", "Tablet", "5 mg / 10 mg"),
+                BrandInfo("Lembo", "Sun Pharma Nepal", "Tablet", "5 mg / 10 mg"),
+                BrandInfo("Lemborest", "Intas Nepal", "Tablet", "5 mg / 10 mg"),
+                BrandInfo("Dormilex", "Quest Pharmaceuticals", "Tablet", "5 mg / 10 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Dayvigo", "Eisai / Lupin", "Tablet", "5 mg / 10 mg"),
+                BrandInfo("Lembo", "Sun Pharma", "Tablet", "5 mg / 10 mg"),
+                BrandInfo("Lemborest", "Intas Pharmaceuticals", "Tablet", "5 mg / 10 mg")
+            )
+        ),
+
+        // 94. Dupilumab
+        BrandEnrichment(
+            genericKey = "dupilumab",
+            nepalBrands = listOf(
+                BrandInfo("Dupixent", "Sanofi / Regeneron Nepal", "Pre-filled Pen", "300 mg / 2 mL"),
+                BrandInfo("Dupix", "Zydus Biologics Nepal", "Pre-filled Syringe", "300 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Dupixent", "Sanofi India", "Pre-filled Pen", "300 mg / 2 mL"),
+                BrandInfo("Dupitrust", "Dr. Reddy's Laboratories", "Pre-filled Syringe", "300 mg")
+            )
+        ),
+
+        // 95. Brexpiprazole
+        BrandEnrichment(
+            genericKey = "brexpiprazole",
+            nepalBrands = listOf(
+                BrandInfo("Rexulti", "Otsuka / Lundbeck Nepal", "Tablet", "0.5 mg / 1 mg / 2 mg"),
+                BrandInfo("Brexzee", "Sun Pharma Nepal", "Tablet", "0.5 mg / 1 mg / 2 mg"),
+                BrandInfo("Brexpip", "Torrent Nepal", "Tablet", "1 mg / 2 mg"),
+                BrandInfo("Brexura", "Intas Nepal", "Tablet", "1 mg / 2 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Rexulti", "Otsuka / Lundbeck", "Tablet", "0.5 mg / 1 mg / 2 mg / 3 mg"),
+                BrandInfo("Brexzee", "Sun Pharma", "Tablet", "0.5 mg / 1 mg / 2 mg"),
+                BrandInfo("Brexal", "Lupin Ltd.", "Tablet", "1 mg / 2 mg")
+            )
+        ),
+
+        // 96. Atogepant
+        BrandEnrichment(
+            genericKey = "atogepant",
+            nepalBrands = listOf(
+                BrandInfo("Atogep-NPL", "Deurali-Janta / Quest", "Tablet", "10 mg / 60 mg"),
+                BrandInfo("Qulip-NP", "Lomus / Asian Pharma", "Tablet", "60 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Qulipta", "AbbVie", "Tablet", "10 mg / 30 mg / 60 mg"),
+                BrandInfo("Atogep", "Dr. Reddy's", "Tablet", "10 mg / 60 mg"),
+                BrandInfo("Aquipta", "AbbVie / Allergan India", "Tablet", "60 mg")
+            )
+        ),
+
+        // 97. Tenapanor
+        BrandEnrichment(
+            genericKey = "tenapanor",
+            nepalBrands = listOf(
+                BrandInfo("Ibsrela-NP", "Quest / Nepal Pharma", "Tablet", "50 mg"),
+                BrandInfo("Tenapa-NP", "Deurali-Janta", "Tablet", "30 mg / 50 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Ibsrela", "Ardelyx", "Tablet", "50 mg"),
+                BrandInfo("Xphozah", "Ardelyx", "Tablet", "30 mg"),
+                BrandInfo("Tenapan", "Sun Pharma / Intas", "Tablet", "30 mg / 50 mg")
+            )
+        ),
+
+        // 98. Fezolinetant
+        BrandEnrichment(
+            genericKey = "fezolinetant",
+            nepalBrands = listOf(
+                BrandInfo("Veozah-NP", "Asian Pharma / Quest", "Tablet", "45 mg"),
+                BrandInfo("Fezo-NP", "Lomus Pharmaceuticals", "Tablet", "45 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Veozah", "Astellas Pharma", "Tablet", "45 mg"),
+                BrandInfo("Fezolin", "Sun Pharma / Intas", "Tablet", "45 mg"),
+                BrandInfo("Velnita", "Dr. Reddy's", "Tablet", "45 mg")
+            )
+        ),
+
+        // 99. Pregabalin + Nortriptyline
+        BrandEnrichment(
+            genericKey = "nortriptyline",
+            nepalBrands = listOf(
+                BrandInfo("Preganor", "Deurali-Janta Pharmaceuticals", "Tablet", "75 mg + 10 mg / 75 mg + 25 mg"),
+                BrandInfo("Gabamax-NT", "Quest Pharmaceuticals", "Tablet", "75 mg + 10 mg"),
+                BrandInfo("Pregabid-NT", "Intas / Nepal Pharma", "Tablet", "75 mg + 10 mg"),
+                BrandInfo("Maxgalin-NT", "Sun Pharma Nepal", "Tablet", "75 mg + 10 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Pregabid-NT", "Intas Pharmaceuticals", "Tablet", "75 mg + 10 mg / 75 mg + 25 mg"),
+                BrandInfo("Gabamax-NT", "Aristo Pharmaceuticals", "Tablet", "75 mg + 10 mg"),
+                BrandInfo("Maxgalin-NT", "Sun Pharma", "Tablet", "75 mg + 10 mg"),
+                BrandInfo("Pregeb-NT", "Torrent Pharma", "Tablet", "75 mg + 10 mg")
+            )
+        ),
+
+        // 100. Rabeprazole + Levosulpiride
+        BrandEnrichment(
+            genericKey = "rabeprazole + levosulpiride",
+            nepalBrands = listOf(
+                BrandInfo("Rabicip-L", "Cipla Nepal", "Capsule SR", "20 mg + 75 mg"),
+                BrandInfo("Veloz-L", "Torrent / Nepal Pharma", "Capsule SR", "20 mg + 75 mg"),
+                BrandInfo("Razo-L", "Dr. Reddy's Nepal", "Capsule SR", "20 mg + 75 mg"),
+                BrandInfo("Rabilab-LS", "Deurali-Janta Pharmaceuticals", "Capsule SR", "20 mg + 75 mg"),
+                BrandInfo("Placid-L", "Lomus Pharmaceuticals", "Capsule SR", "20 mg + 75 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Rabicip-L", "Cipla Ltd.", "Capsule SR", "20 mg + 75 mg"),
+                BrandInfo("Veloz-L", "Torrent Pharmaceuticals", "Capsule SR", "20 mg + 75 mg"),
+                BrandInfo("Razo-L", "Dr. Reddy's", "Capsule SR", "20 mg + 75 mg"),
+                BrandInfo("Rabekind-Plus", "Mankind Pharma", "Capsule SR", "20 mg + 75 mg"),
+                BrandInfo("Happi-L", "Zydus Lifesciences", "Capsule SR", "20 mg + 75 mg")
+            )
         )
     )
 

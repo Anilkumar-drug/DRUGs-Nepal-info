@@ -1,0 +1,595 @@
+package com.example.data.repository
+
+import com.example.data.model.BrandInfo
+import com.example.data.model.Drug
+
+/**
+ * Additional High-Yield Gastrointestinal & Hepatobiliary Medications widely prescribed
+ * in Nepal tertiary centers, district hospitals, and community pharmacies.
+ */
+object GastrointestinalDrugsPart3Data {
+
+    val drugs: List<Drug> = listOf(
+        // 1. Lansoprazole
+        Drug(
+            id = "d_gi_lansoprazole",
+            genericName = "Lansoprazole",
+            system = "Gastrointestinal & Hepatobiliary",
+            drugClass = "Proton Pump Inhibitor (PPI)",
+            blackBoxWarning = null,
+            indications = "Duodenal ulcer, benign gastric ulcer, GERD, erosive esophagitis, Zollinger-Ellison syndrome, H. pylori eradication (triple therapy component), NSAID-induced ulcer prophylaxis in high-risk patients.",
+            doses = "• Duodenal ulcer: 30 mg PO once daily in morning for 4 weeks.\n• Gastric ulcer: 30 mg PO once daily for 8 weeks.\n• GERD / Erosive Esophagitis: 30 mg PO once daily for 4-8 weeks; maintenance 15-30 mg daily.\n• H. pylori eradication: 30 mg PO BID for 14 days + Clarithromycin 500mg BID + Amoxicillin 1000mg BID.\n• Pediatric (GERD): 1-11 yrs: ≤30 kg: 15 mg PO once daily; >30 kg: 30 mg once daily.",
+            administration = "Take 30 to 60 minutes before breakfast. Swallow capsules whole; or open capsule and sprinkle intact pellets on applesauce or yogurt without chewing.",
+            timing = "30-60 minutes before breakfast (बिहान खाना खानु भन्दा आधा घण्टा अगाडि).",
+            specialInstructions = "Do not crush or chew delayed-release granules. Orally disintegrating tablets (ODT) melt on the tongue without water.",
+            pkPd = "Rapidly absorbed; bioavailability 80-85%. Extensively metabolized in liver primarily by CYP2C19 and CYP3A4. Plasma half-life ~1.5 hours, but duration of acid suppression exceeds 24 hours due to irreversible covalent binding to gastric H+/K+-ATPase pumps.",
+            renalAdj = "No dosage adjustment necessary in renal impairment or dialysis.",
+            hepaticAdj = "Severe hepatic impairment (Child-Pugh C): Maximum 15-30 mg PO once daily.",
+            pregnancy = "Category B. Animal studies reveal no harm; preferred or acceptable PPI in pregnancy when clinically indicated.",
+            lactation = "Present in breast milk in small amounts; use with caution or consider pantoprazole/omeprazole.",
+            sideEffects = "Headache, diarrhea, abdominal pain, nausea, hypomagnesemia (with long-term use >1 year), Clostridioides difficile diarrhea, vitamin B12 deficiency.",
+            priceNpr = "NPR 10.00 - 18.00 per capsule (30mg)",
+            priceInr = "INR 6.00 - 12.00 per capsule",
+            brandsNepal = listOf(
+                BrandInfo("Junior Lanzol", "Cipla Nepal", "DT Tablet", "15 mg"),
+                BrandInfo("Lanzol", "Cipla Nepal", "Capsule", "15 mg / 30 mg"),
+                BrandInfo("Lanpro", "Deurali-Janta Pharmaceuticals", "Capsule", "30 mg"),
+                BrandInfo("Lan-30", "Quest Pharmaceuticals", "Capsule", "30 mg"),
+                BrandInfo("Lanzop", "Nepal Pharmaceuticals Lab", "Capsule", "30 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Lanzol", "Cipla", "Capsule", "15 mg / 30 mg"),
+                BrandInfo("Junior Lanzol", "Cipla", "Dispersible Tab", "15 mg"),
+                BrandInfo("Prevacid", "Takeda", "Delayed-Release Cap", "15 mg / 30 mg"),
+                BrandInfo("Lan", "Intas Pharmaceuticals", "Capsule", "30 mg")
+            ),
+            adultDose = "15-30 mg PO once daily before food.",
+            childDose = "0.7-1.5 mg/kg/day PO once daily (max 30 mg/day).",
+            contraindications = "Hypersensitivity to lansoprazole or other substituted benzimidazoles; co-administration with rilpivirine-containing regimens.",
+            modeOfAction = "Suppresses gastric acid secretion by specific inhibition of the H+/K+-ATPase enzyme system at the secretory surface of the gastric parietal cell. Covalently blocks the final step of acid production.",
+            interactions = "Clopidogrel (minimal CYP2C19 inhibition compared to omeprazole), Ketoconazole/Itraconazole/Atazanavir (decreased absorption due to increased pH), Methotrexate (increased MTX toxicity).",
+            packSize = "Strip of 10 delayed-release capsules / dispersible tablets",
+            precautions = "Bone fracture risk in elderly on prolonged therapy; monitor serum magnesium and B12 with long-term therapy (>12 months).",
+            ddaSchedule = "Schedule Ga (Prescription Medicine)",
+            nemlCategory = "NEML: Essential Gastrointestinal Medicines",
+            counselingNepali = "बिहान खाना वा चिया खानु भन्दा कम्तिमा ३० मिनेट अगाडि पूरै क्याप्सुल पानीसँग निल्नुहोस्। क्याप्सुल भित्रका दाना नचपाउनुहोस्।",
+            counselingEnglish = "Take 30-60 minutes before morning meal. Swallow whole with water; do not crush or chew the pellets inside the capsule."
+        ),
+
+        // 2. Dexlansoprazole
+        Drug(
+            id = "d_gi_dexlansoprazole",
+            genericName = "Dexlansoprazole",
+            system = "Gastrointestinal & Hepatobiliary",
+            drugClass = "Dual Delayed-Release Proton Pump Inhibitor (PPI)",
+            blackBoxWarning = null,
+            indications = "Healing of all grades of erosive esophagitis (EE), maintenance of healed erosive esophagitis and relief of heartburn, treatment of symptomatic non-erosive gastroesophageal reflux disease (GERD).",
+            doses = "• Healing of Erosive Esophagitis: 60 mg PO once daily for up to 8 weeks.\n• Maintenance of Healed EE: 30 mg PO once daily for up to 6 months.\n• Symptomatic Non-Erosive GERD: 30 mg PO once daily for 4 weeks.",
+            administration = "Can be taken without regard to meals (unique dual delayed-release formulation provides 2 separate acid suppression peaks).",
+            timing = "Once daily, with or without food (खाना खाएर वा नखाई खान सकिने).",
+            specialInstructions = "Dual Delayed-Release (DDR) technology releases the first peak of medication at 1-2 hours and the second peak at 4-5 hours in the small intestine, providing 24-hour pH control.",
+            pkPd = "R-enantiomer of lansoprazole. Two distinct peak plasma concentrations: first peak 1-2 hours after dose, second peak 4-5 hours after dose. Plasma elimination half-life ~1-2 hours.",
+            renalAdj = "No adjustment needed in renal impairment or hemodialysis.",
+            hepaticAdj = "Moderate hepatic impairment (Child-Pugh B): 30 mg PO once daily. Severe hepatic impairment (Child-Pugh C): Not recommended due to lack of clinical data.",
+            pregnancy = "Category B. Animal studies show no teratogenicity.",
+            lactation = "Caution advised; unknown if excreted in human milk.",
+            sideEffects = "Diarrhea, abdominal pain, nausea, upper respiratory tract infection, vomiting, flatulence.",
+            priceNpr = "NPR 25.00 - 45.00 per capsule (30mg / 60mg)",
+            priceInr = "INR 18.00 - 32.00 per capsule",
+            brandsNepal = listOf(
+                BrandInfo("Dexpure", "Asian Pharmaceuticals", "DDR Capsule", "30 mg / 60 mg"),
+                BrandInfo("Dexilant-NP", "Quest Pharmaceuticals", "DDR Capsule", "30 mg / 60 mg"),
+                BrandInfo("Dexla", "Deurali-Janta Pharmaceuticals", "DDR Capsule", "30 mg / 60 mg"),
+                BrandInfo("D-Lans", "Nepal Pharmaceuticals Lab", "DDR Capsule", "60 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Dexilant", "Takeda", "DDR Capsule", "30 mg / 60 mg"),
+                BrandInfo("Delprazol", "Macleods", "DDR Capsule", "30 mg / 60 mg"),
+                BrandInfo("Dexla", "Lupin", "DDR Capsule", "30 mg / 60 mg")
+            ),
+            adultDose = "30-60 mg PO once daily.",
+            childDose = "Safety and efficacy in pediatric patients <12 years not established.",
+            contraindications = "Hypersensitivity to dexlansoprazole or other PPIs; concomitant rilpivirine.",
+            modeOfAction = "Inhibits gastric parietal cell H+/K+-ATPase. Dual release profile delivers 25% of drug in proximal duodenum and remaining 75% in distal small intestine, maintaining plasma concentrations above therapeutic threshold.",
+            interactions = "Atazanavir, Nelfinavir, Dasatinib, Erlotinib, Ketoconazole, Iron salts (decreased absorption); Methotrexate (increased levels).",
+            packSize = "Strip of 10 Dual Delayed-Release (DDR) capsules",
+            precautions = "Risk of C. difficile colitis; bone fractures with prolonged use; acute interstitial nephritis (rare).",
+            ddaSchedule = "Schedule Ga (Prescription Medicine)",
+            nemlCategory = "Specialist Gastroenterology Formulary",
+            counselingNepali = "दिनको १ पटक पानीसँग खानुहोस्। खाना खाएर वा नखाई जुनसुकै बेला लिन सकिन्छ किनभने यसको दोहोरो रिलिज प्रविधिले २४ घण्टा नै एसिड नियन्त्रण गर्छ।",
+            counselingEnglish = "Take once daily with water. Can be taken with or without food due to dual-delayed release technology."
+        ),
+
+        // 3. Ilaprazole
+        Drug(
+            id = "d_gi_ilaprazole",
+            genericName = "Ilaprazole",
+            system = "Gastrointestinal & Hepatobiliary",
+            drugClass = "Third-Generation Long-Acting Proton Pump Inhibitor (PPI)",
+            blackBoxWarning = null,
+            indications = "Duodenal ulcer, gastric ulcer, severe erosive reflux esophagitis, refractory GERD, and H. pylori eradication.",
+            doses = "• Duodenal / Gastric Ulcer: 10 mg PO once daily for 4-8 weeks.\n• Reflux Esophagitis / GERD: 10 mg PO once daily for 4-8 weeks.\n• H. pylori triple therapy: 10 mg PO BID + Amoxicillin 1g BID + Clarithromycin 500mg BID for 14 days.",
+            administration = "Take once daily in the morning, 30 minutes before breakfast.",
+            timing = "30 minutes before breakfast (बिहान खाली पेटमा).",
+            specialInstructions = "Long terminal elimination half-life (~8 to 10 hours) provides superior nocturnal acid control compared to older PPIs.",
+            pkPd = "Bioavailability ~65%. Elimination half-life 8-10 hours (3 to 4 times longer than omeprazole/pantoprazole). Hepatic metabolism via non-enzymatic sulfoxidation and CYP3A4/CYP2C19, making it less vulnerable to CYP2C19 gene polymorphism.",
+            renalAdj = "No dosage adjustment necessary in mild-to-moderate renal failure.",
+            hepaticAdj = "Use with caution in moderate to severe hepatic impairment; 5-10 mg daily.",
+            pregnancy = "Category B/C equivalent. Avoid unless clinical benefit clearly outweighs potential fetal risk.",
+            lactation = "Safety in breastfeeding not established; alternative PPI preferred.",
+            sideEffects = "Headache, dizziness, nausea, mild diarrhea, flatulence, abdominal discomfort.",
+            priceNpr = "NPR 18.00 - 30.00 per tablet (10mg)",
+            priceInr = "INR 12.00 - 22.00 per tablet",
+            brandsNepal = listOf(
+                BrandInfo("Ila-P", "Lomus Pharmaceuticals", "Tablet", "10 mg"),
+                BrandInfo("Ilapro", "Quest Pharmaceuticals", "Tablet", "10 mg"),
+                BrandInfo("Ilapra", "Nepal Pharmaceuticals Lab", "Tablet", "10 mg"),
+                BrandInfo("Ila-D", "Deurali-Janta Pharmaceuticals", "Tablet", "10 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Iladac", "Zydus Cadila", "Tablet", "10 mg"),
+                BrandInfo("Blokacid", "Ajanta Pharma", "Tablet", "10 mg"),
+                BrandInfo("Lupila", "Lupin", "Tablet", "10 mg")
+            ),
+            adultDose = "10 mg PO once daily in morning.",
+            childDose = "Not established in pediatric populations.",
+            contraindications = "Hypersensitivity to ilaprazole or other substituted benzimidazoles.",
+            modeOfAction = "Selectively and irreversibly binds to H+/K+-ATPase pumps on gastric parietal cells. Due to higher pKa and prolonged half-life, offers deeper and sustained suppression of night-time nocturnal acid breakthrough.",
+            interactions = "Lower susceptibility to CYP2C19 genetic polymorphism variations than omeprazole. May still affect absorption of pH-dependent drugs (ketoconazole, itraconazole, iron).",
+            packSize = "Strip of 10 enteric-coated tablets",
+            precautions = "Exclude gastric malignancy prior to therapy as symptom relief can delay diagnosis.",
+            ddaSchedule = "Schedule Ga (Prescription Medicine)",
+            nemlCategory = "Hospital Gastroenterology Formulary",
+            counselingNepali = "बिहानको खाना खानु भन्दा आधा घण्टा अगाडि १ चक्की पानीसँग खानुहोस्। यसले रातको समयमा एसिड आउने समस्यालाई धेरै प्रभावकारी ढंगले नियन्त्रण गर्छ।",
+            counselingEnglish = "Take 30 minutes before breakfast. Highly effective for nighttime acid reflux due to extended duration of action."
+        ),
+
+        // 4. Granisetron
+        Drug(
+            id = "d_gi_granisetron",
+            genericName = "Granisetron",
+            system = "Gastrointestinal & Hepatobiliary",
+            drugClass = "5-HT3 Serotonin Receptor Antagonist (Antiemetic)",
+            blackBoxWarning = null,
+            indications = "Prevention and treatment of chemotherapy-induced nausea and vomiting (CINV), radiation-induced nausea and vomiting (RINV), and postoperative nausea and vomiting (PONV).",
+            doses = "• CINV Prevention (IV): 1-3 mg (or 10 mcg/kg) IV slow bolus over 5 min or infused over 15 min, given within 30 min before chemotherapy.\n• CINV Prevention (Oral): 1 mg PO BID (first dose 1 hr before chemo) or 2 mg PO once daily.\n• Postoperative Nausea & Vomiting (PONV): 1 mg IV slow bolus over 30 seconds at induction of anesthesia or post-op.\n• Pediatric (>2 yrs): 10-40 mcg/kg IV (max 3 mg/dose).",
+            administration = "IV bolus administered over 30-60 seconds for PONV; IV infusion over 5-15 minutes diluted in 20-50 mL NS or D5W for chemotherapy. Oral tablets taken with water.",
+            timing = "30-60 minutes prior to chemotherapy or at anesthesia induction.",
+            specialInstructions = "Significantly higher selectivity and longer half-life (9-12 hrs) than ondansetron (3-4 hrs); often requires only once-daily dosing.",
+            pkPd = "Bioavailability ~60%. Extensively metabolized in liver primarily by CYP3A4. Elimination half-life ~9-12 hours in healthy subjects and ~10-12 hours in cancer patients. Excreted in urine and feces.",
+            renalAdj = "No dosage adjustment necessary in renal failure or hemodialysis.",
+            hepaticAdj = "No initial adjustment needed, but clearance is decreased in severe hepatic impairment; monitor closely.",
+            pregnancy = "Category B. Animal studies show no teratogenicity; acceptable when clinically necessary.",
+            lactation = "Use with caution; excretion into breast milk unknown.",
+            sideEffects = "Headache (most common, ~15%), constipation, transient AST/ALT elevations, mild QT interval prolongation, asthenia.",
+            priceNpr = "NPR 25.00 - 55.00 per ampoule (1mg/mL); NPR 15.00 - 25.00 per tab (1mg)",
+            priceInr = "INR 18.00 - 40.00 per ampoule",
+            brandsNepal = listOf(
+                BrandInfo("Granicip", "Cipla Nepal", "Injection / Tab", "1 mg/mL, 1 mg tab"),
+                BrandInfo("Graniforce", "Mankind Pharma Nepal", "Injection / Tab", "1 mg/mL, 1 mg tab"),
+                BrandInfo("Granitron", "Deurali-Janta Pharmaceuticals", "Tablet", "1 mg / 2 mg"),
+                BrandInfo("Graniset-Quest", "Quest Pharmaceuticals", "Injection", "1 mg / 3 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Kytril", "Roche", "Injection / Tab", "1 mg, 2 mg"),
+                BrandInfo("Granicip", "Cipla", "Injection / Tab", "1 mg/mL, 1 mg tab"),
+                BrandInfo("Graniforce", "Mankind", "Tablet / Inj", "1 mg, 2 mg")
+            ),
+            adultDose = "1-2 mg PO daily or 1-3 mg IV slow infusion prior to chemo.",
+            childDose = "10-20 mcg/kg IV (max 1 mg) in children ≥2 years.",
+            contraindications = "Known hypersensitivity to granisetron or other 5-HT3 receptor antagonists.",
+            modeOfAction = "Potent, highly selective 5-HT3 receptor antagonist that blocks serotonin centrally in the chemoreceptor trigger zone (CTZ) and peripherally on vagal nerve terminals in the gastrointestinal tract.",
+            interactions = "Drugs prolonging QT interval (amiodarone, haloperidol, fluoroquinolones); apomorphine (severe hypotension risk).",
+            packSize = "Vial/Ampoule of 1 mg/1 mL or 3 mg/3 mL; Strip of 10 tablets (1mg)",
+            precautions = "Monitor ECG in patients with underlying cardiac conduction disorders or congenital long QT syndrome.",
+            ddaSchedule = "Schedule Ga (Prescription Medicine)",
+            nemlCategory = "NEML: Essential Antiemetic / Oncology Supportive Care",
+            counselingNepali = "केमोथेरापी वा शल्यक्रिया अगाडि वान्ता आउन नदिन यो औषधि दिइन्छ। सामान्य टाउको दुखाई वा कब्जियत हुन सक्छ।",
+            counselingEnglish = "Used to prevent nausea and vomiting from chemotherapy or surgery. Take 1 hour before treatment. Mild headache or constipation may occur."
+        ),
+
+        // 5. Palonosetron
+        Drug(
+            id = "d_gi_palonosetron",
+            genericName = "Palonosetron Hydrochloride",
+            system = "Gastrointestinal & Hepatobiliary",
+            drugClass = "Second-Generation Long-Acting 5-HT3 Receptor Antagonist (Antiemetic)",
+            blackBoxWarning = null,
+            indications = "Prevention of acute and delayed nausea and vomiting associated with initial and repeat courses of moderately and highly emetogenic cancer chemotherapy (MEC and HEC); prevention of postoperative nausea and vomiting (PONV).",
+            doses = "• Chemotherapy-Induced Nausea (CINV): 0.25 mg IV bolus over 30 seconds, administered ~30 min before chemotherapy on Day 1.\n• Oral CINV: 0.5 mg PO once ~1 hour before chemotherapy on Day 1.\n• Postoperative Nausea & Vomiting (PONV): 0.075 mg IV single bolus over 10 seconds immediately before anesthesia induction.\n• Pediatric (≥1 month to 17 yrs): 20 mcg/kg IV (max 1.5 mg) infused over 15 min on Day 1.",
+            administration = "Administer IV bolus over 30 seconds. Do not mix with other drugs; flush line before and after with normal saline.",
+            timing = "30 minutes prior to chemotherapy (Day 1 only due to 40-hour half-life).",
+            specialInstructions = "Second-generation 5-HT3 antagonist with 100-fold higher receptor binding affinity and an exceptionally long terminal elimination half-life (~40 hours), uniquely providing coverage for DELAYED nausea/vomiting without repeated daily dosing.",
+            pkPd = "Terminal half-life ~40 hours (up to 100 hours in some patients). ~50% metabolized by CYP2D6, CYP3A4, and CYP1A2; ~50% excreted unchanged in urine.",
+            renalAdj = "No dosage adjustment necessary in renal impairment or hemodialysis.",
+            hepaticAdj = "No dosage adjustment necessary in mild, moderate, or severe hepatic impairment.",
+            pregnancy = "Category B. Animal studies show no teratogenicity; use if clinically needed in oncologic regimens.",
+            lactation = "Unknown if excreted in human milk; use caution.",
+            sideEffects = "Headache, constipation, asthenia, dizziness, dyspepsia. Much lower incidence of QT prolongation than 1st-generation 5-HT3 antagonists.",
+            priceNpr = "NPR 250.00 - 550.00 per vial (0.25mg/5mL)",
+            priceInr = "INR 180.00 - 380.00 per vial",
+            brandsNepal = listOf(
+                BrandInfo("Palostar", "Quest Pharmaceuticals", "Injection", "0.25 mg / 5 mL"),
+                BrandInfo("Palonox", "Nepal Pharmaceuticals Lab", "Injection", "0.25 mg / 5 mL"),
+                BrandInfo("Palnox", "Lomus Pharmaceuticals", "Injection", "0.25 mg / 5 mL"),
+                BrandInfo("Palosafe-NP", "Asian Pharmaceuticals", "Injection", "0.25 mg / 5 mL")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Aloxi", "Helsinn / Eisai", "Injection", "0.25 mg / 5 mL"),
+                BrandInfo("Palosafe", "Mankind", "Injection", "0.25 mg / 5 mL"),
+                BrandInfo("Palonext", "Dr. Reddy's", "Injection", "0.25 mg / 5 mL"),
+                BrandInfo("Chepatron", "Cipla", "Injection", "0.25 mg / 5 mL")
+            ),
+            adultDose = "0.25 mg IV single dose 30 min before chemo on Day 1.",
+            childDose = "20 mcg/kg IV (max 1.5 mg) single dose in pediatric patients.",
+            contraindications = "Hypersensitivity to palonosetron.",
+            modeOfAction = "Allosteric receptor binding and positive cooperativity at 5-HT3 receptors trigger receptor internalisation and persistent inhibition, maintaining antiemetic efficacy for both acute (0-24h) and delayed (24-120h) phases of emesis.",
+            interactions = "Serotonergic drugs (SSRIs, SNRIs) - monitor for serotonin syndrome. Apomorphine (hypotension risk).",
+            packSize = "Single-use vial of 0.25 mg / 5 mL",
+            precautions = "Hypersensitivity cross-reactions may occur in patients sensitive to other 5-HT3 antagonists.",
+            ddaSchedule = "Schedule Ga (Prescription Medicine)",
+            nemlCategory = "Tertiary Oncology Formulary",
+            counselingNepali = "यो औषधिको १ डोजले नै ४ देखि ५ दिनसम्म केमोथेरापी पछिको वान्ता रोक्न मद्दत गर्छ।",
+            counselingEnglish = "Single dose protects against both immediate and delayed chemotherapy nausea for up to 5 days."
+        ),
+
+        // 6. Aprepitant
+        Drug(
+            id = "d_gi_aprepitant",
+            genericName = "Aprepitant",
+            system = "Gastrointestinal & Hepatobiliary",
+            drugClass = "Neurokinin-1 (NK1) Receptor Antagonist (Antiemetic)",
+            blackBoxWarning = null,
+            indications = "Prevention of acute and delayed nausea and vomiting associated with initial and repeat courses of highly emetogenic cancer chemotherapy (HEC, e.g., Cisplatin) and moderately emetogenic chemotherapy (MEC), in combination with a 5-HT3 antagonist and dexamethasone.",
+            doses = "• 3-Day Oral Regimen for Chemotherapy:\n  - Day 1: 125 mg PO 1 hour before chemotherapy.\n  - Day 2: 80 mg PO once daily in morning.\n  - Day 3: 80 mg PO once daily in morning.\n• Postoperative Nausea (PONV): 40 mg PO single dose given within 3 hours prior to anesthesia induction.\n• Pediatric (≥6 months, CINV): Weight-based dosing (Day 1: 3 mg/kg, max 125 mg; Days 2 & 3: 2 mg/kg, max 80 mg).",
+            administration = "Administer orally with or without food. Can be swallowed whole with water.",
+            timing = "1 hour before chemotherapy on Day 1, morning on Days 2 & 3.",
+            specialInstructions = "Always used in combination with Dexamethasone and a 5-HT3 antagonist (such as Ondansetron, Granisetron, or Palonosetron). When co-prescribed, reduce oral dexamethasone dose by 50% due to CYP3A4 inhibition.",
+            pkPd = "Bioavailability 60-65%. Extensively metabolized primarily by CYP3A4. Moderate inhibitor and inducer of CYP3A4, and inducer of CYP2C9. Elimination half-life ~9-13 hours.",
+            renalAdj = "No dosage adjustment necessary in renal impairment or end-stage renal disease on hemodialysis.",
+            hepaticAdj = "Mild-to-moderate impairment (Child-Pugh A & B): No dosage adjustment necessary. Severe impairment (Child-Pugh C): Use with caution.",
+            pregnancy = "Category B. Animal studies show no fetal toxicity; use when clinically indicated for severe emesis.",
+            lactation = "Excreted in milk of lactating rats; use caution or consider formula feeding during treatment.",
+            sideEffects = "Fatigue, hiccups, asthenia, constipation, dyspepsia, anorexia, elevated ALT/AST, headache.",
+            priceNpr = "NPR 950.00 - 1500.00 per 3-capsule pack (125mg + 80mg + 80mg)",
+            priceInr = "INR 650.00 - 1100.00 per 3-capsule pack",
+            brandsNepal = listOf(
+                BrandInfo("Aprecap", "Glenmark Nepal", "Capsule Pack", "125 mg + 2x 80 mg"),
+                BrandInfo("Emend-NP", "MSD / Quest Pharma", "Capsule Pack", "125 mg + 2x 80 mg"),
+                BrandInfo("Aprepep", "Asian Pharmaceuticals", "Capsule Pack", "125 mg + 2x 80 mg"),
+                BrandInfo("Apriset", "Nepal Pharmaceuticals Lab", "Capsule Pack", "125 mg + 2x 80 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Emend", "Merck Sharp & Dohme (MSD)", "Capsule Pack", "125 mg + 2x 80 mg"),
+                BrandInfo("Aprecap", "Glenmark", "Capsule Pack", "125 mg + 2x 80 mg"),
+                BrandInfo("Apriset", "Dr. Reddy's", "Capsule Pack", "125 mg + 2x 80 mg")
+            ),
+            adultDose = "Day 1: 125 mg PO; Day 2: 80 mg PO; Day 3: 80 mg PO.",
+            childDose = "Day 1: 3 mg/kg PO; Days 2-3: 2 mg/kg PO.",
+            contraindications = "Hypersensitivity to aprepitant; concurrent administration with pimozide, terfenadine, astemizole, or cisapride (fatal arrhythmias).",
+            modeOfAction = "Selectively crosses the blood-brain barrier and binds to neurokinin-1 (NK1) receptors in the area postrema and solitary tract nucleus, preventing Substance P from triggering delayed-phase emetic cascades.",
+            interactions = "CYP3A4 substrates (Dexamethasone - reduce dose by 50%; Midazolam, Fentanyl); CYP2C9 substrates (Warfarin - monitor INR closely, aprepitant decreases INR on days 7-10); Oral contraceptives (decreased efficacy, use backup barrier method).",
+            packSize = "Tri-pack blister: 1 capsule of 125 mg and 2 capsules of 80 mg",
+            precautions = "Significant drug interactions with CYP3A4/CYP2C9 metabolized agents; requires barrier contraception during and for 1 month post therapy.",
+            ddaSchedule = "Schedule Ga (Prescription Medicine)",
+            nemlCategory = "Tertiary Oncology Supportive Care Formulary",
+            counselingNepali = "केमोथेरापी हुनुभन्दा १ घण्टा अगाडि पहिलो ठूलो चक्की (१२५ एमजी) खानुहोस्, र भोलिपल्ट र पर्सिपल्ट बिहान १-१ चक्की (८० एमजी) खानुहोस्। यसले हिक्का आउने वा थकान महसुस गराउन सक्छ।",
+            counselingEnglish = "Take 125 mg capsule 1 hour before chemo on Day 1, then 80 mg on morning of Days 2 and 3. Informs protection against severe delayed vomiting."
+        ),
+
+        // 7. Ispaghula Husk (Psyllium Husk)
+        Drug(
+            id = "d_gi_ispaghula",
+            genericName = "Ispaghula Husk (Psyllium Husk)",
+            system = "Gastrointestinal & Hepatobiliary",
+            drugClass = "Bulk-Forming Laxative & Soluble Dietary Fiber",
+            blackBoxWarning = null,
+            indications = "Constipation (chronic and acute), irritable bowel syndrome (IBS - constipation predominant), hemorrhoids/fissures (to soften stool and prevent straining), adjunct in hypercholesterolemia, and regulating bowel movements in colostomy/ileostomy.",
+            doses = "• Adults: 3.5 g to 7 g (1 to 2 level measuring spoonfuls or sachets) PO once or twice daily stirred vigorously in a full glass of water or juice.\n• Hypercholesterolemia: 7 to 10 g daily in divided doses before meals.\n• Children (6-12 years): 1.75 g to 3.5 g PO once or twice daily with plenty of water.\n• Children (<6 years): Not recommended unless under specialist guidance.",
+            administration = "MUST be taken with at least 150-250 mL of water or liquid per sachet/dose. Drink immediately before gelling occurs, followed by an additional glass of water.",
+            timing = "Morning and/or evening, after meals with plenty of fluid (प्रशस्त पानीसँग).",
+            specialInstructions = "NEVER swallow dry powder or husk granules directly, as it may swell in the esophagus and cause severe choking or mechanical obstruction.",
+            pkPd = "Not absorbed from the gastrointestinal tract. Passes intact into the colon where its mucilage binds water, expands to 10-14 times its original volume, and is partially fermented by colonic bacteria into short-chain fatty acids (SCFAs).",
+            renalAdj = "No adjustment needed. Safe in renal failure and dialysis.",
+            hepaticAdj = "No adjustment needed. Safe in hepatic cirrhosis and portal hypertension.",
+            pregnancy = "Safe. First-line fiber supplement for constipation in pregnancy and postpartum.",
+            lactation = "Safe and non-systemic; fully compatible with breastfeeding.",
+            sideEffects = "Abdominal distension, flatulence (usually resolves after 3-5 days), esophageal or intestinal obstruction (if taken with inadequate fluid).",
+            priceNpr = "NPR 150.00 - 320.00 per 100g container / NPR 12.00 per sachet",
+            priceInr = "INR 90.00 - 210.00 per 100g",
+            brandsNepal = listOf(
+                BrandInfo("Fybogel", "Reckitt Benckiser Nepal", "Effervescent Granules", "3.5 g sachet"),
+                BrandInfo("Ispabowel", "Lomus Pharmaceuticals", "Granules/Husk", "100 g jar"),
+                BrandInfo("Isabgol-NPL", "Nepal Pharmaceuticals Lab", "Pure Husk", "100 g / 200 g"),
+                BrandInfo("Naturelax", "Deurali-Janta Pharmaceuticals", "Husk Powder", "100 g jar")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Fybogel Orange", "Reckitt", "Sachet", "3.5 g"),
+                BrandInfo("Softovac", "Lupin", "Powder", "100 g / 250 g"),
+                BrandInfo("Isabgol", "Baidyanath / Dabur", "Pure Husk", "100 g"),
+                BrandInfo("Metamucil", "Procter & Gamble", "Powder", "Pack")
+            ),
+            adultDose = "3.5-7 g PO once or twice daily with a full glass of water.",
+            childDose = "1.75-3.5 g PO daily with adequate water (≥6 years).",
+            contraindications = "Intestinal obstruction, fecal impaction, colonic atony, difficulty swallowing, or known hypersensitivity to psyllium.",
+            modeOfAction = "Hydrophilic mucilloid absorbs water and forms an emollient gel that increases stool bulk and moisture, stimulating natural peristalsis and facilitating comfortable, strain-free defecation.",
+            interactions = "May reduce or delay absorption of oral medications (Digoxin, Carbamazepine, Lithium, Warfarin, Iron). Separate other oral drugs by at least 2 hours.",
+            packSize = "Jar of 100g / 200g husk powder, or box of 10 sachets (3.5g)",
+            precautions = "Ensure adequate daily fluid intake (at least 1.5 - 2 liters of water daily).",
+            ddaSchedule = "Schedule Ga (Over-The-Counter / General Sale)",
+            nemlCategory = "NEML: Essential Gastrointestinal Medicines",
+            counselingNepali = "१ देखि २ चम्चा धुलो १ ठूलो गिलास पानीमा राम्ररी घोलेर तुरुन्तै पिउनुहोस् र लगत्तै अर्को १ गिलास पानी थप पिउनुहोस्। सुख्खा धुलो कहिल्यै ननिल्नुहोस्।",
+            counselingEnglish = "Stir 1-2 spoons into a full glass of water, drink immediately, and follow with another glass of water. Never swallow dry."
+        ),
+
+        // 8. Milk of Magnesia (Magnesium Hydroxide)
+        Drug(
+            id = "d_gi_magnesium_hydroxide",
+            genericName = "Milk of Magnesia (Magnesium Hydroxide)",
+            system = "Gastrointestinal & Hepatobiliary",
+            drugClass = "Saline / Osmotic Laxative & Antacid",
+            blackBoxWarning = null,
+            indications = "Short-term relief of occasional constipation, acid indigestion, heartburn, and sour stomach.",
+            doses = "• Laxative (Constipation):\n  - Adults & Children ≥12 yrs: 30 mL to 60 mL (approx. 2 to 4 tablespoonfuls) PO once daily at bedtime or divided.\n  - Children 6-11 yrs: 15 mL to 30 mL PO once daily.\n  - Children 2-5 yrs: 5 mL to 15 mL PO once daily.\n• Antacid (Heartburn / Indigestion):\n  - Adults: 5 mL to 15 mL PO up to 4 times daily, 1 hour after meals and at bedtime (max 60 mL in 24 hours).",
+            administration = "Shake well before use. Follow each dose with a full glass (250 mL) of water to facilitate osmotic bowel action.",
+            timing = "Bedtime for laxative effect (रातको समयमा सुत्नु अघि); after meals for antacid effect.",
+            specialInstructions = "Acts as an osmotic laxative within 30 minutes to 6 hours. Adequate hydration is essential.",
+            pkPd = "Acts locally in the gastrointestinal tract. Poorly absorbed (~15-30% magnesium ions may be absorbed systemically in healthy individuals). Absorbed magnesium is eliminated rapidly by kidneys.",
+            renalAdj = "STRICT CAUTION OR CONTRAINDICATED in severe renal impairment (CrCl <30 mL/min) due to dangerous accumulation of magnesium causing hypermagnesemia, cardiac arrest, and respiratory paralysis.",
+            hepaticAdj = "No adjustment needed.",
+            pregnancy = "Category B. Generally safe for occasional short-term constipation in pregnancy; avoid high doses.",
+            lactation = "Compatible with breastfeeding; small amounts absorbed do not affect breast milk.",
+            sideEffects = "Diarrhea, abdominal cramps, nausea, dehydration, hypermagnesemia (in renal impairment: hypotension, bradycardia, muscle weakness, hyporeflexia).",
+            priceNpr = "NPR 90.00 - 180.00 per bottle (170 mL / 350 mL)",
+            priceInr = "INR 60.00 - 120.00 per bottle",
+            brandsNepal = listOf(
+                BrandInfo("Cremaffin", "Abbott Nepal", "Suspension", "Magnesium Hydroxide + Liq Paraffin"),
+                BrandInfo("Phillips MOM", "GSK Nepal", "Suspension", "Magnesium Hydroxide 8% w/v"),
+                BrandInfo("Magnesia-Lomus", "Lomus Pharmaceuticals", "Suspension", "400 mg / 5 mL"),
+                BrandInfo("MOM-NPL", "Nepal Pharmaceuticals Lab", "Suspension", "Magnesium Hydroxide Oral"),
+                BrandInfo("Gelusil-M", "Pfizer Nepal", "Suspension", "Magnesium Hydroxide Antacid")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Phillips Milk of Magnesia", "Bayer / GSK", "Suspension", "Magnesium Hydroxide"),
+                BrandInfo("Cremaffin", "Abbott", "Suspension", "Mag Hydroxide + Liq Paraffin"),
+                BrandInfo("Gelusil", "Pfizer", "Suspension", "Mag Hydroxide + Alum Hydroxide")
+            ),
+            adultDose = "30-60 mL PO at bedtime with water for constipation; 5-15 mL for antacid.",
+            childDose = "15-30 mL (6-11 yrs); 5-15 mL (2-5 yrs) with full glass of water.",
+            contraindications = "Severe renal failure (CrCl <30 mL/min); acute abdomen, intestinal obstruction, undiagnosed abdominal pain.",
+            modeOfAction = "Antacid: Reacts with gastric hydrochloric acid to form magnesium chloride, neutralizing gastric acidity. Laxative: Retains osmotic water in the colonic lumen, expanding fecal volume and mechanically stimulating peristalsis.",
+            interactions = "Reduces absorption of Tetracyclines, Fluoroquinolones (Ciprofloxacin, Levofloxacin), Iron supplements, and Digoxin via chelation and raised gastric pH. Separate by at least 2 hours.",
+            packSize = "PET Bottle of 170 mL / 350 mL suspension",
+            precautions = "Avoid prolonged daily use (>7 days) without clinical evaluation. Monitor magnesium in elderly or renal patients.",
+            ddaSchedule = "Schedule Ga (General Sale / OTC)",
+            nemlCategory = "NEML: Essential Antacids & Laxatives",
+            counselingNepali = "औषधि खानु अघि शिशी राम्ररी हल्लाउनुहोस्। कब्जियतको लागि राती सुत्नु अघि २ देखि ४ चम्चा १ गिलास पानीसँग पिउनुहोस्। मिर्गौला रोगीले चिकित्सकको सल्लाह बिना खानु हुँदैन।",
+            counselingEnglish = "Shake well before use. Take 30-60 mL at bedtime with a full glass of water. Avoid if you have significant kidney problems."
+        ),
+
+        // 9. Sodium Alginate + Sodium Bicarbonate
+        Drug(
+            id = "d_gi_sodium_alginate",
+            genericName = "Sodium Alginate + Sodium Bicarbonate",
+            system = "Gastrointestinal & Hepatobiliary",
+            drugClass = "Alginate Raft-Forming Reflux Suppressant & Antacid",
+            blackBoxWarning = null,
+            indications = "Gastroesophageal reflux disease (GERD), heartburn during pregnancy, reflux esophagitis, acid regurgitation, postprandial dyspepsia, and laryngopharyngeal reflux (LPR / silent reflux).",
+            doses = "• Adults & Children ≥12 years: 10 mL to 20 mL (or 1 to 2 chewable tablets) PO up to 4 times daily, taken after meals and at bedtime.\n• Children 6-12 years: 5 mL to 10 mL PO after meals and at bedtime.\n• Children <6 years: Not recommended without specialist pediatrician guidance.",
+            administration = "Take orally after meals and at bedtime. Chew tablets thoroughly before swallowing; drink water if desired.",
+            timing = "Immediately after meals and at bedtime (खाना खाएपछि र सुत्नु अघि).",
+            specialInstructions = "Acts by forming a physical floating foaming barrier ('raft') on top of gastric contents within seconds, preventing acid and pepsin from regurgitating into the esophagus.",
+            pkPd = "Non-systemic mechanical mode of action. Alginate is not absorbed; it forms a gel raft that remains on top of stomach contents for up to 4 hours and is subsequently eliminated in feces.",
+            renalAdj = "Use with caution in patients with severe renal impairment due to sodium and potassium content.",
+            hepaticAdj = "No dosage adjustment necessary. Safe in liver disease.",
+            pregnancy = "Safe. Gold standard first-line therapy for heartburn and acid reflux in all trimesters of pregnancy.",
+            lactation = "Safe; not absorbed systemically and does not pass into breast milk.",
+            sideEffects = "Mild flatulence, bloating, constipation (rare), transient belching.",
+            priceNpr = "NPR 180.00 - 320.00 per bottle (150 mL / 200 mL); NPR 12.00 - 20.00 per chewable tablet",
+            priceInr = "INR 120.00 - 220.00 per bottle",
+            brandsNepal = listOf(
+                BrandInfo("Gaviscon", "Reckitt Benckiser Nepal", "Suspension / Chew Tab", "500mg/267mg per 10mL"),
+                BrandInfo("Refluxid", "Quest Pharmaceuticals", "Suspension", "Sodium Alginate Reflux"),
+                BrandInfo("Algigel", "Deurali-Janta Pharmaceuticals", "Suspension", "Alginate Raft Formula"),
+                BrandInfo("Gastrocid-A", "Nepal Pharmaceuticals Lab", "Chewable Tablet", "Alginate + Bicarbonate")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Gaviscon Double Action", "Reckitt", "Liquid / Chew Tab", "Alginate 500mg + Bicarb"),
+                BrandInfo("Algiscon", "Abbott", "Suspension", "Sodium Alginate + Bicarbonate"),
+                BrandInfo("Refluxoff", "Mankind", "Suspension", "Alginate Formula")
+            ),
+            adultDose = "10-20 mL PO after meals and at bedtime.",
+            childDose = "5-10 mL PO after meals and at bedtime (6-12 years).",
+            contraindications = "Known hypersensitivity to sodium alginate or sodium bicarbonate.",
+            modeOfAction = "In contact with gastric acid, alginate precipitates to form a low-density, buoyant gel foam layer ('raft') while bicarbonate releases carbon dioxide bubbles that entrap within the gel, floating it over stomach contents to create a physical anti-reflux barrier.",
+            interactions = "Separate by 2 hours from iron supplements, fluoroquinolones, tetracyclines, and thyroid medications due to potential interference with absorption.",
+            packSize = "Bottle of 150 mL / 200 mL oral liquid; Strip of 10 chewable tablets",
+            precautions = "Contains sodium; monitor in severe congestive heart failure or renal failure requiring strict sodium restriction.",
+            ddaSchedule = "Schedule Ga (General Sale / OTC)",
+            nemlCategory = "NEML: Essential Gastrointestinal Medicines",
+            counselingNepali = "खाना खाएपछि र राती सुत्नु अघि २ देखि ४ चम्चा खानुहोस्। यसले पेटको मुखमा छाता जस्तै तह बनाएर एसिड घाँटीतिर आउन दिँदैन। चक्की भए राम्ररी चपाएर खानुहोस्।",
+            counselingEnglish = "Take 10-20 mL after meals and at bedtime. Forms a protective barrier over stomach contents to stop reflux. Chew tablets thoroughly."
+        ),
+
+        // 10. Simethicone (Activated Dimethicone)
+        Drug(
+            id = "d_gi_simethicone",
+            genericName = "Simethicone (Activated Dimethicone)",
+            system = "Gastrointestinal & Hepatobiliary",
+            drugClass = "Antiflatulent / Gastrointestinal Defoaming Agent",
+            blackBoxWarning = null,
+            indications = "Relief of painful symptoms of excess gas in digestive tract (bloating, fullness, pressure, flatulence), infant colic, and preparation for abdominal diagnostic imaging (endoscopy, ultrasound, barium radiography) to disperse bowel gas.",
+            doses = "• Adults & Adolescents: 40 mg to 125 mg PO 4 times daily, after meals and at bedtime (max 500 mg/day).\n• Infant Colic & Gas (<2 yrs): 20 mg (approx. 0.3 mL drops) PO with or after feeds (max 240 mg/day).\n• Children 2-12 yrs: 40 mg PO 4 times daily after meals and bedtime.\n• Endoscopy Preparation: 80 mg to 100 mg PO in water 15-30 min prior to procedure.",
+            administration = "Take after meals and at bedtime. Chewable tablets must be chewed thoroughly. Liquid drops can be given directly or mixed with cool water, baby formula, or breast milk.",
+            timing = "After meals and at bedtime (खाना खाएपछि र सुत्ने बेलामा).",
+            specialInstructions = "Completely non-systemic; acts purely by physical surface tension reduction. Safe for infants, pregnant women, and elderly.",
+            pkPd = "Inert silicone polymer. Not absorbed from the gastrointestinal tract following oral administration; excreted completely unchanged in feces.",
+            renalAdj = "No adjustment needed. Safe in renal failure.",
+            hepaticAdj = "No adjustment needed. Safe in cirrhosis.",
+            pregnancy = "Category A/B equivalent. Not absorbed systemically; considered safe throughout pregnancy.",
+            lactation = "Safe; not excreted into breast milk due to lack of systemic absorption.",
+            sideEffects = "Virtually free of adverse effects. Rare mild loose stools or nausea.",
+            priceNpr = "NPR 80.00 - 150.00 per bottle drops (15 mL / 30 mL); NPR 40.00 - 80.00 per strip chewable tabs",
+            priceInr = "INR 50.00 - 110.00 per bottle",
+            brandsNepal = listOf(
+                BrandInfo("Colinorm", "Lomus Pharmaceuticals", "Drops / Tablets", "40 mg/mL, 80 mg tab"),
+                BrandInfo("Degas", "Quest Pharmaceuticals", "Chewable Tab / Drops", "80 mg, 40 mg/mL"),
+                BrandInfo("Gas-Free", "Deurali-Janta Pharmaceuticals", "Chewable Tablet", "40 mg / 80 mg"),
+                BrandInfo("Flatu-Nil", "Nepal Pharmaceuticals Lab", "Drops / Tab", "40 mg/mL"),
+                BrandInfo("Colicaid", "Meyer / Quest Nepal", "Paediatric Drops", "Simethicone + Dill Oil")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Gas-X", "GSK", "Chewable Tab / Softgel", "80 mg, 125 mg"),
+                BrandInfo("Polycrol", "Piramal Healthcare", "Liquid / Chew Tab", "Simethicone + Antacids"),
+                BrandInfo("Gelusil MPS", "Pfizer", "Tablet / Liquid", "Simethicone Antacid"),
+                BrandInfo("Colicaid", "Meyer Organics", "Infant Drops", "Simethicone 40mg/mL")
+            ),
+            adultDose = "40-125 mg PO 4 times daily after meals and at bedtime.",
+            childDose = "20-40 mg PO after feeds or meals.",
+            contraindications = "Known hypersensitivity to simethicone; known or suspected intestinal perforation or mechanical obstruction.",
+            modeOfAction = "Acts as a surfactant and antifoaming agent by lowering the surface tension of gas bubbles in the gastrointestinal tract, causing microscopic bubbles to coalesce into larger gas pockets that can be readily eliminated via belching or flatus.",
+            interactions = "May reduce absorption of Levothyroxine (separate administration by at least 4 hours).",
+            packSize = "Dropper bottle of 15 mL / 30 mL; Strip of 10 chewable tablets",
+            precautions = "If gas symptoms persist for >2 weeks, evaluate for underlying functional or organic gastrointestinal pathology.",
+            ddaSchedule = "Schedule Ga (General Sale / OTC)",
+            nemlCategory = "NEML: Essential Gastrointestinal Medicines",
+            counselingNepali = "खाना खाएपछि र सुत्ने बेलामा राम्ररी चपाएर खानुहोस्। नानीबाबुहरुको पेट फुल्ने वा पेट दुखाईको लागि थोपा औषधि दुध वा पानीसँग खुवाउन सकिन्छ।",
+            counselingEnglish = "Chew thoroughly after meals and at bedtime. For infant colic, drops can be mixed with feeds. Breaks up trapped gas bubbles."
+        ),
+
+        // 11. Diphenoxylate Hydrochloride + Atropine Sulfate
+        Drug(
+            id = "d_gi_diphenoxylate_atropine",
+            genericName = "Diphenoxylate Hydrochloride + Atropine Sulfate",
+            system = "Gastrointestinal & Hepatobiliary",
+            drugClass = "Synthetic Opioid Derivative Antidiarrheal + Subtherapeutic Anticholinergic",
+            blackBoxWarning = "Risk of toxic megacolon in ulcerative colitis; risk of respiratory depression in pediatric overdoses.",
+            indications = "Adjunctive therapy in the management of severe acute non-infectious diarrhea and chronic diarrhea in adults.",
+            doses = "• Adults: Initial dose 5 mg (2 tablets) PO 3 to 4 times daily (max 20 mg/day). Once diarrhea is controlled, reduce dosage to maintenance levels (e.g. 5 mg once daily as needed).\n• Pediatric: CONTRAINDICATED in children <2 years. Strictly avoid in young children due to risk of fatal respiratory depression and paralytic ileus.",
+            administration = "Administer orally with water, with or without food.",
+            timing = "After unformed stools or TID-QID as directed (झाडापखाला लाग्दा).",
+            specialInstructions = "Atropine sulfate is included in a sub-therapeutic quantity (0.025 mg per 2.5 mg diphenoxylate) solely to prevent opioid abuse and recreational misuse by triggering unpleasant anticholinergic symptoms (dry mouth, flushing, tachycardia) if overdosed.",
+            pkPd = "Well absorbed from the GI tract. Rapidly and extensively metabolized to diphenoxylic acid (difenoxine), the primary active antidiarrheal metabolite. Elimination half-life ~12-14 hours. Excreted mainly in feces and urine.",
+            renalAdj = "Use with caution in renal insufficiency; monitor for CNS sedation.",
+            hepaticAdj = "CONTRAINDICATED in advanced liver disease / severe hepatic impairment (Child-Pugh C) due to risk of precipitating hepatic encephalopathy.",
+            pregnancy = "Category C. Use only if clearly needed and safer alternatives (e.g. ORS, loperamide) are unavailable.",
+            lactation = "Excreted in breast milk; avoid use while nursing due to potential infant CNS depression.",
+            sideEffects = "Drowsiness, dizziness, dry mouth, nausea, vomiting, abdominal discomfort, paralytic ileus, urinary retention, blurred vision.",
+            priceNpr = "NPR 30.00 - 60.00 per strip of 10 tablets",
+            priceInr = "INR 20.00 - 45.00 per strip",
+            brandsNepal = listOf(
+                BrandInfo("Lomotil", "RPG / Sanofi Nepal", "Tablet", "2.5 mg / 0.025 mg"),
+                BrandInfo("Lomofen", "RPG Life Sciences Nepal", "Tablet", "2.5 mg / 0.025 mg"),
+                BrandInfo("Dia-Stop", "Lomus Pharmaceuticals", "Tablet", "2.5 mg / 0.025 mg"),
+                BrandInfo("Difen-NPL", "Nepal Pharmaceuticals Lab", "Tablet", "2.5 mg / 0.025 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Lomotil", "RPG Life Sciences", "Tablet", "2.5 mg / 0.025 mg"),
+                BrandInfo("Lomofen", "RPG", "Tablet", "2.5 mg / 0.025 mg"),
+                BrandInfo("Diarlop", "Cipla", "Tablet", "2.5 mg / 0.025 mg")
+            ),
+            adultDose = "Initial 5 mg (2 tabs) PO 3-4 times daily; reduce as bowel movements normalize.",
+            childDose = "CONTRAINDICATED in children <2 years; avoid in children <12 years.",
+            contraindications = "Children <2 years; acute diarrhea associated with bacterial pathogens (Shigella, Salmonella, Campylobacter) or pseudomembranous colitis (C. difficile); acute ulcerative colitis flare; jaundice / hepatic encephalopathy.",
+            modeOfAction = "Acts on peripheral mu-opioid receptors in the circular and longitudinal smooth muscles of the intestinal wall, inhibiting peristaltic contractions, delaying intestinal transit, and increasing fluid absorption.",
+            interactions = "CNS depressants (Alcohol, Benzodiazepines, Opioids, Sedatives) - enhanced drowsiness; MAO inhibitors (hypertensive crisis risk).",
+            packSize = "Strip of 10 tablets (2.5 mg diphenoxylate + 0.025 mg atropine)",
+            precautions = "Never use in bacterial dysentery with bloody stool (कडा रगतमासी) or high fever, as it delays clearance of invasive bacterial toxins.",
+            ddaSchedule = "Schedule Kha (Restricted Prescription Only - Controlled Opioid Analogue)",
+            nemlCategory = "Hospital Acute Care Formulary",
+            counselingNepali = "कडा रगतमासी वा ज्वरो आएको झाडापखालामा यो औषधि कहिल्यै खानु हुँदैन। जीवनजल (ORS) सँगै खानुपर्छ। औषधिले झुम पार्न सक्ने हुँदा गाडी नचलाउनुहोस्।",
+            counselingEnglish = "Do not take for bloody diarrhea or bacterial dysentery with high fever. Continue oral rehydration salts (ORS). May cause drowsiness."
+        ),
+
+        // 12. Silymarin (Milk Thistle Flavonolignan Complex)
+        Drug(
+            id = "d_gi_silymarin",
+            genericName = "Silymarin (Milk Thistle Flavonolignan Complex)",
+            system = "Gastrointestinal & Hepatobiliary",
+            drugClass = "Hepatoprotective / Antioxidant & Cell Membrane Stabilizer",
+            blackBoxWarning = null,
+            indications = "Supportive adjuvant treatment in chronic liver disease (non-alcoholic fatty liver disease / NAFLD, alcoholic hepatitis, liver cirrhosis), toxin-induced liver injury, and Death Cap mushroom (Amanita phalloides) poisoning.",
+            doses = "• Adults: 140 mg PO two to three times daily with meals (standardized to 70-80% silymarin / silybin).\n• Maintenance / Mild Disease: 70 mg to 140 mg PO twice daily.\n• Amanita Mushroom Poisoning (IV Legalon-SIL / Silybin): 20 to 50 mg/kg/day continuous IV infusion.",
+            administration = "Administer orally with meals and plenty of water.",
+            timing = "With or immediately after meals (खानासँग वा खाना खाएपछि).",
+            specialInstructions = "Standardized extract of milk thistle (Silybum marianum) rich in active flavonolignans (silybin A & B, isosilybin, silychristin, and silydianin).",
+            pkPd = "Oral bioavailability is low (20-50%) due to extensive phase II conjugation and biliary excretion. Undergoes enterohepatic circulation. Elimination half-life ~6 hours. Primarily excreted in bile (80%) and urine (10%).",
+            renalAdj = "No dosage adjustment necessary. Safe in renal impairment.",
+            hepaticAdj = "Specifically indicated in chronic hepatic disorders; no dose reduction required.",
+            pregnancy = "Category B equivalent. Traditional use indicates good tolerability; use with physician consultation.",
+            lactation = "Generally considered safe; herbal galactagogue properties reported.",
+            sideEffects = "Mild laxative effect, transient gastrointestinal upset, nausea, headache, allergic skin reaction (rare).",
+            priceNpr = "NPR 15.00 - 32.00 per capsule (140mg)",
+            priceInr = "INR 10.00 - 22.00 per capsule",
+            brandsNepal = listOf(
+                BrandInfo("Silybon", "Micro Labs Nepal", "Tablet / Capsule", "70 mg / 140 mg"),
+                BrandInfo("Silymar", "Deurali-Janta Pharmaceuticals", "Capsule", "140 mg"),
+                BrandInfo("Hepaliv-S", "Lomus Pharmaceuticals", "Capsule", "140 mg"),
+                BrandInfo("Livercare-S", "Quest Pharmaceuticals", "Tablet", "140 mg"),
+                BrandInfo("Sily-NPL", "Nepal Pharmaceuticals Lab", "Capsule", "140 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Silybon", "Micro Labs", "Suspension / Tab", "70 mg, 140 mg"),
+                BrandInfo("Hepa-Merz", "Sun Pharma / Merz", "Granules / Infusion", "LOLA + Silymarin"),
+                BrandInfo("Legalon", "Madaus", "Capsule", "140 mg"),
+                BrandInfo("Liv-52", "Himalaya", "Syrup / Tablet", "Herbal Hepatoprotective")
+            ),
+            adultDose = "140 mg PO two to three times daily with meals.",
+            childDose = "5-10 mg/kg/day PO divided BID in children ≥6 years.",
+            contraindications = "Known hypersensitivity to milk thistle or plants of the Asteraceae / Compositae family (ragweed, marigold, daisies).",
+            modeOfAction = "Exerts hepatoprotective effects by acting as a free-radical scavenger, stimulating RNA polymerase I and ribosomal protein synthesis in hepatocytes (accelerating liver regeneration), and stabilizing hepatocyte outer cell membranes against toxin entry.",
+            interactions = "Mild inhibition of CYP2C9 and CYP3A4 at high concentrations; monitor narrow therapeutic index drugs.",
+            packSize = "Strip of 10 capsules / tablets (140 mg)",
+            precautions = "Adjuvant therapy; does not replace fundamental management (alcohol cessation, weight reduction in NAFLD, or antiviral therapy in viral hepatitis).",
+            ddaSchedule = "Schedule Ga (General Sale / Hepatoprotective Supplement)",
+            nemlCategory = "Liver Clinic & Supportive Care Formulary",
+            counselingNepali = "खानासँगै दिनको २ देखि ३ पटक १-१ चक्की खानुहोस्। यसले कलेजोका कोषहरुलाई सुरक्षित राख्न र पुनरुत्थान गर्न मद्दत गर्छ। जाँडरक्सी पूर्ण रुपमा बन्द गर्नुपर्छ।",
+            counselingEnglish = "Take 1 capsule 2-3 times daily with meals. Promotes liver cell protection and regeneration. Abstain from alcohol completely."
+        ),
+
+        // 13. Ursodeoxycholic Acid + Silymarin
+        Drug(
+            id = "d_gi_udca_silymarin",
+            genericName = "Ursodeoxycholic Acid + Silymarin",
+            system = "Gastrointestinal & Hepatobiliary",
+            drugClass = "Hepatoprotective & Choleretic Combination Therapy",
+            blackBoxWarning = null,
+            indications = "Non-alcoholic steatohepatitis (NASH / NAFLD), chronic cholestatic liver disease, alcoholic liver disease with cholestasis, toxic hepatopathy, and early biliary stasis.",
+            doses = "• Adults: 1 tablet/capsule (UDCA 300 mg + Silymarin 140 mg) PO twice daily with meals (morning and evening).\n• Maintenance: 1 tablet daily with evening meal.",
+            administration = "Swallow whole with water during or immediately after meals.",
+            timing = "Morning and evening with meals (बिहान र बेलुका खानासँग).",
+            specialInstructions = "Synergistic dual action: UDCA replaces toxic hydrophobic bile acids and stimulates bicarbonate-rich bile flow, while Silymarin protects hepatocyte cell membranes against oxidative lipid peroxidation.",
+            pkPd = "UDCA is absorbed in small intestine (~90%), extracted by liver (70%), conjugated with glycine/taurine, and secreted into bile. Silymarin undergoes enterohepatic recirculation and acts locally on hepatocytes.",
+            renalAdj = "No dosage adjustment necessary.",
+            hepaticAdj = "Indicated in chronic liver disease. Contraindicated in complete biliary obstruction or decompensated end-stage cirrhosis.",
+            pregnancy = "Category B equivalent. Use in 2nd and 3rd trimesters for intrahepatic cholestasis of pregnancy under specialist supervision.",
+            lactation = "Small amounts excreted; compatible with breastfeeding under medical guidance.",
+            sideEffects = "Loose stools / diarrhea, abdominal pain, nausea, pruritus (rare, transient), dyspepsia.",
+            priceNpr = "NPR 35.00 - 65.00 per tablet (UDCA 300mg + Silymarin 140mg)",
+            priceInr = "INR 25.00 - 45.00 per tablet",
+            brandsNepal = listOf(
+                BrandInfo("Udilos-S", "Quest Pharmaceuticals", "Tablet", "300 mg + 140 mg"),
+                BrandInfo("Ursocol Plus", "Sun Pharma Nepal", "Tablet", "300 mg + 140 mg"),
+                BrandInfo("Ursobil-S", "Deurali-Janta Pharmaceuticals", "Tablet", "300 mg + 140 mg"),
+                BrandInfo("Hepasafe-Plus", "Nepal Pharmaceuticals Lab", "Tablet", "300 mg + 140 mg")
+            ),
+            brandsIndia = listOf(
+                BrandInfo("Ursocol Plus", "Sun Pharma", "Tablet", "300 mg + 140 mg"),
+                BrandInfo("Udiliv Plus", "Abbott", "Tablet", "300 mg + 140 mg"),
+                BrandInfo("Livplus", "Alkem", "Tablet", "300 mg + 140 mg"),
+                BrandInfo("Ursorich-S", "Cipla", "Tablet", "300 mg + 140 mg")
+            ),
+            adultDose = "1 tablet PO BID with meals (UDCA 300mg + Silymarin 140mg).",
+            childDose = "Safety and efficacy in pediatric patients not established.",
+            contraindications = "Complete biliary tract obstruction, acute cholecystitis, calcified radiopaque gallstones, severe biliary colic.",
+            modeOfAction = "Combines hydrophilic choleretic action of UDCA (cytoprotection against hydrophobic detergent bile salts, stimulation of hepatobiliary secretion, anti-apoptotic signaling) with membrane stabilization and free radical scavenging of Silymarin.",
+            interactions = "Bile acid sequestrants (Cholestyramine, Colestipol) and aluminum hydroxide antacids bind UDCA and prevent absorption (separate by 2 hours). Estrogens and fibrates increase biliary cholesterol and counteract dissolution.",
+            packSize = "Strip of 10 film-coated tablets",
+            precautions = "Monitor liver enzyme panel (AST, ALT, GGT, Total Bilirubin) periodically every 4-8 weeks during initial treatment.",
+            ddaSchedule = "Schedule Ga (Prescription Medicine)",
+            nemlCategory = "Specialist Hepatology Formulary",
+            counselingNepali = "बिहान र बेलुका खानासँगै १-१ चक्की खानुहोस्। यसले कलेजोको बोसो घटाउन, पित्तको बहाव सहज बनाउन र कलेजोका कोषहरु बचाउन मद्दत गर्छ।",
+            counselingEnglish = "Take 1 tablet twice daily with meals. Improves bile flow and protects liver cells from damage in fatty liver and cholestasis."
+        )
+    )
+}

@@ -115,6 +115,9 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
             state.currentScreen == NavigationScreen.CALCULATOR && state.selectedCalculatorId != null -> {
                 viewModel.closeCalculator()
             }
+            state.currentScreen == NavigationScreen.SYSTEM && state.selectedSystemFilter != null -> {
+                viewModel.clearSystemFilter()
+            }
             state.currentScreen != NavigationScreen.SEARCH -> {
                 viewModel.navigateTo(NavigationScreen.SEARCH)
             }
@@ -633,9 +636,10 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                     )
 
                     NavigationScreen.SYSTEM -> SystemBrowseScreen(
-                        onSystemSelected = { systemName ->
-                            viewModel.filterBySystem(systemName)
-                        }
+                        state = state,
+                        viewModel = viewModel,
+                        onDrugClick = { drug -> viewModel.openDrug(drug) },
+                        onBookmarkToggle = { drugId -> viewModel.toggleBookmark(drugId) }
                     )
 
                     NavigationScreen.SAVED -> SavedScreen(

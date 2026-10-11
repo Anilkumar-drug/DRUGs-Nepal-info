@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.AclsCardiacSocietyChartSection
 import com.example.ui.theme.*
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -1375,6 +1376,11 @@ private fun ResuscitationProtocolsSection(
                                 color = Color(0xFFFCA5A5),
                                 lineHeight = 15.sp
                             )
+                        }
+
+                        if (activeProtocol.title.contains("ACLS", ignoreCase = true)) {
+                            Divider(color = Color(0xFF334155))
+                            AclsCardiacSocietyChartSection()
                         }
                     }
                 }

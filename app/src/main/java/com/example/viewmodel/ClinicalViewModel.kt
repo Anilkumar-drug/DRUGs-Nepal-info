@@ -212,7 +212,7 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
     )
 
     private val indexedDrugs: List<IndexedDrug> by lazy {
-        ClinicalRepository.drugs.map { drug ->
+        ClinicalRepository.drugs.sortedBy { it.genericName.trim().lowercase() }.map { drug ->
             val nepBrands = drug.brandsNepal.joinToString(" ") { 
                 "${it.name} ${it.company} ${it.form} ${it.strength} ${it.name.replace("-", " ")}"
             }
@@ -528,10 +528,27 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
         )
         _uiState.update {
             it.copy(
-                currentScreen = NavigationScreen.SEARCH,
+                currentScreen = NavigationScreen.SYSTEM,
                 selectedSystemFilter = sysFilter,
                 activeFilter = DrugFilterType.ALL,
                 searchQuery = "",
+                filteredDrugs = filtered
+            )
+        }
+    }
+
+    fun clearSystemFilter() {
+        val current = _uiState.value
+        val filtered = filterDrugs(
+            searchQuery = current.searchQuery,
+            searchMode = current.searchMode,
+            activeFilter = current.activeFilter,
+            selectedSystemFilter = null,
+            bookmarkedDrugIds = current.bookmarkedDrugIds
+        )
+        _uiState.update {
+            it.copy(
+                selectedSystemFilter = null,
                 filteredDrugs = filtered
             )
         }
@@ -1257,11 +1274,25 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
             .replace("solian", "amisulpride")
             .replace("famocid", "famotidine")
             .replace("pepcid", "famotidine")
+            .replace("vonopran", "vonoprazan")
+            .replace("vonapran", "vonoprazan")
+            .replace("vonopraz", "vonoprazan")
+            .replace("pcab", "vonoprazan")
+            .replace("p-cab", "vonoprazan")
             .replace("norflox", "norfloxacin")
             .replace("fasigyn", "tinidazole")
             .replace("tiniba", "tinidazole")
             .replace("pexep", "paroxetine")
             .replace("paxil", "paroxetine")
+            .replace("qulipta", "atogepant")
+            .replace("ibsrela", "tenapanor")
+            .replace("xphozah", "tenapanor")
+            .replace("veozah", "fezolinetant")
+            .replace("preganor", "pregabalin")
+            .replace("gabamax", "pregabalin")
+            .replace("pregabid", "pregabalin")
+            .replace("rabicip", "rabeprazole")
+            .replace("veloz", "rabeprazole")
             // Popular Nepal brand & colloquial abbreviations
             .replace("pcm", "paracetamol")
             .replace("cetmol", "paracetamol")
@@ -1383,7 +1414,7 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
             return false
         }
 
-        return indexedDrugs.asSequence().filter { item ->
+        val results = indexedDrugs.asSequence().filter { item ->
             val drug = item.drug
 
             val matchesFilter = when (activeFilter) {
@@ -1435,8 +1466,16 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
             }
             if (!matchesFilter) return@filter false
 
-            val matchesSystem = if (selectedSystemFilter == null) true else {
-                drug.system.equals(selectedSystemFilter, ignoreCase = true)
+            val matchesSystem = if (selectedSystemFilter == null || q.isNotBlank()) true else {
+                val sysKey = selectedSystemFilter.lowercase()
+                val dSys = drug.system.lowercase()
+                dSys.equals(sysKey, ignoreCase = true) ||
+                dSys.contains(sysKey) || sysKey.contains(dSys) ||
+                (sysKey.contains("gastro") && (dSys.contains("gastro") || dSys.contains("git") || dSys.contains("gis") || dSys.contains("hepat"))) ||
+                (sysKey.contains("cardio") && (dSys.contains("cardio") || dSys.contains("cvs"))) ||
+                (sysKey.contains("neuro") && (dSys.contains("neuro") || dSys.contains("cns") || dSys.contains("psych"))) ||
+                (sysKey.contains("respirat") && (dSys.contains("respirat") || dSys.contains("rs") || dSys.contains("pulmon"))) ||
+                (sysKey.contains("infect") && (dSys.contains("infect") || dSys.contains("antimicrob") || dSys.contains("antibiot")))
             }
             if (!matchesSystem) return@filter false
 
@@ -1449,5 +1488,20 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
                 SearchMode.HERBAL -> item.allIndex.matchesQuery()
             }
         }.map { it.drug }.toList()
+
+        return if (q.isBlank()) {
+            results.sortedBy { it.genericName.trim().lowercase() }
+        } else {
+            results.sortedWith(
+                compareBy<Drug> { drug ->
+                    val g = drug.genericName.trim().lowercase()
+                    if (g == q) 0
+                    else if (g.startsWith(q)) 1
+                    else if (drug.brandsNepal.any { it.name.trim().lowercase().startsWith(q) } ||
+                             drug.brandsIndia.any { it.name.trim().lowercase().startsWith(q) }) 2
+                    else 3
+                }.thenBy { it.genericName.trim().lowercase() }
+            )
+        }
     }
 }

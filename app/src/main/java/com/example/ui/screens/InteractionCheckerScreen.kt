@@ -1440,7 +1440,7 @@ private fun DrugPickerModal(
                 drug.brandsIndia.any { b -> b.name.lowercase().contains(q) } ||
                 drug.drugClass.lowercase().contains(q)
             matchSystem && matchQuery
-        }
+        }.sortedBy { it.genericName.trim().lowercase() }
     }
 
     AlertDialog(
