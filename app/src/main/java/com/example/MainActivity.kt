@@ -44,6 +44,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -198,10 +199,33 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                     NavigationScreen.RENAL_ADJUSTER,
                     NavigationScreen.ANTIMICROBIAL_STEWARDSHIP,
                     NavigationScreen.COMPANIES,
-                    NavigationScreen.MEDICAL_NEWS
+                    NavigationScreen.MEDICAL_NEWS,
+                    NavigationScreen.DRUG_ALARM_REMINDER
                 )
 
                 if (!isDedicatedScreen) {
+                    val infiniteTransition = rememberInfiniteTransition(label = "taskbarInfiniteAnimations")
+
+                    // Top Bar Icon Animations:
+                    val sparkleRotation by infiniteTransition.animateFloat(
+                        initialValue = -12f,
+                        targetValue = 12f,
+                        animationSpec = infiniteRepeatable(tween(1400, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+                        label = "sparkleRot"
+                    )
+                    val copilotGlowScale by infiniteTransition.animateFloat(
+                        initialValue = 0.98f,
+                        targetValue = 1.05f,
+                        animationSpec = infiniteRepeatable(tween(1200, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+                        label = "copilotGlow"
+                    )
+                    val bellSwingAngle by infiniteTransition.animateFloat(
+                        initialValue = -14f,
+                        targetValue = 14f,
+                        animationSpec = infiniteRepeatable(tween(900, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+                        label = "bellSwing"
+                    )
+
                     val topBarBg by animateColorAsState(
                         targetValue = when (state.themeMode) {
                             AppThemeMode.PITCH_BLACK -> Color.Black
@@ -222,15 +246,20 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                                .padding(horizontal = 6.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            // Three-Dot Sidebar Button (Left) - Animated teal pulse
+                            // Three-Dot Sidebar Button (Left) - Animated teal pulse & rotation
                             val sidebarScale by animateFloatAsState(
                                 targetValue = if (state.isSidebarOpen) 0.88f else 1f,
-                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow),
                                 label = "sidebarScale"
+                            )
+                            val sidebarRotation by animateFloatAsState(
+                                targetValue = if (state.isSidebarOpen) 90f else 0f,
+                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                label = "sidebarRot"
                             )
                             Surface(
                                 onClick = { viewModel.openSidebar() },
@@ -247,7 +276,9 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                         imageVector = Icons.Default.MoreVert,
                                         contentDescription = "Open Sidebar Navigation Menu",
                                         tint = DimsTealPrimary,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .graphicsLayer { rotationZ = sidebarRotation }
                                     )
                                 }
                             }
@@ -257,6 +288,11 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                             val searchPillBorderColor by animateColorAsState(
                                 targetValue = if (isSearchActive) MedicalBlue400 else NavyCardBorder,
                                 label = "searchPillBorder"
+                            )
+                            val searchIconScale by animateFloatAsState(
+                                targetValue = if (isSearchActive) 1.15f else 1f,
+                                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                                label = "searchIconScale"
                             )
                             Surface(
                                 shape = RoundedCornerShape(22.dp),
@@ -270,15 +306,17 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(start = 12.dp, end = 6.dp),
+                                        .padding(start = 10.dp, end = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Search,
                                         contentDescription = "Search",
                                         tint = if (isSearchActive) MedicalBlue400 else Slate400,
-                                        modifier = Modifier.size(18.dp)
+                                        modifier = Modifier
+                                            .size(18.dp)
+                                            .scale(searchIconScale)
                                     )
 
                                     BasicTextField(
@@ -305,16 +343,21 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                             viewModel.navigateTo(NavigationScreen.SEARCH)
                                         }),
                                         decorationBox = { innerTextField ->
-                                            if (state.searchQuery.isEmpty()) {
-                                                Text(
-                                                    text = "Search drugs, protocols, calculators...",
-                                                    fontSize = 12.sp,
-                                                    color = Slate400,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis
-                                                )
+                                            Box(
+                                                contentAlignment = Alignment.CenterStart,
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                if (state.searchQuery.isEmpty()) {
+                                                    Text(
+                                                        text = "Search drugs, protocols, calculators...",
+                                                        fontSize = 11.5.sp,
+                                                        color = Slate400,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
+                                                innerTextField()
                                             }
-                                            innerTextField()
                                         },
                                         modifier = Modifier
                                             .weight(1f)
@@ -324,7 +367,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                     if (state.searchQuery.isNotBlank()) {
                                         IconButton(
                                             onClick = { viewModel.updateSearchQuery("") },
-                                            modifier = Modifier.size(26.dp)
+                                            modifier = Modifier.size(24.dp)
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.Close,
@@ -340,7 +383,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                             viewModel.updateSearchQuery(spoken)
                                             viewModel.navigateTo(NavigationScreen.SEARCH)
                                         },
-                                        size = 32.dp,
+                                        size = 30.dp,
                                         idleColor = MedicalBlue400,
                                         activeColor = Red500,
                                         testTag = "top_bar_voice_search_button"
@@ -348,7 +391,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                 }
                             }
 
-                            // Brand vs Generic Switch Button (With animated bounce and color transitions)
+                            // Brand vs Generic Switch Button (With animated bounce and flip micro-interactions)
                             val isBrand = state.searchMode == SearchMode.BRAND
                             val isGeneric = state.searchMode == SearchMode.GENERIC
                             val brandBtnScale by animateFloatAsState(
@@ -391,7 +434,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                    modifier = Modifier.padding(horizontal = 7.dp)
                                 ) {
                                     Icon(
                                         imageVector = if (isGeneric) Icons.Default.Science else Icons.Default.Medication,
@@ -408,7 +451,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                 }
                             }
 
-                            // AI Copilot Button beside Brand/Generic Switch in Above Taskbar
+                            // AI Copilot Button beside Brand/Generic Switch in Above Taskbar (Animated with continuous sparkle & breathing)
                             val isAiActive = state.currentScreen == NavigationScreen.GEMINI
                             val aiBtnBgColor by animateColorAsState(
                                 targetValue = if (isAiActive) SparkleViolet.copy(alpha = 0.35f) else SparkleViolet.copy(alpha = 0.15f),
@@ -427,18 +470,21 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                 border = BorderStroke(1.2.dp, aiBtnBorderColor),
                                 modifier = Modifier
                                     .height(38.dp)
+                                    .scale(if (isAiActive) copilotGlowScale else 1f)
                                     .testTag("top_ai_copilot_button")
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                    modifier = Modifier.padding(horizontal = 7.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.AutoAwesome,
                                         contentDescription = "AI Copilot",
                                         tint = if (isAiActive) Color(0xFFE9D5FF) else Color(0xFFC084FC),
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .graphicsLayer { rotationZ = sparkleRotation }
                                     )
                                     Text(
                                         text = "Copilot",
@@ -446,6 +492,56 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                         fontWeight = FontWeight.Bold,
                                         color = if (isAiActive) Color(0xFFE9D5FF) else Color(0xFFC084FC)
                                     )
+                                }
+                            }
+
+                            // Quick Drug Alarm Bell Icon in Above Taskbar
+                            val hasActiveAlarms = state.drugAlarms.any { it.isEnabled }
+                            val isAlarmActive = state.currentScreen == NavigationScreen.DRUG_ALARM_REMINDER
+                            val alarmScale by animateFloatAsState(
+                                targetValue = if (isAlarmActive) 1.08f else 1f,
+                                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                                label = "alarmScale"
+                            )
+                            Surface(
+                                onClick = { viewModel.navigateTo(NavigationScreen.DRUG_ALARM_REMINDER) },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isAlarmActive) Color(0xFFF43F5E).copy(alpha = 0.35f)
+                                        else if (hasActiveAlarms) Color(0xFFF43F5E).copy(alpha = 0.15f)
+                                        else NavyPill,
+                                border = BorderStroke(
+                                    1.2.dp,
+                                    if (isAlarmActive) Color(0xFFF43F5E)
+                                    else if (hasActiveAlarms) Color(0xFFFB7185).copy(alpha = 0.8f)
+                                    else NavyCardBorder
+                                ),
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .scale(alarmScale)
+                                    .testTag("top_alarm_reminder_button")
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = if (hasActiveAlarms) Icons.Default.NotificationsActive else Icons.Default.Alarm,
+                                        contentDescription = "Drug Dose Alarm & Reminders",
+                                        tint = if (isAlarmActive || hasActiveAlarms) Color(0xFFFB7185) else Slate400,
+                                        modifier = Modifier
+                                            .size(18.dp)
+                                            .graphicsLayer {
+                                                if (hasActiveAlarms || state.isAlarmRinging) {
+                                                    rotationZ = bellSwingAngle
+                                                }
+                                            }
+                                    )
+                                    if (state.drugAlarms.isNotEmpty()) {
+                                        Box(
+                                            modifier = Modifier
+                                                .align(Alignment.TopEnd)
+                                                .padding(top = 4.dp, end = 4.dp)
+                                                .size(7.dp)
+                                                .background(Color(0xFFF43F5E), CircleShape)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -481,12 +577,25 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                             navItems.forEach { item ->
                                 val isSelected = state.currentScreen == item.screen
                                 val iconScale by animateFloatAsState(
-                                    targetValue = if (isSelected) 1.18f else 1f,
+                                    targetValue = if (isSelected) 1.22f else 1f,
                                     animationSpec = spring(
                                         dampingRatio = Spring.DampingRatioMediumBouncy,
                                         stiffness = Spring.StiffnessMediumLow
                                     ),
                                     label = "navIconScale"
+                                )
+                                val iconOffset by animateDpAsState(
+                                    targetValue = if (isSelected) (-3.5).dp else 0.dp,
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessLow
+                                    ),
+                                    label = "navIconOffset"
+                                )
+                                val iconTilt by animateFloatAsState(
+                                    targetValue = if (isSelected) 0f else -3f,
+                                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                                    label = "navIconTilt"
                                 )
                                 val iconColor by animateColorAsState(
                                     targetValue = if (isSelected) item.activeColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
@@ -515,8 +624,18 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                     icon = {
                                         Box(
                                             contentAlignment = Alignment.Center,
-                                            modifier = Modifier.scale(iconScale)
+                                            modifier = Modifier
+                                                .offset(y = iconOffset)
+                                                .scale(iconScale)
+                                                .graphicsLayer { rotationZ = iconTilt }
                                         ) {
+                                            if (isSelected) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(34.dp)
+                                                        .background(item.activeColor.copy(alpha = 0.16f), CircleShape)
+                                                )
+                                            }
                                             Icon(
                                                 imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
                                                 contentDescription = item.label,
@@ -526,14 +645,26 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                         }
                                     },
                                     label = {
-                                        Text(
-                                            text = item.label,
-                                            fontSize = 10.sp,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) item.activeColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
+                                            Text(
+                                                text = item.label,
+                                                fontSize = 10.sp,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                color = if (isSelected) item.activeColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            if (isSelected) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(4.dp)
+                                                        .background(item.activeColor, CircleShape)
+                                                )
+                                            }
+                                        }
                                     },
                                     colors = NavigationBarItemDefaults.colors(
                                         selectedIconColor = item.activeColor,
@@ -754,6 +885,12 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                     NavigationScreen.BLOOD_TRANSFUSION -> BloodTransfusionProtocolsScreen(
                         onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
                     )
+
+                    NavigationScreen.DRUG_ALARM_REMINDER -> DrugAlarmReminderScreen(
+                        state = state,
+                        viewModel = viewModel,
+                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                    )
                 }
             }
 
@@ -894,6 +1031,10 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
         onBloodTransfusionClick = {
             viewModel.closeSidebar()
             viewModel.navigateTo(NavigationScreen.BLOOD_TRANSFUSION)
+        },
+        onDrugReminderClick = {
+            viewModel.closeSidebar()
+            viewModel.navigateTo(NavigationScreen.DRUG_ALARM_REMINDER)
         },
         onInteractionsClick = {
             viewModel.closeSidebar()

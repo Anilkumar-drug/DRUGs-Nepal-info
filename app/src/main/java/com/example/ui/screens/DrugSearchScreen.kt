@@ -184,47 +184,74 @@ fun DrugSearchScreen(
 
             // Global Search Scope & Results Indicator (shown when actively searching)
             Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = DimsTealPrimary.copy(alpha = 0.08f),
-                border = BorderStroke(1.dp, DimsTealPrimary.copy(alpha = 0.25f)),
+                shape = RoundedCornerShape(12.dp),
+                color = DimsTealPrimary.copy(alpha = 0.10f),
+                border = BorderStroke(1.dp, DimsTealPrimary.copy(alpha = 0.35f)),
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("global_search_scope_indicator")
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(
+                        modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = null,
                             tint = DimsTealPrimary,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(16.dp)
                         )
-                        Text(
-                            text = "Search Results",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = DimsTealPrimary
-                        )
+                        Column {
+                            Text(
+                                text = "Searching: \"$searchQuery\"",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = DimsTealPrimary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = "Filtered across Drugs, Brands, Indications & Protocols",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
 
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = DimsTealPrimary.copy(alpha = 0.2f)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text(
-                            text = "$totalMatches found",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = DimsTealPrimary,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = DimsTealPrimary.copy(alpha = 0.25f)
+                        ) {
+                            Text(
+                                text = "$totalMatches found",
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = DimsTealPrimary,
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { onSearchChange("") },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear Search",
+                                tint = DimsTealPrimary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
                     }
                 }
             }

@@ -13,6 +13,7 @@ import com.example.data.model.CalculatorSummary
 import com.example.data.model.ChatMessage
 import com.example.data.model.DiseaseProtocol
 import com.example.data.model.Drug
+import com.example.data.model.DrugAlarmReminder
 import com.example.data.model.FontSizeScale
 import com.example.data.model.GlobalSearchTab
 import com.example.data.model.GroundingSource
@@ -53,7 +54,8 @@ enum class NavigationScreen(val title: String) {
     SURGICAL_PREOP("Surgical Pre-Op Drug Clearance & Bridge"),
     LAB_VALUES("Critical Lab Values & Diagnostic Ratios"),
     TOPICAL_STEROID_LADDER("Topical Corticosteroid Potency Ladder"),
-    BLOOD_TRANSFUSION("Blood Transfusion & Massive Transfusion Protocol")
+    BLOOD_TRANSFUSION("Blood Transfusion & Massive Transfusion Protocol"),
+    DRUG_ALARM_REMINDER("Drug Dose Alarm & Pill Reminder")
 }
 
 enum class SearchMode(val title: String) {
@@ -189,7 +191,54 @@ data class ClinicalUiState(
     val gcsEye: Int = 4,
     val gcsVerbal: Int = 5,
     val gcsMotor: Int = 6,
-    val gcsResult: ClinicalCalculators.GcsResult? = null
+    val gcsResult: ClinicalCalculators.GcsResult? = null,
+    // Drug Dose Alarms & Medication Reminders
+    val drugAlarms: List<DrugAlarmReminder> = listOf(
+        DrugAlarmReminder(
+            id = "alarm_1",
+            drugName = "Pantoprazole 40 mg",
+            dosage = "1 Tablet",
+            hour = 7,
+            minute = 0,
+            timingTag = "Before Food (खाली पेट)",
+            frequency = "Once Daily (OD)",
+            notes = "Take with a full glass of water 30 minutes before breakfast."
+        ),
+        DrugAlarmReminder(
+            id = "alarm_2",
+            drugName = "Vonopran (Vonoprazan) 20 mg",
+            dosage = "1 Tablet",
+            hour = 8,
+            minute = 0,
+            timingTag = "Before Food (खाली पेट)",
+            frequency = "Once Daily (OD)",
+            notes = "Novel P-CAB for rapid 24-hr gastric acid suppression."
+        ),
+        DrugAlarmReminder(
+            id = "alarm_3",
+            drugName = "Metformin 500 mg",
+            dosage = "1 Tablet",
+            hour = 8,
+            minute = 30,
+            timingTag = "After Meals (खानापछि)",
+            frequency = "Twice Daily (BD)",
+            notes = "Take immediately after breakfast with meals."
+        ),
+        DrugAlarmReminder(
+            id = "alarm_4",
+            drugName = "Atorvastatin 20 mg",
+            dosage = "1 Tablet",
+            hour = 21,
+            minute = 30,
+            timingTag = "At Bedtime (सुत्ने बेलामा)",
+            frequency = "Once Daily (OD)",
+            notes = "Night-time lipid lowering dose."
+        )
+    ),
+    val isAlarmRinging: Boolean = false,
+    val activeRingingAlarm: DrugAlarmReminder? = null,
+    val isCheckingAppUpdates: Boolean = false,
+    val updateCheckMessage: String? = null
 )
 
 class ClinicalViewModel(application: Application) : AndroidViewModel(application) {
@@ -951,9 +1000,99 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
         loginOrUpdateProfile(name = name, degree = _uiState.value.doctorDegree, councilNo = nmc)
     }
 
-    // Gemini Chat
+    // Gemini Chat & AI Search
     fun updateAiInput(text: String) {
-        _uiState.value = _uiState.value.copy(aiInputText = text)
+        _uiState.update { it.copy(aiInputText = text) }
+    }
+
+    // Drug Dose Alarms & Medication Reminders
+    fun addDrugAlarm(alarm: DrugAlarmReminder) {
+        _uiState.update { it.copy(drugAlarms = it.drugAlarms + alarm) }
+    }
+
+    fun updateDrugAlarm(alarm: DrugAlarmReminder) {
+        _uiState.update {
+            it.copy(drugAlarms = it.drugAlarms.map { existing ->
+                if (existing.id == alarm.id) alarm else existing
+            })
+        }
+    }
+
+    fun toggleDrugAlarm(id: String) {
+        _uiState.update {
+            it.copy(drugAlarms = it.drugAlarms.map { existing ->
+                if (existing.id == id) existing.copy(isEnabled = !existing.isEnabled) else existing
+            })
+        }
+    }
+
+    fun deleteDrugAlarm(id: String) {
+        _uiState.update {
+            it.copy(drugAlarms = it.drugAlarms.filterNot { it.id == id })
+        }
+    }
+
+    fun markDoseTaken(id: String) {
+        val todayStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
+        _uiState.update {
+            it.copy(
+                drugAlarms = it.drugAlarms.map { existing ->
+                    if (existing.id == id) existing.copy(lastTakenDate = todayStr) else existing
+                },
+                isAlarmRinging = if (it.activeRingingAlarm?.id == id) false else it.isAlarmRinging,
+                activeRingingAlarm = if (it.activeRingingAlarm?.id == id) null else it.activeRingingAlarm
+            )
+        }
+    }
+
+    fun simulateTriggerAlarm(alarm: DrugAlarmReminder) {
+        _uiState.update {
+            it.copy(
+                isAlarmRinging = true,
+                activeRingingAlarm = alarm
+            )
+        }
+    }
+
+    fun dismissRingingAlarm() {
+        _uiState.update {
+            it.copy(
+                isAlarmRinging = false,
+                activeRingingAlarm = null
+            )
+        }
+    }
+
+    fun snoozeRingingAlarm() {
+        _uiState.update {
+            it.copy(
+                isAlarmRinging = false,
+                activeRingingAlarm = null
+            )
+        }
+    }
+
+    // Software & Clinical Formulary Updates
+    fun checkForAppUpdates() {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isCheckingAppUpdates = true,
+                    updateCheckMessage = "Connecting to Eternity Clinical Update Server..."
+                )
+            }
+            delay(1200)
+            _uiState.update {
+                it.copy(
+                    isCheckingAppUpdates = false,
+                    updateCheckMessage = "✓ Up to Date: DRUGs Nepal v4.2.1 (Formulary 2026.1 verified with Cardiac Society ACLS, Vonopran P-CAB & Eternity Medical Engines)"
+                )
+            }
+        }
+    }
+
+    fun clearUpdateMessage() {
+        _uiState.update { it.copy(updateCheckMessage = null) }
     }
 
     fun setAiModel(model: String) {

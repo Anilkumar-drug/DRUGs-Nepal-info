@@ -26,6 +26,7 @@ import com.example.data.model.FontSizeScale
 import com.example.ui.theme.*
 import com.example.viewmodel.ClinicalUiState
 import com.example.viewmodel.ClinicalViewModel
+import com.example.viewmodel.NavigationScreen
 
 @Composable
 fun SettingsScreen(
@@ -352,6 +353,383 @@ fun SettingsScreen(
             }
         }
 
+        // 8. Drug Dose Alarm & Medication Reminder Management (User Request)
+        val activeAlarmsCount = state.drugAlarms.count { it.isEnabled }
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("settings_drug_alarm_card"),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFF43F5E).copy(alpha = 0.5f))
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = Color(0xFFF43F5E).copy(alpha = 0.15f),
+                            modifier = Modifier.size(42.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Alarm,
+                                    contentDescription = "Drug Dose Alarm",
+                                    tint = Color(0xFFF43F5E),
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                        }
+                        Column {
+                            Text(
+                                text = "Alarm for Drugs Reminder",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = if (state.drugAlarms.isEmpty()) "No alarms set • Tap to schedule"
+                                else "${state.drugAlarms.size} scheduled (${activeAlarmsCount} active alarms)",
+                                fontSize = 11.5.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (activeAlarmsCount > 0) Color(0xFFF43F5E).copy(alpha = 0.15f) else Slate700.copy(alpha = 0.15f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, if (activeAlarmsCount > 0) Color(0xFFF43F5E) else Slate600)
+                    ) {
+                        Text(
+                            text = if (activeAlarmsCount > 0) "$activeAlarmsCount ACTIVE" else "IDLE",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = if (activeAlarmsCount > 0) Color(0xFFF43F5E) else Slate400,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+
+                Text(
+                    text = "Configure patient dosage alarms, daily drug timings (Before Food / After Food / Bedtime), sound alerts, and track medication compliance records.",
+                    fontSize = 11.5.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 16.sp
+                )
+
+                Button(
+                    onClick = { viewModel.navigateTo(NavigationScreen.DRUG_ALARM_REMINDER) },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF43F5E)),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("open_drug_alarms_button")
+                ) {
+                    Icon(imageVector = Icons.Default.AddAlarm, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Open Drug Dose Alarm & Reminder ⏰", fontSize = 12.5.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        // 9. Software & Formulary Update Option (User Request)
+        var autoUpdateEnabled by remember { mutableStateOf(true) }
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("app_updates_card"),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = androidx.compose.foundation.BorderStroke(1.2.dp, DimsTealPrimary.copy(alpha = 0.5f))
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = DimsTealPrimary.copy(alpha = 0.15f),
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.SystemUpdate,
+                                    contentDescription = "Update Option",
+                                    tint = DimsTealPrimary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                        Column {
+                            Text(
+                                text = "Update Option (Formulary & Guidelines)",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Current Version: v4.2.1 • Build 2026.3 • Eternity Release",
+                                fontSize = 11.5.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Emerald500.copy(alpha = 0.15f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Emerald400)
+                    ) {
+                        Text(
+                            text = "UP TO DATE",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Emerald400,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+
+                // Auto-update toggle row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Automatic Background Formulary Updates",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Seamlessly fetch latest Nepal brands, AHA ACLS protocols, and drug interactions.",
+                            fontSize = 10.5.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = autoUpdateEnabled,
+                        onCheckedChange = { autoUpdateEnabled = it },
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+
+                // Check for Updates action button
+                Button(
+                    onClick = { viewModel.checkForAppUpdates() },
+                    enabled = !state.isCheckingAppUpdates,
+                    colors = ButtonDefaults.buttonColors(containerColor = DimsTealPrimary),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("check_for_updates_button")
+                ) {
+                    if (state.isCheckingAppUpdates) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Checking Eternity Clinical Update Server...", fontSize = 12.5.sp, fontWeight = FontWeight.Bold)
+                    } else {
+                        Icon(imageVector = Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Check for Updates Now", fontSize = 12.5.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                // Update result message
+                state.updateCheckMessage?.let { msg ->
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = Emerald500.copy(alpha = 0.12f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Emerald400.copy(alpha = 0.5f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = Emerald400, modifier = Modifier.size(16.dp))
+                            Text(
+                                text = msg,
+                                fontSize = 11.5.sp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+
+                // Changelog summary
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "What's New in v4.2.1 (Eternity Medical Build):",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "• Added Developer: Eternity & Dedicated Update Option in Settings\n• Full Drug Dose Alarm & Medication Reminder System with audio/vibration alerts\n• Animated above and below taskbars with tactile spring physics\n• Fixed AI search live text input with real-time character typing feedback\n• Comprehensive AHA ACLS Cardiac Resuscitation algorithm & CPR Guide\n• Vonopran (Vonoprazan P-CAB) & High-Frequency Physician Prescriptions catalog",
+                            fontSize = 10.5.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
+            }
+        }
+
+        // 9. Developer: Eternity Card (User Request)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("developer_eternity_card"),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = androidx.compose.foundation.BorderStroke(1.2.dp, DimsTealPrimary.copy(alpha = 0.5f))
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = DimsTealPrimary,
+                            modifier = Modifier.size(46.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Terminal,
+                                    contentDescription = "Developer Eternity",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(
+                                    text = "Developer: Eternity",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = DimsTealPrimary.copy(alpha = 0.2f)
+                                ) {
+                                    Text(
+                                        text = "CORE ARCHITECT",
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = DimsTealPrimary,
+                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Text(
+                                text = "Clinical Informatics & Medical Systems Engineering",
+                                fontSize = 11.5.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                Text(
+                    text = "DRUGs Nepal is designed and engineered by Eternity for healthcare professionals, physicians, medical officers, and residents across Nepal. Incorporating national EDCD guidelines, American Heart Association ACLS algorithms, and real-time clinical pharmacology.",
+                    fontSize = 11.5.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 16.sp
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFF0F172A),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = Emerald400, modifier = Modifier.size(13.dp))
+                            Text("Eternity Clinical Engine", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Emerald400)
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFF0F172A),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(Icons.Default.Star, contentDescription = null, tint = Amber400, modifier = Modifier.size(13.dp))
+                            Text("Nepal Edition 2026", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Amber400)
+                        }
+                    }
+                }
+            }
+        }
+
         // App Version
         Row(
             modifier = Modifier
@@ -361,9 +739,10 @@ fun SettingsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "DRUGs Nepal v4.2.0 (Build 2026.1)",
+                text = "DRUGs Nepal v4.2.1 • Dev: Eternity",
                 style = MaterialTheme.typography.bodySmall,
                 fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Row(

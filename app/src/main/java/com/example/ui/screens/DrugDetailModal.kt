@@ -59,6 +59,7 @@ fun DrugDetailModal(
     onWeightChanged: (Double) -> Unit,
     onCheckInteractions: ((Drug) -> Unit)? = null,
     onConsultAi: ((Drug, String) -> Unit)? = null,
+    onSetAlarmReminder: ((Drug) -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current

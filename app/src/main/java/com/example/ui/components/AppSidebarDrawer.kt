@@ -111,6 +111,7 @@ fun AppSidebarDrawer(
     onLabValuesClick: () -> Unit = {},
     onSteroidLadderClick: () -> Unit = {},
     onBloodTransfusionClick: () -> Unit = {},
+    onDrugReminderClick: () -> Unit = {},
     onInteractionsClick: () -> Unit,
     onAntidotesClick: () -> Unit,
     onSettingsClick: () -> Unit
@@ -585,15 +586,28 @@ fun AppSidebarDrawer(
                                 testTag = "sidebar_saved_item"
                             )
 
-                            // 7. Drug Reminder & Interaction Checker
+                            // 7. Drug Dose Alarm & Pill Reminder (User Request)
                             SidebarItemCard(
-                                icon = Icons.Default.ElectricBolt,
+                                icon = Icons.Default.Alarm,
                                 iconColor = Color(0xFFF43F5E),
                                 iconBg = Color(0xFFF43F5E).copy(alpha = 0.15f),
-                                title = "DRUG REMINDER & ALARM",
-                                subtitle = "Medicine schedule, smart alarm & alerts",
+                                title = "DRUG DOSE ALARM & REMINDER",
+                                subtitle = "औषधि खाने समय, अलार्म र डोज रिमाइन्डर",
                                 badge = "ALARM",
                                 badgeColor = Color(0xFFF43F5E),
+                                onClick = onDrugReminderClick,
+                                testTag = "sidebar_drug_alarm_item"
+                            )
+
+                            // 8. Drug Interactions Checker
+                            SidebarItemCard(
+                                icon = Icons.Default.ElectricBolt,
+                                iconColor = Color(0xFF38BDF8),
+                                iconBg = Color(0xFF38BDF8).copy(alpha = 0.15f),
+                                title = "DRUG INTERACTIONS CHECKER",
+                                subtitle = "मल्टी-ड्रग अन्तरक्रिया र गम्भीरता जाँच",
+                                badge = "Interactions",
+                                badgeColor = Color(0xFF38BDF8),
                                 onClick = onInteractionsClick,
                                 testTag = "sidebar_interactions_item"
                             )

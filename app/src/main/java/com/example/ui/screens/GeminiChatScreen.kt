@@ -543,6 +543,50 @@ fun GeminiChatScreen(
             }
         }
 
+        // Live Typed Query Preview (Ensures immediate visible feedback on typing any drug)
+        AnimatedVisibility(visible = state.aiInputText.isNotBlank()) {
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = Indigo950.copy(alpha = 0.6f),
+                border = BorderStroke(1.dp, Indigo500.copy(alpha = 0.5f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.EditNote,
+                            contentDescription = null,
+                            tint = Color(0xFFC084FC),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "Typing: \"${state.aiInputText}\"",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    Text(
+                        text = "${state.aiInputText.length} letters",
+                        fontSize = 10.sp,
+                        color = Color(0xFF94A3B8)
+                    )
+                }
+            }
+        }
+
         // Input Bar with Direct "Search in App" and "Search Google in Chrome" Buttons
         Row(
             modifier = Modifier
@@ -554,17 +598,42 @@ fun GeminiChatScreen(
             OutlinedTextField(
                 value = state.aiInputText,
                 onValueChange = { viewModel.updateAiInput(it) },
-                placeholder = { Text("Ask any disease, drug, dose...", fontSize = 12.5.sp) },
+                placeholder = { Text("Ask any disease, drug, dose...", fontSize = 12.5.sp, color = Slate400) },
                 modifier = Modifier
                     .weight(1f)
                     .testTag("gemini_chat_input"),
                 shape = RoundedCornerShape(18.dp),
+                textStyle = androidx.compose.ui.text.TextStyle(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 13.5.sp,
+                    fontWeight = FontWeight.Medium
+                ),
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    cursorColor = Indigo500,
                     focusedBorderColor = Indigo500,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    focusedPlaceholderColor = Slate400,
+                    unfocusedPlaceholderColor = Slate400
                 ),
+                trailingIcon = if (state.aiInputText.isNotBlank()) {
+                    {
+                        IconButton(
+                            onClick = { viewModel.updateAiInput("") },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear",
+                                tint = Slate400,
+                                modifier = Modifier.size(15.dp)
+                            )
+                        }
+                    }
+                } else null,
                 maxLines = 3,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                 keyboardActions = KeyboardActions(onSend = {
