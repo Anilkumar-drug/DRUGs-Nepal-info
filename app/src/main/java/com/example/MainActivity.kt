@@ -120,7 +120,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                 viewModel.clearSystemFilter()
             }
             state.currentScreen != NavigationScreen.SEARCH -> {
-                viewModel.navigateTo(NavigationScreen.SEARCH)
+                viewModel.navigateBack()
             }
             else -> {
                 val currentTime = System.currentTimeMillis()
@@ -871,25 +871,25 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                     )
 
                     NavigationScreen.SURGICAL_PREOP -> SurgicalPreOpScreen(
-                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                        onBackClick = { viewModel.navigateBack() }
                     )
 
                     NavigationScreen.LAB_VALUES -> LabValuesReferenceScreen(
-                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                        onBackClick = { viewModel.navigateBack() }
                     )
 
                     NavigationScreen.TOPICAL_STEROID_LADDER -> TopicalSteroidLadderScreen(
-                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                        onBackClick = { viewModel.navigateBack() }
                     )
 
                     NavigationScreen.BLOOD_TRANSFUSION -> BloodTransfusionProtocolsScreen(
-                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                        onBackClick = { viewModel.navigateBack() }
                     )
 
                     NavigationScreen.DRUG_ALARM_REMINDER -> DrugAlarmReminderScreen(
                         state = state,
                         viewModel = viewModel,
-                        onBackClick = { viewModel.navigateTo(NavigationScreen.SEARCH) }
+                        onBackClick = { viewModel.navigateBack() }
                     )
                 }
             }

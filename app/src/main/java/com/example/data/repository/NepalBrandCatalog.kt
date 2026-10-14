@@ -945,20 +945,34 @@ object NepalBrandCatalog {
             )
         ),
 
-        // 55. Loperamide / ORS
+        // 55. Loperamide
         BrandEnrichment(
             genericKey = "loperamide",
             nepalBrands = listOf(
                 BrandInfo("Lopam-DJPL", "Deurali-Janta Pharmaceuticals", "Capsule", "2 mg"),
                 BrandInfo("Lopan-NPL", "Nepal Pharmaceuticals Lab", "Capsule", "2 mg"),
-                BrandInfo("Jeevan Jal ORS", "Nepal Aushadhi Limited", "Sachet", "WHO Formula 20.5g"),
-                BrandInfo("Nava Jeevan ORS", "Deurali-Janta Pharmaceuticals", "Sachet", "WHO Low Osmolarity 20.5g")
+                BrandInfo("Lomid", "Asian Pharmaceuticals", "Capsule", "2 mg")
             ),
             importedBrands = listOf(
                 BrandInfo("Lopamide", "Torrent Pharmaceuticals", "Tablet", "2 mg"),
                 BrandInfo("Imodium", "Johnson & Johnson", "Capsule", "2 mg"),
-                BrandInfo("Eldoper", "Micro Labs", "Capsule", "2 mg"),
-                BrandInfo("Electral ORS", "FDC Ltd.", "Sachet", "WHO Formula 21.8g")
+                BrandInfo("Eldoper", "Micro Labs", "Capsule", "2 mg")
+            )
+        ),
+
+        // 55b. Oral Rehydration Salts (ORS / Jeevan Jal)
+        BrandEnrichment(
+            genericKey = "oral rehydration salts",
+            nepalBrands = listOf(
+                BrandInfo("Jeevan Jal ORS", "Nepal Aushadhi Limited / MoHP", "Sachet", "WHO Low Osmolarity 20.5g for 1L"),
+                BrandInfo("Nava Jeevan ORS", "Nepal Pharmaceuticals Lab", "Sachet", "WHO Low Osmolarity 20.5g for 1L"),
+                BrandInfo("ORS-Quest", "Quest Pharmaceuticals", "Sachet", "WHO Formula 20.5g for 1L"),
+                BrandInfo("Electrobion", "Procter & Gamble Nepal", "Sachet", "21.8g for 1L")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Electral ORS", "FDC Ltd.", "Sachet", "WHO Formula 21.8g for 1L"),
+                BrandInfo("Walyte", "Cipla Ltd.", "Sachet", "20.5g for 1L"),
+                BrandInfo("Pocari Sweat", "Otsuka", "Drink / Powder", "Electrolyte Solution")
             )
         ),
 
@@ -1691,6 +1705,377 @@ object NepalBrandCatalog {
                 BrandInfo("Razo-L", "Dr. Reddy's", "Capsule SR", "20 mg + 75 mg"),
                 BrandInfo("Rabekind-Plus", "Mankind Pharma", "Capsule SR", "20 mg + 75 mg"),
                 BrandInfo("Happi-L", "Zydus Lifesciences", "Capsule SR", "20 mg + 75 mg")
+            )
+        ),
+
+        // 101. Etofylline + Theophylline (Deriphyllin)
+        BrandEnrichment(
+            genericKey = "etofylline",
+            nepalBrands = listOf(
+                BrandInfo("Deriphyllin", "Zydus Nepal", "Tablet / Injection", "150mg / 300mg / 2mL Amp"),
+                BrandInfo("Deriphyll-NPL", "Nepal Pharmaceuticals Lab", "Tablet", "150 mg / 300 mg"),
+                BrandInfo("Bronchophylline", "Deurali-Janta Pharmaceuticals", "Tablet", "150 mg / 300 mg"),
+                BrandInfo("Theofed", "Lomus Pharmaceuticals", "Tablet", "150 mg / 300 mg"),
+                BrandInfo("Asthmaphylline", "Quest Pharmaceuticals", "Tablet", "300 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Deriphyllin", "Zydus Healthcare", "Tablet / Injection", "150 mg / 300 mg Retard / 2mL"),
+                BrandInfo("Deriphyllin-OD", "Zydus Healthcare", "Tablet CR", "300 mg / 450 mg"),
+                BrandInfo("Theo-Asthalin", "Cipla Ltd.", "Tablet", "Theophylline + Salbutamol")
+            )
+        ),
+
+        // 102. Anti-Rabies Vaccine
+        BrandEnrichment(
+            genericKey = "rabies vaccine",
+            nepalBrands = listOf(
+                BrandInfo("Rabipur", "Chiron Behring / GSK Nepal", "Vial + Diluent (PCECV)", "≥2.5 IU / mL"),
+                BrandInfo("Abhayrab", "Indian Immunologicals / Nepal", "Vial + Diluent (PVRV)", "≥2.5 IU / 0.5 mL"),
+                BrandInfo("Verorab", "Sanofi Pasteur Nepal", "Vial + Diluent (PVRV)", "≥2.5 IU / 0.5 mL"),
+                BrandInfo("Vaxirab N", "Zydus Lifesciences Nepal", "Vial + Diluent (PCECV)", "≥2.5 IU / 1.0 mL"),
+                BrandInfo("Indirab", "Bharat Serums & Vaccines Nepal", "Vial + Diluent (PVRV)", "≥2.5 IU / 0.5 mL")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Rabipur", "Chiron Behring Vaccines", "Vial + Sterile Water", "≥2.5 IU"),
+                BrandInfo("Abhayrab", "Indian Immunologicals Ltd.", "Vial + Diluent", "≥2.5 IU"),
+                BrandInfo("Verorab", "Sanofi Healthcare India", "Vial + Diluent", "≥2.5 IU")
+            )
+        ),
+
+        // 103. Japanese Encephalitis Vaccine
+        BrandEnrichment(
+            genericKey = "japanese encephalitis",
+            nepalBrands = listOf(
+                BrandInfo("CD.JEVAX", "Chengdu Institute / Nepal MoHP NIP", "Vial + Diluent (Live Attenuated SA 14-14-2)", "0.5 mL"),
+                BrandInfo("Imojev", "Sanofi Pasteur Nepal", "Vial + Diluent (Recombinant Live)", "0.5 mL"),
+                BrandInfo("JENVAC", "Bharat Biotech Nepal", "Vial (Inactivated)", "0.5 mL")
+            ),
+            importedBrands = listOf(
+                BrandInfo("JENVAC", "Bharat Biotech International", "Single dose vial", "0.5 mL"),
+                BrandInfo("CD.JEVAX", "Chengdu Biological / Biological E", "Vial + Diluent", "0.5 mL"),
+                BrandInfo("Imojev", "Sanofi India", "Prefilled syringe", "0.5 mL")
+            )
+        ),
+
+        // 104. Typhoid Conjugate Vaccine (TCV)
+        BrandEnrichment(
+            genericKey = "typhoid conjugate",
+            nepalBrands = listOf(
+                BrandInfo("Typbar-TCV", "Bharat Biotech / Nepal MoHP EPI", "Single-dose vial", "25 mcg Vi polysaccharide / 0.5 mL"),
+                BrandInfo("Zyvac-TCV", "Zydus Lifesciences Nepal", "Single-dose vial", "25 mcg / 0.5 mL"),
+                BrandInfo("Typhevax", "Biological E Nepal", "Single-dose vial", "25 mcg / 0.5 mL")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Typbar-TCV", "Bharat Biotech International", "Single dose vial / PFS", "25 mcg Vi polysaccharide"),
+                BrandInfo("PedaTyph", "Bio-Med", "Vial", "5 mcg Vi conjugate"),
+                BrandInfo("Typhevax", "Biological E Ltd.", "Vial", "25 mcg")
+            )
+        ),
+
+        // 105. Isoxsuprine
+        BrandEnrichment(
+            genericKey = "isoxsuprine",
+            nepalBrands = listOf(
+                BrandInfo("Duvadilan", "Abbott Nepal", "Tablet / Injection", "10 mg / 40 mg SR / 2 mL Amp"),
+                BrandInfo("Suprine", "Quest Pharmaceuticals", "Tablet", "10 mg / 40 mg SR"),
+                BrandInfo("Tidilan", "Deurali-Janta Pharmaceuticals", "Tablet", "10 mg / 20 mg"),
+                BrandInfo("Isox-NPL", "Nepal Pharmaceuticals Lab", "Tablet", "10 mg / 40 mg SR"),
+                BrandInfo("Gestaprine", "Asian Pharmaceuticals", "Tablet", "10 mg / 40 mg SR")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Duvadilan", "Abbott Healthcare", "Tablet / Injection", "10 mg / 40 mg Retard / 10mg Inj"),
+                BrandInfo("Tidilan", "Sun Pharma", "Tablet", "10 mg / 20 mg / 40 mg Retard"),
+                BrandInfo("Supradyl", "Mankind Pharma", "Tablet", "40 mg SR")
+            )
+        ),
+
+        // 106. Amorolfine
+        BrandEnrichment(
+            genericKey = "amorolfine",
+            nepalBrands = listOf(
+                BrandInfo("Loceryl 5% Lacquer", "Galderma / Nepal", "Nail Lacquer", "5% w/v (5 mL)"),
+                BrandInfo("Amorolf", "Asian Pharmaceuticals", "Nail Lacquer / Cream", "5% Lacquer / 0.25% Cream"),
+                BrandInfo("Fungicros", "Sun Pharma Nepal", "Nail Lacquer / Cream", "5% Lacquer / 0.25% Cream"),
+                BrandInfo("Arolf", "Quest Pharmaceuticals", "Nail Lacquer", "5% w/v (5 mL)"),
+                BrandInfo("Amorderm", "National Healthcare", "Cream", "0.25% w/w (20g)")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Loceryl", "Galderma India", "Nail Lacquer Kit", "5% w/v"),
+                BrandInfo("Fungicros", "Sun Pharma", "Nail Lacquer / Cream", "5% / 0.25%"),
+                BrandInfo("Amrolmac", "Macleods", "Nail Lacquer", "5% w/v")
+            )
+        ),
+
+        // 107. Rabeprazole + Domperidone
+        BrandEnrichment(
+            genericKey = "rabeprazole sodium + domperidone",
+            nepalBrands = listOf(
+                BrandInfo("Razo-D", "Dr. Reddy's Nepal", "Capsule SR", "20 mg + 30 mg"),
+                BrandInfo("Rabekind-D", "Mankind Nepal", "Capsule SR", "20 mg + 30 mg"),
+                BrandInfo("Cyra-D", "Systopic Nepal", "Capsule SR", "20 mg + 30 mg"),
+                BrandInfo("Rabicer-D", "Deurali-Janta Pharmaceuticals", "Capsule SR", "20 mg + 30 mg"),
+                BrandInfo("Robikem-D", "Alkem Nepal", "Capsule SR", "20 mg + 30 mg"),
+                BrandInfo("Rabep-D", "Nepal Pharmaceuticals Lab", "Capsule SR", "20 mg + 30 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Razo-D", "Dr. Reddy's Laboratories", "Capsule SR", "20 mg + 30 mg"),
+                BrandInfo("Rabicip-D", "Cipla Ltd.", "Capsule SR", "20 mg + 30 mg"),
+                BrandInfo("Cyra-D", "Systopic Laboratories", "Capsule SR", "20 mg + 30 mg"),
+                BrandInfo("Rablet-D", "Lupin Ltd.", "Capsule SR", "20 mg + 30 mg")
+            )
+        ),
+
+        // 108. Esomeprazole + Domperidone
+        BrandEnrichment(
+            genericKey = "esomeprazole + domperidone",
+            nepalBrands = listOf(
+                BrandInfo("Esomac-D", "Cipla Nepal", "Capsule SR", "40 mg + 30 mg"),
+                BrandInfo("Nexpro-RD", "Torrent Nepal", "Capsule SR", "40 mg + 30 mg"),
+                BrandInfo("Sompraz-D", "Sun Pharma Nepal", "Capsule SR", "40 mg + 30 mg"),
+                BrandInfo("Esoz-D", "Glenmark Nepal", "Capsule SR", "40 mg + 30 mg"),
+                BrandInfo("Esofag-D", "Deurali-Janta Pharmaceuticals", "Capsule SR", "40 mg + 30 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Nexpro-RD", "Torrent Pharmaceuticals", "Capsule SR", "40 mg + 30 mg"),
+                BrandInfo("Sompraz-D", "Sun Pharma", "Capsule SR", "40 mg + 30 mg"),
+                BrandInfo("Esokem-D", "Alkem Laboratories", "Capsule SR", "40 mg + 30 mg")
+            )
+        ),
+
+        // 109. Telmisartan + Chlorthalidone
+        BrandEnrichment(
+            genericKey = "telmisartan + chlorthalidone",
+            nepalBrands = listOf(
+                BrandInfo("Telma-CT", "Glenmark Nepal", "Tablet", "40/12.5 mg / 80/12.5 mg"),
+                BrandInfo("Teltan-CT", "Deurali-Janta Pharmaceuticals", "Tablet", "40/12.5 mg / 80/12.5 mg"),
+                BrandInfo("Tazloc-CT", "Torrent Nepal", "Tablet", "40/12.5 mg / 80/12.5 mg"),
+                BrandInfo("Telpres-CT", "Sun Pharma Nepal", "Tablet", "40/12.5 mg"),
+                BrandInfo("Telmikind-CT", "Mankind Nepal", "Tablet", "40/12.5 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Telma-CT", "Glenmark Pharmaceuticals", "Tablet", "40/12.5 mg / 80/12.5 mg"),
+                BrandInfo("Tazloc-CT", "Torrent Pharmaceuticals", "Tablet", "40/12.5 mg"),
+                BrandInfo("Telpres-CT", "Sun Pharma", "Tablet", "40/12.5 mg / 80/12.5 mg")
+            )
+        ),
+
+        // 110. Tamsulosin + Dutasteride
+        BrandEnrichment(
+            genericKey = "tamsulosin + dutasteride",
+            nepalBrands = listOf(
+                BrandInfo("Urimax-D", "Cipla Nepal", "Capsule", "0.4 mg + 0.5 mg"),
+                BrandInfo("Veltam-Plus", "Intas Nepal", "Capsule", "0.4 mg + 0.5 mg"),
+                BrandInfo("Tamlet-D", "Sun Pharma Nepal", "Capsule", "0.4 mg + 0.5 mg"),
+                BrandInfo("Flodart-Plus", "Macleods Nepal", "Capsule", "0.4 mg + 0.5 mg"),
+                BrandInfo("Uroflo-D", "Quest Pharmaceuticals", "Capsule", "0.4 mg + 0.5 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Urimax-D", "Cipla Ltd.", "Capsule", "0.4 mg + 0.5 mg"),
+                BrandInfo("Veltam-Plus", "Intas Pharmaceuticals", "Capsule", "0.4 mg + 0.5 mg"),
+                BrandInfo("Flodart-Plus", "Macleods Pharmaceuticals", "Capsule", "0.4 mg + 0.5 mg")
+            )
+        ),
+
+        // 111. Rosuvastatin + Fenofibrate
+        BrandEnrichment(
+            genericKey = "rosuvastatin + fenofibrate",
+            nepalBrands = listOf(
+                BrandInfo("Rozavel-F", "Sun Pharma Nepal", "Tablet", "10 mg + 160 mg / 10 mg + 145 mg"),
+                BrandInfo("Rosuvas-F", "Ranbaxy / Sun Nepal", "Tablet", "10 mg + 160 mg"),
+                BrandInfo("Lipirose-F", "Mankind Nepal", "Tablet", "10 mg + 145 mg"),
+                BrandInfo("Novastat-TG", "Lupin Nepal", "Tablet", "10 mg + 145 mg"),
+                BrandInfo("Rosufit-F", "Torrent Nepal", "Tablet", "10 mg + 145 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Rozavel-F", "Sun Pharma", "Tablet", "10 mg + 160 mg"),
+                BrandInfo("Novastat-TG", "Lupin Ltd.", "Tablet", "10 mg + 145 mg"),
+                BrandInfo("Rosuvas-F", "Sun Pharma", "Tablet", "10 mg + 160 mg")
+            )
+        ),
+
+        // 112. Atorvastatin + Fenofibrate
+        BrandEnrichment(
+            genericKey = "atorvastatin + fenofibrate",
+            nepalBrands = listOf(
+                BrandInfo("Atorva-F", "Zydus Nepal", "Tablet", "10 mg + 145 mg / 10 mg + 160 mg"),
+                BrandInfo("Tonact-F", "Lupin Nepal", "Tablet", "10 mg + 145 mg"),
+                BrandInfo("Atocor-F", "Dr. Reddy's Nepal", "Tablet", "10 mg + 160 mg"),
+                BrandInfo("Lipikind-F", "Mankind Nepal", "Tablet", "10 mg + 145 mg"),
+                BrandInfo("Storvas-F", "Sun Pharma Nepal", "Tablet", "10 mg + 145 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Tonact-F", "Lupin Ltd.", "Tablet", "10 mg + 145 mg"),
+                BrandInfo("Atorva-F", "Zydus Healthcare", "Tablet", "10 mg + 160 mg"),
+                BrandInfo("Lipikind-F", "Mankind Pharma", "Tablet", "10 mg + 145 mg")
+            )
+        ),
+
+        // 113. Cefoperazone + Sulbactam
+        BrandEnrichment(
+            genericKey = "cefoperazone + sulbactam",
+            nepalBrands = listOf(
+                BrandInfo("Magnex", "Pfizer Nepal", "IV Injection / Infusion", "1.5g / 3g Vial"),
+                BrandInfo("Sulbacin", "Cipla Nepal", "IV Injection", "1.5g / 3g Vial"),
+                BrandInfo("Ceftas-SB", "Intas Nepal", "IV Injection", "1.5g / 3g"),
+                BrandInfo("Zosul", "Alkem Nepal", "IV Injection", "1.5g / 3g"),
+                BrandInfo("Cefosul-NPL", "Nepal Pharmaceuticals Lab", "IV Injection", "1.5g Vial")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Magnex", "Pfizer India", "IV Vial", "1.5g / 3g"),
+                BrandInfo("Sulbacin", "Cipla Ltd.", "IV Vial", "1.5g / 3g"),
+                BrandInfo("Ceftas-SB", "Intas Pharmaceuticals", "IV Vial", "1.5g")
+            )
+        ),
+
+        // 114. Glimepiride + Metformin
+        BrandEnrichment(
+            genericKey = "glimepiride + metformin",
+            nepalBrands = listOf(
+                BrandInfo("Glycomet-GP", "USV Nepal", "Tablet", "1/500 mg / 2/500 mg / 2/1000 mg SR"),
+                BrandInfo("Amaryl-M", "Sanofi Nepal", "Tablet", "1/500 mg / 2/500 mg"),
+                BrandInfo("Diaprime-M", "Deurali-Janta Pharmaceuticals", "Tablet", "1/500 mg / 2/500 mg"),
+                BrandInfo("Glimy-M", "Nepal Pharmaceuticals Lab", "Tablet", "1/500 mg / 2/500 mg"),
+                BrandInfo("Glimestar-M", "Mankind Nepal", "Tablet", "1/500 mg / 2/500 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Glycomet-GP 1 / 2", "USV Ltd.", "Tablet", "1/500 mg / 2/500 mg"),
+                BrandInfo("Amaryl-M", "Sanofi India", "Tablet", "1/500 mg / 2/500 mg"),
+                BrandInfo("Glimestar-M", "Mankind Pharma", "Tablet", "1/500 mg / 2/500 mg")
+            )
+        ),
+
+        // 115. Glimepiride + Metformin + Voglibose
+        BrandEnrichment(
+            genericKey = "glimepiride + metformin + voglibose",
+            nepalBrands = listOf(
+                BrandInfo("Trio-SR", "USV Nepal", "Tablet", "1/500/0.2 mg / 2/500/0.2 mg"),
+                BrandInfo("Glimestar-PM", "Mankind Nepal", "Tablet", "1/500/0.2 mg / 2/500/0.2 mg"),
+                BrandInfo("Glycomet-Trio", "USV Nepal", "Tablet", "1/500/0.2 mg / 2/500/0.3 mg"),
+                BrandInfo("Amaryl-M-VP", "Sanofi Nepal", "Tablet", "1/500/0.2 mg / 2/500/0.2 mg"),
+                BrandInfo("Volix-Trio", "Sun Pharma Nepal", "Tablet", "1/500/0.2 mg / 2/500/0.2 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Glycomet-Trio 1 / 2", "USV Ltd.", "Tablet", "1/500/0.2 mg / 2/500/0.3 mg"),
+                BrandInfo("Glimestar-PM", "Mankind Pharma", "Tablet", "1/500/0.2 mg / 2/500/0.2 mg"),
+                BrandInfo("Zoryl-MV", "Intas Pharmaceuticals", "Tablet", "1/500/0.2 mg")
+            )
+        ),
+
+        // 116. Dapagliflozin + Metformin
+        BrandEnrichment(
+            genericKey = "dapagliflozin + metformin",
+            nepalBrands = listOf(
+                BrandInfo("Oxra-M", "Sun Pharma Nepal", "Tablet SR", "10/500 mg / 10/1000 mg"),
+                BrandInfo("Dapa-M", "Cipla Nepal", "Tablet SR", "10/500 mg / 10/1000 mg"),
+                BrandInfo("Forxiga-M", "AstraZeneca Nepal", "Tablet SR", "10/1000 mg"),
+                BrandInfo("Dapavel-M", "Torrent Nepal", "Tablet SR", "10/500 mg / 10/1000 mg"),
+                BrandInfo("Dapaford-M", "Leeford Nepal", "Tablet SR", "10/500 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Oxra-M", "Sun Pharma", "Tablet SR", "10/500 mg / 10/1000 mg"),
+                BrandInfo("Forxiga-M", "AstraZeneca India", "Tablet SR", "10/1000 mg"),
+                BrandInfo("Dapavel-M", "Torrent Pharmaceuticals", "Tablet SR", "10/500 mg")
+            )
+        ),
+
+        // 117. Carboxymethylcellulose
+        BrandEnrichment(
+            genericKey = "carboxymethylcellulose",
+            nepalBrands = listOf(
+                BrandInfo("Refresh Tears 0.5%", "Allergan Nepal", "Eye Drops", "0.5% w/v (10 mL)"),
+                BrandInfo("Tears Plus", "Nepal Eye Hospital / NPL", "Eye Drops", "0.5% w/v (10 mL)"),
+                BrandInfo("Eyemist", "Sun Pharma Nepal", "Eye Drops", "0.5% w/v (10 mL)"),
+                BrandInfo("Lacryl", "Entod Nepal", "Eye Drops", "0.5% / 1% (10 mL)"),
+                BrandInfo("Vistafresh", "Cipla Nepal", "Eye Drops", "0.5% w/v (10 mL)")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Refresh Tears", "Allergan India", "Eye Drops", "0.5% w/v (10 mL)"),
+                BrandInfo("Eyemist", "Sun Pharma", "Eye Drops", "0.5% w/v (10 mL)"),
+                BrandInfo("Tears Plus", "Allergan", "Eye Drops", "0.5% w/v")
+            )
+        ),
+
+        // 118. Norfloxacin + Tinidazole
+        BrandEnrichment(
+            genericKey = "norfloxacin + tinidazole",
+            nepalBrands = listOf(
+                BrandInfo("Norflox-TZ", "Cipla Nepal", "Tablet", "400 mg + 600 mg"),
+                BrandInfo("Normaxin-TZ", "Torrent Nepal", "Tablet", "400 mg + 600 mg"),
+                BrandInfo("Floxagyl-TZ", "Nepal Pharmaceuticals Lab", "Tablet", "400 mg + 600 mg"),
+                BrandInfo("Tiniflox", "Deurali-Janta Pharmaceuticals", "Tablet", "400 mg + 600 mg"),
+                BrandInfo("Nortin", "Quest Pharmaceuticals", "Tablet", "400 mg + 600 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Norflox-TZ", "Cipla Ltd.", "Tablet", "400 mg + 600 mg"),
+                BrandInfo("Normaxin-TZ", "Torrent Pharmaceuticals", "Tablet", "400 mg + 600 mg"),
+                BrandInfo("Albiotic-TZ", "Alkem", "Tablet", "400 mg + 600 mg")
+            )
+        ),
+
+        // 119. Amoxicillin + Cloxacillin
+        BrandEnrichment(
+            genericKey = "amoxicillin + cloxacillin",
+            nepalBrands = listOf(
+                BrandInfo("Novaclox", "Cipla Nepal", "Capsule / Dry Syrup", "250/250 mg / 125/125 mg per 5mL"),
+                BrandInfo("Megapen", "Aristo Nepal", "Capsule / Injection", "250/250 mg / 1000 mg"),
+                BrandInfo("Ampiclox", "GlaxoSmithKline Nepal", "Capsule / Syrup", "250/250 mg"),
+                BrandInfo("Clomox-NPL", "Nepal Pharmaceuticals Lab", "Capsule", "250/250 mg"),
+                BrandInfo("Asian-Clox", "Asian Pharmaceuticals", "Capsule / Syrup", "500 mg / 250 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Novaclox", "Cipla Ltd.", "Capsule / Dry Syrup", "250/250 mg / 125/125 mg"),
+                BrandInfo("Megapen", "Aristo Pharmaceuticals", "Capsule / Vial", "250/250 mg / 1g"),
+                BrandInfo("Ampiclox", "GSK India", "Capsule", "250/250 mg")
+            )
+        ),
+
+        // 120. Cefixime + Ofloxacin
+        BrandEnrichment(
+            genericKey = "cefixime + ofloxacin",
+            nepalBrands = listOf(
+                BrandInfo("Zifi-O", "FDC Nepal", "Tablet", "200 mg + 200 mg"),
+                BrandInfo("Ceftas-O", "Intas Nepal", "Tablet", "200 mg + 200 mg"),
+                BrandInfo("Taxim-OF", "Alkem Nepal", "Tablet", "200 mg + 200 mg"),
+                BrandInfo("Mahacef-Plus", "Mankind Nepal", "Tablet", "200 mg + 200 mg"),
+                BrandInfo("Fix-O", "Nepal Pharmaceuticals Lab", "Tablet", "200 mg + 200 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Zifi-O", "FDC Ltd.", "Tablet", "200 mg + 200 mg"),
+                BrandInfo("Ceftas-O", "Intas Pharmaceuticals", "Tablet", "200 mg + 200 mg"),
+                BrandInfo("Taxim-OF", "Alkem Laboratories", "Tablet", "200 mg + 200 mg")
+            )
+        ),
+
+        // 121. Cefixime + Potassium Clavulanate
+        BrandEnrichment(
+            genericKey = "cefixime + potassium clavulanate",
+            nepalBrands = listOf(
+                BrandInfo("Zifi-CV", "FDC Nepal", "Tablet", "200 mg + 125 mg"),
+                BrandInfo("Taxim-O CV", "Alkem Nepal", "Tablet", "200 mg + 125 mg"),
+                BrandInfo("Ceftas-CV", "Intas Nepal", "Tablet", "200 mg + 125 mg"),
+                BrandInfo("Omnicef-CV", "Aristo Nepal", "Tablet", "200 mg + 125 mg"),
+                BrandInfo("Fix-CV", "Nepal Pharmaceuticals Lab", "Tablet", "200 mg + 125 mg")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Zifi-CV", "FDC Ltd.", "Tablet", "200 mg + 125 mg"),
+                BrandInfo("Taxim-O CV", "Alkem Laboratories", "Tablet", "200 mg + 125 mg"),
+                BrandInfo("Ceftas-CV", "Intas Pharmaceuticals", "Tablet", "200 mg + 125 mg")
+            )
+        ),
+
+        // 122. Lidocaine + Prilocaine
+        BrandEnrichment(
+            genericKey = "lidocaine + prilocaine",
+            nepalBrands = listOf(
+                BrandInfo("Prilox Cream", "Neon Laboratories Nepal", "Topical Cream", "2.5% + 2.5% (5g / 30g)"),
+                BrandInfo("EMLA Cream", "AstraZeneca Nepal", "Topical Cream", "2.5% + 2.5% (5g / 30g)"),
+                BrandInfo("Lignopril", "Troikaa Nepal", "Cream", "2.5% + 2.5% (5g)"),
+                BrandInfo("Anesderm", "Sun Pharma Nepal", "Cream", "2.5% + 2.5% (5g)")
+            ),
+            importedBrands = listOf(
+                BrandInfo("Prilox", "Neon Laboratories", "Cream", "2.5% + 2.5% (5g / 30g)"),
+                BrandInfo("EMLA", "AstraZeneca India", "Cream", "2.5% + 2.5% (5g / 30g)"),
+                BrandInfo("Lido-Prilo", "Sun Pharma", "Cream", "5g")
             )
         )
     )

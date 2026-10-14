@@ -637,6 +637,54 @@ fun AppSidebarDrawer(
                                 onClick = onSettingsClick,
                                 testTag = "sidebar_settings_item"
                             )
+
+                            // Developer: Eternity & Update Option Footer
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF0F172A),
+                                border = BorderStroke(1.dp, DimsTealPrimary.copy(alpha = 0.35f)),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onSettingsClick() }
+                                    .testTag("sidebar_developer_eternity_footer")
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Terminal,
+                                            contentDescription = null,
+                                            tint = DimsTealPrimary,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Column {
+                                            Text(
+                                                text = "Developer: Eternity",
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White
+                                            )
+                                            Text(
+                                                text = "v4.2.1 • Update Option available in Settings",
+                                                fontSize = 9.5.sp,
+                                                color = Slate400
+                                            )
+                                        }
+                                    }
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                        contentDescription = null,
+                                        tint = DimsTealPrimary,
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                }
+                            }
                         }
                     }
                 }

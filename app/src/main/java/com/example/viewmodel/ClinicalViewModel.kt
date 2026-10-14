@@ -79,6 +79,7 @@ enum class DrugFilterType(val label: String) {
 
 data class ClinicalUiState(
     val currentScreen: NavigationScreen = NavigationScreen.SEARCH,
+    val screenHistory: List<NavigationScreen> = emptyList(),
     val searchQuery: String = "",
     val searchMode: SearchMode = SearchMode.BRAND,
     val activeFilter: DrugFilterType = DrugFilterType.ALL,
@@ -192,49 +193,8 @@ data class ClinicalUiState(
     val gcsVerbal: Int = 5,
     val gcsMotor: Int = 6,
     val gcsResult: ClinicalCalculators.GcsResult? = null,
-    // Drug Dose Alarms & Medication Reminders
-    val drugAlarms: List<DrugAlarmReminder> = listOf(
-        DrugAlarmReminder(
-            id = "alarm_1",
-            drugName = "Pantoprazole 40 mg",
-            dosage = "1 Tablet",
-            hour = 7,
-            minute = 0,
-            timingTag = "Before Food (खाली पेट)",
-            frequency = "Once Daily (OD)",
-            notes = "Take with a full glass of water 30 minutes before breakfast."
-        ),
-        DrugAlarmReminder(
-            id = "alarm_2",
-            drugName = "Vonopran (Vonoprazan) 20 mg",
-            dosage = "1 Tablet",
-            hour = 8,
-            minute = 0,
-            timingTag = "Before Food (खाली पेट)",
-            frequency = "Once Daily (OD)",
-            notes = "Novel P-CAB for rapid 24-hr gastric acid suppression."
-        ),
-        DrugAlarmReminder(
-            id = "alarm_3",
-            drugName = "Metformin 500 mg",
-            dosage = "1 Tablet",
-            hour = 8,
-            minute = 30,
-            timingTag = "After Meals (खानापछि)",
-            frequency = "Twice Daily (BD)",
-            notes = "Take immediately after breakfast with meals."
-        ),
-        DrugAlarmReminder(
-            id = "alarm_4",
-            drugName = "Atorvastatin 20 mg",
-            dosage = "1 Tablet",
-            hour = 21,
-            minute = 30,
-            timingTag = "At Bedtime (सुत्ने बेलामा)",
-            frequency = "Once Daily (OD)",
-            notes = "Night-time lipid lowering dose."
-        )
-    ),
+    // Drug Dose Alarms & Medication Reminders (Empty by default - user creates custom alarms)
+    val drugAlarms: List<DrugAlarmReminder> = emptyList(),
     val isAlarmRinging: Boolean = false,
     val activeRingingAlarm: DrugAlarmReminder? = null,
     val isCheckingAppUpdates: Boolean = false,
@@ -249,6 +209,8 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
     private val appDb: AppDatabase = AppDatabase.getInstance(application.applicationContext)
     private val savedItemRepository: SavedItemRepository = SavedItemRepository(appDb.savedItemDao())
     private val profilePrefs = application.getSharedPreferences("practitioner_profile_prefs", android.content.Context.MODE_PRIVATE)
+    private val settingsPrefs = application.getSharedPreferences("clinical_settings_prefs", android.content.Context.MODE_PRIVATE)
+    private val alarmPrefs = application.getSharedPreferences("drug_alarms_prefs", android.content.Context.MODE_PRIVATE)
 
     private var searchJob: Job? = null
 
@@ -293,30 +255,50 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
         val savedMobile = profilePrefs.getString("doc_mobile", "") ?: ""
         val savedAvatar = profilePrefs.getString("doc_avatar", "👨‍⚕️") ?: "👨‍⚕️"
 
-        if (savedLoggedIn) {
-            _uiState.update {
-                it.copy(
-                    isLoggedIn = true,
-                    doctorName = savedName,
-                    doctorDegree = savedDegree,
-                    doctorCollege = savedCollege,
-                    doctorCouncilNo = savedCouncil,
-                    doctorMobile = savedMobile,
-                    doctorPhotoAvatar = savedAvatar
-                )
-            }
+        // Load persistent settings (Font Size, Theme, Drug Alarms)
+        val savedFontScaleName = settingsPrefs.getString("font_size_scale", FontSizeScale.NORMAL.name)
+        val savedFontScale = try {
+            FontSizeScale.valueOf(savedFontScaleName ?: FontSizeScale.NORMAL.name)
+        } catch (_: Exception) {
+            FontSizeScale.NORMAL
+        }
+
+        val savedThemeModeName = settingsPrefs.getString("theme_mode", AppThemeMode.PITCH_BLACK.name)
+        val savedThemeMode = try {
+            AppThemeMode.valueOf(savedThemeModeName ?: AppThemeMode.PITCH_BLACK.name)
+        } catch (_: Exception) {
+            AppThemeMode.PITCH_BLACK
+        }
+
+        val savedAlarms = loadDrugAlarmsFromPrefs()
+
+        _uiState.update {
+            it.copy(
+                fontSizeScale = savedFontScale,
+                themeMode = savedThemeMode,
+                drugAlarms = savedAlarms,
+                isLoggedIn = if (savedLoggedIn) true else it.isLoggedIn,
+                doctorName = if (savedLoggedIn) savedName else it.doctorName,
+                doctorDegree = if (savedLoggedIn) savedDegree else it.doctorDegree,
+                doctorCollege = if (savedLoggedIn) savedCollege else it.doctorCollege,
+                doctorCouncilNo = if (savedLoggedIn) savedCouncil else it.doctorCouncilNo,
+                doctorMobile = if (savedLoggedIn) savedMobile else it.doctorMobile,
+                doctorPhotoAvatar = if (savedLoggedIn) savedAvatar else it.doctorPhotoAvatar
+            )
         }
 
         // Initialize precomputed drug list
-        _uiState.value = _uiState.value.copy(
-            filteredDrugs = filterDrugs(
-                searchQuery = "",
-                searchMode = SearchMode.BRAND,
-                activeFilter = DrugFilterType.ALL,
-                selectedSystemFilter = null,
-                bookmarkedDrugIds = _uiState.value.bookmarkedDrugIds
+        _uiState.update { current ->
+            current.copy(
+                filteredDrugs = filterDrugs(
+                    searchQuery = "",
+                    searchMode = SearchMode.BRAND,
+                    activeFilter = DrugFilterType.ALL,
+                    selectedSystemFilter = null,
+                    bookmarkedDrugIds = current.bookmarkedDrugIds
+                )
             )
-        )
+        }
         // Compute initial calculator results
         computeEgfr()
         computeBsa()
@@ -439,12 +421,30 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun navigateTo(screen: NavigationScreen) {
-        _uiState.update {
-            it.copy(
-                currentScreen = screen,
-                selectedProtocol = if (screen != NavigationScreen.DISEASE) null else it.selectedProtocol,
-                selectedCalculatorId = if (screen != NavigationScreen.CALCULATOR) null else it.selectedCalculatorId,
-                isDrugModalOpen = if (screen == NavigationScreen.SEARCH) false else it.isDrugModalOpen
+        _uiState.update { current ->
+            if (current.currentScreen == screen) current
+            else {
+                val updatedHistory = (current.screenHistory + current.currentScreen).takeLast(12)
+                current.copy(
+                    currentScreen = screen,
+                    screenHistory = updatedHistory,
+                    selectedProtocol = if (screen != NavigationScreen.DISEASE) null else current.selectedProtocol,
+                    selectedCalculatorId = if (screen != NavigationScreen.CALCULATOR) null else current.selectedCalculatorId,
+                    isDrugModalOpen = if (screen == NavigationScreen.SEARCH) false else current.isDrugModalOpen
+                )
+            }
+        }
+    }
+
+    fun navigateBack() {
+        _uiState.update { current ->
+            val prev = current.screenHistory.lastOrNull() ?: NavigationScreen.SEARCH
+            val newHistory = if (current.screenHistory.isNotEmpty()) current.screenHistory.dropLast(1) else emptyList()
+            current.copy(
+                currentScreen = prev,
+                screenHistory = newHistory,
+                selectedProtocol = if (prev != NavigationScreen.DISEASE) null else current.selectedProtocol,
+                selectedCalculatorId = if (prev != NavigationScreen.CALCULATOR) null else current.selectedCalculatorId
             )
         }
     }
@@ -894,7 +894,8 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
 
     // Theme & Setting Controls
     fun setThemeMode(mode: AppThemeMode) {
-        _uiState.value = _uiState.value.copy(themeMode = mode)
+        settingsPrefs.edit().putString("theme_mode", mode.name).apply()
+        _uiState.update { it.copy(themeMode = mode) }
     }
 
     fun toggleNextTheme() {
@@ -907,7 +908,8 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setFontSizeScale(scale: FontSizeScale) {
-        _uiState.value = _uiState.value.copy(fontSizeScale = scale)
+        settingsPrefs.edit().putString("font_size_scale", scale.name).apply()
+        _uiState.update { it.copy(fontSizeScale = scale) }
     }
 
     // Practitioner Authentication / Profile
@@ -1005,42 +1007,109 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
         _uiState.update { it.copy(aiInputText = text) }
     }
 
-    // Drug Dose Alarms & Medication Reminders
+    // Drug Dose Alarms & Medication Reminders (User-added, strictly persistent, empty by default)
+    private fun saveDrugAlarmsToPrefs(alarms: List<DrugAlarmReminder>) {
+        try {
+            val jsonArray = org.json.JSONArray()
+            alarms.forEach { alarm ->
+                val obj = org.json.JSONObject().apply {
+                    put("id", alarm.id)
+                    put("drugName", alarm.drugName)
+                    put("dosage", alarm.dosage)
+                    put("hour", alarm.hour)
+                    put("minute", alarm.minute)
+                    put("timingTag", alarm.timingTag)
+                    put("frequency", alarm.frequency)
+                    put("isEnabled", alarm.isEnabled)
+                    put("isSoundEnabled", alarm.isSoundEnabled)
+                    put("isVibrationEnabled", alarm.isVibrationEnabled)
+                    put("notes", alarm.notes)
+                    put("lastTakenDate", alarm.lastTakenDate ?: "")
+                }
+                jsonArray.put(obj)
+            }
+            alarmPrefs.edit().putString("saved_alarms_json", jsonArray.toString()).apply()
+        } catch (_: Exception) {}
+    }
+
+    private fun loadDrugAlarmsFromPrefs(): List<DrugAlarmReminder> {
+        val jsonStr = alarmPrefs.getString("saved_alarms_json", null) ?: return emptyList()
+        val list = mutableListOf<DrugAlarmReminder>()
+        try {
+            val jsonArray = org.json.JSONArray(jsonStr)
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                val lastTaken = obj.optString("lastTakenDate").takeIf { it.isNotBlank() }
+                list.add(
+                    DrugAlarmReminder(
+                        id = obj.optString("id", java.util.UUID.randomUUID().toString()),
+                        drugName = obj.optString("drugName", ""),
+                        dosage = obj.optString("dosage", "1 Tablet"),
+                        hour = obj.optInt("hour", 8),
+                        minute = obj.optInt("minute", 0),
+                        timingTag = obj.optString("timingTag", "Before Food (खाली पेट)"),
+                        frequency = obj.optString("frequency", "Once Daily (OD)"),
+                        isEnabled = obj.optBoolean("isEnabled", true),
+                        isSoundEnabled = obj.optBoolean("isSoundEnabled", true),
+                        isVibrationEnabled = obj.optBoolean("isVibrationEnabled", true),
+                        notes = obj.optString("notes", ""),
+                        lastTakenDate = lastTaken
+                    )
+                )
+            }
+        } catch (_: Exception) {
+            return emptyList()
+        }
+        return list
+    }
+
     fun addDrugAlarm(alarm: DrugAlarmReminder) {
-        _uiState.update { it.copy(drugAlarms = it.drugAlarms + alarm) }
+        _uiState.update { current ->
+            val updated = current.drugAlarms + alarm
+            saveDrugAlarmsToPrefs(updated)
+            current.copy(drugAlarms = updated)
+        }
     }
 
     fun updateDrugAlarm(alarm: DrugAlarmReminder) {
-        _uiState.update {
-            it.copy(drugAlarms = it.drugAlarms.map { existing ->
+        _uiState.update { current ->
+            val updated = current.drugAlarms.map { existing ->
                 if (existing.id == alarm.id) alarm else existing
-            })
+            }
+            saveDrugAlarmsToPrefs(updated)
+            current.copy(drugAlarms = updated)
         }
     }
 
     fun toggleDrugAlarm(id: String) {
-        _uiState.update {
-            it.copy(drugAlarms = it.drugAlarms.map { existing ->
+        _uiState.update { current ->
+            val updated = current.drugAlarms.map { existing ->
                 if (existing.id == id) existing.copy(isEnabled = !existing.isEnabled) else existing
-            })
+            }
+            saveDrugAlarmsToPrefs(updated)
+            current.copy(drugAlarms = updated)
         }
     }
 
     fun deleteDrugAlarm(id: String) {
-        _uiState.update {
-            it.copy(drugAlarms = it.drugAlarms.filterNot { it.id == id })
+        _uiState.update { current ->
+            val updated = current.drugAlarms.filterNot { it.id == id }
+            saveDrugAlarmsToPrefs(updated)
+            current.copy(drugAlarms = updated)
         }
     }
 
     fun markDoseTaken(id: String) {
         val todayStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
-        _uiState.update {
-            it.copy(
-                drugAlarms = it.drugAlarms.map { existing ->
-                    if (existing.id == id) existing.copy(lastTakenDate = todayStr) else existing
-                },
-                isAlarmRinging = if (it.activeRingingAlarm?.id == id) false else it.isAlarmRinging,
-                activeRingingAlarm = if (it.activeRingingAlarm?.id == id) null else it.activeRingingAlarm
+        _uiState.update { current ->
+            val updated = current.drugAlarms.map { existing ->
+                if (existing.id == id) existing.copy(lastTakenDate = todayStr) else existing
+            }
+            saveDrugAlarmsToPrefs(updated)
+            current.copy(
+                drugAlarms = updated,
+                isAlarmRinging = if (current.activeRingingAlarm?.id == id) false else current.isAlarmRinging,
+                activeRingingAlarm = if (current.activeRingingAlarm?.id == id) null else current.activeRingingAlarm
             )
         }
     }

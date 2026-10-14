@@ -170,6 +170,7 @@ fun GeminiChatScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
+                        modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
@@ -187,18 +188,23 @@ fun GeminiChatScreen(
                                 )
                             }
                         }
-                        Column {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
                                 Text(
                                     text = "Gemini Clinical AI",
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = Indigo400
+                                    color = Indigo400,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 val currentModel = state.aiSelectedModel
                                 val (modelBadgeText, modelBadgeColor, modelTextColor) = when {
-                                    currentModel.contains("pro") -> Triple("🧠 3.1 Pro Reasoner ▾", Color(0xFFA855F7).copy(alpha = 0.25f), Color(0xFFC084FC))
-                                    currentModel.contains("lite") -> Triple("⚡ 3.1 Flash-Lite ▾", Color(0xFF0284C7).copy(alpha = 0.25f), Color(0xFF38BDF8))
+                                    currentModel.contains("pro") -> Triple("🧠 3.1 Pro ▾", Color(0xFFA855F7).copy(alpha = 0.25f), Color(0xFFC084FC))
+                                    currentModel.contains("lite") -> Triple("⚡ 3.1 Lite ▾", Color(0xFF0284C7).copy(alpha = 0.25f), Color(0xFF38BDF8))
                                     else -> Triple("✨ 3.5 Flash ▾", Emerald600.copy(alpha = 0.2f), Emerald400)
                                 }
                                 Surface(
@@ -219,15 +225,18 @@ fun GeminiChatScreen(
                                         fontSize = 9.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = modelTextColor,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        maxLines = 1
                                     )
                                 }
                             }
                             Text(
-                                text = "AHA, GINA, ACG, WHO & Nepal EDCD Clinical Protocols",
+                                text = "AHA, GINA, ACG, WHO & Nepal Protocols",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontSize = 10.5.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -587,18 +596,26 @@ fun GeminiChatScreen(
             }
         }
 
-        // Input Bar with Direct "Search in App" and "Search Google in Chrome" Buttons
+        // Input Bar (Full width input to prevent word clipping or overlap)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 80.dp),
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
                 value = state.aiInputText,
                 onValueChange = { viewModel.updateAiInput(it) },
-                placeholder = { Text("Ask any disease, drug, dose...", fontSize = 12.5.sp, color = Slate400) },
+                placeholder = { 
+                    Text(
+                        text = "Ask any disease, drug, dose...", 
+                        fontSize = 12.5.sp, 
+                        color = Slate400,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    ) 
+                },
                 modifier = Modifier
                     .weight(1f)
                     .testTag("gemini_chat_input"),
@@ -643,55 +660,12 @@ fun GeminiChatScreen(
                 })
             )
 
-            // Direct "Search in App" Button
-            IconButton(
-                onClick = {
-                    val query = if (state.aiInputText.isNotBlank()) state.aiInputText else ""
-                    viewModel.updateSearchQuery(query)
-                    viewModel.navigateTo(NavigationScreen.SEARCH)
-                },
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(CircleShape)
-                    .background(Emerald600.copy(alpha = 0.25f))
-                    .border(1.dp, Emerald400, CircleShape)
-                    .testTag("search_app_from_copilot_button")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Medication,
-                    contentDescription = "Search in App",
-                    tint = Emerald400,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-
-            // Direct "Search on Google in Chrome" Action Button
-            IconButton(
-                onClick = {
-                    val query = if (state.aiInputText.isNotBlank()) state.aiInputText else "clinical pharmacology guidelines Nepal"
-                    launchGoogleSearch(context, query)
-                },
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF0F766E).copy(alpha = 0.35f))
-                    .border(1.dp, Color(0xFF14B8A6), CircleShape)
-                    .testTag("google_search_chrome_button")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.TravelExplore,
-                    contentDescription = "Search Google in Chrome",
-                    tint = Color(0xFF2DD4BF),
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-
             // Gemini Send Button
             IconButton(
                 onClick = { viewModel.sendAiMessage() },
                 enabled = state.aiInputText.isNotBlank() && !state.isAiThinking,
                 modifier = Modifier
-                    .size(42.dp)
+                    .size(44.dp)
                     .clip(CircleShape)
                     .background(if (state.aiInputText.isNotBlank()) Indigo600 else MaterialTheme.colorScheme.surfaceVariant)
                     .testTag("gemini_send_button")
@@ -700,7 +674,7 @@ fun GeminiChatScreen(
                     imageVector = Icons.AutoMirrored.Filled.Send,
                     contentDescription = "Send Query",
                     tint = if (state.aiInputText.isNotBlank()) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -809,9 +783,9 @@ private fun ChatBubble(
                 Text(
                     text = message.text,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontSize = 13.sp,
+                    fontSize = 13.5.sp,
                     color = if (isUser) Color.White else MaterialTheme.colorScheme.onSurface,
-                    lineHeight = 19.sp
+                    lineHeight = 21.sp
                 )
 
                 if (!isUser) {
@@ -875,10 +849,12 @@ private fun ChatBubble(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Action Toolbar: Search in App + Google Search in Chrome + PubMed + Copy + Share
+                    // Action Toolbar: Horizontally scrollable to guarantee no button or word overlap
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Direct Search in App button

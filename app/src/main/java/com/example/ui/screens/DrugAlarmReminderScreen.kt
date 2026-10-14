@@ -7,9 +7,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -458,16 +460,30 @@ fun DrugAlarmReminderScreen(
                                 modifier = Modifier.size(36.dp)
                             )
                             Text(
-                                text = "No drug reminders in this category",
-                                fontSize = 13.sp,
+                                text = if (state.drugAlarms.isEmpty()) "No Medication Alarms Added Yet" else "No drug reminders in this category",
+                                fontSize = 13.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Tap '+ Add Dose Alarm' below to schedule a new medication reminder.",
+                                text = if (state.drugAlarms.isEmpty()) 
+                                    "No drugs are added by default. Tap the button below to add your customized medication alarms with precise times, dosages, and meal instructions."
+                                else "No scheduled doses match the '$selectedFilter' filter. Switch to 'All' or add a new dose.",
                                 fontSize = 11.5.sp,
-                                color = Slate400
+                                color = Slate400,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 8.dp)
                             )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Button(
+                                onClick = { showAddDialog = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = DimsTealPrimary),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.AddAlarm, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Add Dose Alarm", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
@@ -858,28 +874,55 @@ private fun EditOrAddAlarmDialog(
                     )
                 }
 
-                // Timing Tag
-                Text("Instructions / Timing:", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                // Timing Tag (Food & Schedule relationship)
+                Text("Timing / Meal Relationship:", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    timingOptions.take(2).forEach { tag ->
+                    timingOptions.forEach { tag ->
                         val isSelected = timingTag == tag
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = if (isSelected) DimsTealPrimary else MaterialTheme.colorScheme.surfaceVariant,
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { timingTag = tag }
+                            border = BorderStroke(1.dp, if (isSelected) DimsTealPrimary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
+                            modifier = Modifier.clickable { timingTag = tag }
                         ) {
                             Text(
-                                text = tag.substringBefore(" "),
-                                fontSize = 11.sp,
+                                text = tag,
+                                fontSize = 10.5.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                 color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                modifier = Modifier.padding(vertical = 5.dp, horizontal = 8.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Frequency options
+                Text("Dosage Frequency:", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    frequencyOptions.forEach { freq ->
+                        val isSelected = frequency == freq
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (isSelected) MedicalBlue500 else MaterialTheme.colorScheme.surfaceVariant,
+                            border = BorderStroke(1.dp, if (isSelected) MedicalBlue500 else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
+                            modifier = Modifier.clickable { frequency = freq }
+                        ) {
+                            Text(
+                                text = freq,
+                                fontSize = 10.5.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(vertical = 5.dp, horizontal = 8.dp)
                             )
                         }
                     }

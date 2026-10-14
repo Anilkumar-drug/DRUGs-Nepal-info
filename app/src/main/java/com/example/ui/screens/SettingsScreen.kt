@@ -312,6 +312,32 @@ fun SettingsScreen(
                         }
                     }
                 }
+
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = Emerald400,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "Locked Size: ${state.fontSizeScale.label} (${(state.fontSizeScale.scaleFactor * 100).toInt()}%) • Saved permanently",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         }
 
