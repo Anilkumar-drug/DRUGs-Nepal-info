@@ -634,7 +634,7 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "• Added Developer: Eternity & Dedicated Update Option in Settings\n• Full Drug Dose Alarm & Medication Reminder System with audio/vibration alerts\n• Animated above and below taskbars with tactile spring physics\n• Fixed AI search live text input with real-time character typing feedback\n• Comprehensive AHA ACLS Cardiac Resuscitation algorithm & CPR Guide\n• Vonopran (Vonoprazan P-CAB) & High-Frequency Physician Prescriptions catalog",
+                            text = "• Added Developer: Eternity & Dedicated Update Option in Settings\n• Full Drug Dose Alarm & Medication Reminder System with audio/vibration alerts\n• AI-style bottom taskbar animations: smooth breathing pulse & oscillation instead of icon enlargement on click\n• Fixed AI search input: unified direct typing directly inside search box at bottom\n• Comprehensive AHA ACLS Cardiac Resuscitation algorithm & CPR Guide\n• 35+ Commonly Prescribed Nepal Essential Medications & Vaccines (EDCD/MoHP)",
                             fontSize = 10.5.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 15.sp

@@ -31,6 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -51,6 +52,7 @@ fun GeminiChatScreen(
     viewModel: ClinicalViewModel
 ) {
     val context = LocalContext.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     val listState = rememberLazyListState()
     var selectedCategory by remember { mutableStateOf("⚡ Emergency") }
 
@@ -504,109 +506,25 @@ fun GeminiChatScreen(
             }
         }
 
-        // Quick Search Action Pills for Current Typed Query
-        if (state.aiInputText.isNotBlank()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    onClick = {
-                        viewModel.updateSearchQuery(state.aiInputText)
-                        viewModel.navigateTo(NavigationScreen.SEARCH)
-                    },
-                    shape = RoundedCornerShape(10.dp),
-                    color = Emerald600.copy(alpha = 0.2f),
-                    border = BorderStroke(0.8.dp, Emerald400)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(Icons.Default.Medication, contentDescription = null, tint = Emerald400, modifier = Modifier.size(12.dp))
-                        Text("Search in App 🔍", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Emerald400)
-                    }
-                }
-
-                Surface(
-                    onClick = {
-                        launchGoogleSearch(context, state.aiInputText)
-                    },
-                    shape = RoundedCornerShape(10.dp),
-                    color = Color(0xFF0284C7).copy(alpha = 0.2f),
-                    border = BorderStroke(0.8.dp, Color(0xFF38BDF8))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(Icons.Default.TravelExplore, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(12.dp))
-                        Text("Search in Chrome ↗", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF7DD3FC))
-                    }
-                }
-            }
-        }
-
-        // Live Typed Query Preview (Ensures immediate visible feedback on typing any drug)
-        AnimatedVisibility(visible = state.aiInputText.isNotBlank()) {
-            Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = Indigo950.copy(alpha = 0.6f),
-                border = BorderStroke(1.dp, Indigo500.copy(alpha = 0.5f)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 6.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.EditNote,
-                            contentDescription = null,
-                            tint = Color(0xFFC084FC),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = "Typing: \"${state.aiInputText}\"",
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    Text(
-                        text = "${state.aiInputText.length} letters",
-                        fontSize = 10.sp,
-                        color = Color(0xFF94A3B8)
-                    )
-                }
-            }
-        }
-
-        // Input Bar (Full width input to prevent word clipping or overlap)
+        // Input Bar (Direct text input placed cleanly at the bottom without disorienting overlays)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 80.dp),
+                .padding(top = 4.dp, bottom = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
                 value = state.aiInputText,
                 onValueChange = { viewModel.updateAiInput(it) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = "AI Search",
+                        tint = Indigo400,
+                        modifier = Modifier.size(18.dp)
+                    )
+                },
                 placeholder = { 
                     Text(
                         text = "Ask any disease, drug, dose...", 
@@ -655,6 +573,7 @@ fun GeminiChatScreen(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                 keyboardActions = KeyboardActions(onSend = {
                     if (state.aiInputText.isNotBlank() && !state.isAiThinking) {
+                        keyboardController?.hide()
                         viewModel.sendAiMessage()
                     }
                 })
@@ -662,7 +581,10 @@ fun GeminiChatScreen(
 
             // Gemini Send Button
             IconButton(
-                onClick = { viewModel.sendAiMessage() },
+                onClick = {
+                    keyboardController?.hide()
+                    viewModel.sendAiMessage()
+                },
                 enabled = state.aiInputText.isNotBlank() && !state.isAiThinking,
                 modifier = Modifier
                     .size(44.dp)

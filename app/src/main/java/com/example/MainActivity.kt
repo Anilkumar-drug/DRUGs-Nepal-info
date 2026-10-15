@@ -183,6 +183,34 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    val infiniteTransition = rememberInfiniteTransition(label = "appTaskbarInfiniteAnimations")
+
+    // AI-Style Living Continuous Animations (Sparkle Oscillation & Gentle Breathing Pulse):
+    val sparkleRotation by infiniteTransition.animateFloat(
+        initialValue = -12f,
+        targetValue = 12f,
+        animationSpec = infiniteRepeatable(tween(1400, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "sparkleRot"
+    )
+    val copilotGlowScale by infiniteTransition.animateFloat(
+        initialValue = 0.98f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(tween(1200, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "copilotGlow"
+    )
+    val bellSwingAngle by infiniteTransition.animateFloat(
+        initialValue = -14f,
+        targetValue = 14f,
+        animationSpec = infiniteRepeatable(tween(900, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "bellSwing"
+    )
+    val navPulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.12f,
+        targetValue = 0.24f,
+        animationSpec = infiniteRepeatable(tween(1400, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "navPulseAlpha"
+    )
+
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             modifier = Modifier
@@ -204,28 +232,6 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                 )
 
                 if (!isDedicatedScreen) {
-                    val infiniteTransition = rememberInfiniteTransition(label = "taskbarInfiniteAnimations")
-
-                    // Top Bar Icon Animations:
-                    val sparkleRotation by infiniteTransition.animateFloat(
-                        initialValue = -12f,
-                        targetValue = 12f,
-                        animationSpec = infiniteRepeatable(tween(1400, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-                        label = "sparkleRot"
-                    )
-                    val copilotGlowScale by infiniteTransition.animateFloat(
-                        initialValue = 0.98f,
-                        targetValue = 1.05f,
-                        animationSpec = infiniteRepeatable(tween(1200, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-                        label = "copilotGlow"
-                    )
-                    val bellSwingAngle by infiniteTransition.animateFloat(
-                        initialValue = -14f,
-                        targetValue = 14f,
-                        animationSpec = infiniteRepeatable(tween(900, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-                        label = "bellSwing"
-                    )
-
                     val topBarBg by animateColorAsState(
                         targetValue = when (state.themeMode) {
                             AppThemeMode.PITCH_BLACK -> Color.Black
@@ -289,11 +295,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                 targetValue = if (isSearchActive) MedicalBlue400 else NavyCardBorder,
                                 label = "searchPillBorder"
                             )
-                            val searchIconScale by animateFloatAsState(
-                                targetValue = if (isSearchActive) 1.15f else 1f,
-                                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                                label = "searchIconScale"
-                            )
+                            val searchIconScale = if (isSearchActive) copilotGlowScale else 1f
                             Surface(
                                 shape = RoundedCornerShape(22.dp),
                                 color = NavyPill,
@@ -576,26 +578,17 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                         ) {
                             navItems.forEach { item ->
                                 val isSelected = state.currentScreen == item.screen
-                                val iconScale by animateFloatAsState(
-                                    targetValue = if (isSelected) 1.22f else 1f,
-                                    animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                                        stiffness = Spring.StiffnessMediumLow
-                                    ),
-                                    label = "navIconScale"
-                                )
+                                // Instead of increasing icon size on click (1.22f), animate as the AI icon is animating:
+                                // gentle breathing pulse (0.98f..1.05f) and continuous sparkle rotation oscillation (-12f..12f)
+                                val activeScale = if (isSelected) copilotGlowScale else 1f
+                                val activeRotation = if (isSelected) sparkleRotation else 0f
                                 val iconOffset by animateDpAsState(
-                                    targetValue = if (isSelected) (-3.5).dp else 0.dp,
+                                    targetValue = if (isSelected) (-2).dp else 0.dp,
                                     animationSpec = spring(
                                         dampingRatio = Spring.DampingRatioMediumBouncy,
                                         stiffness = Spring.StiffnessLow
                                     ),
                                     label = "navIconOffset"
-                                )
-                                val iconTilt by animateFloatAsState(
-                                    targetValue = if (isSelected) 0f else -3f,
-                                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                                    label = "navIconTilt"
                                 )
                                 val iconColor by animateColorAsState(
                                     targetValue = if (isSelected) item.activeColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
@@ -626,14 +619,15 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                             contentAlignment = Alignment.Center,
                                             modifier = Modifier
                                                 .offset(y = iconOffset)
-                                                .scale(iconScale)
-                                                .graphicsLayer { rotationZ = iconTilt }
+                                                .scale(activeScale)
+                                                .graphicsLayer { rotationZ = activeRotation }
                                         ) {
                                             if (isSelected) {
                                                 Box(
                                                     modifier = Modifier
                                                         .size(34.dp)
-                                                        .background(item.activeColor.copy(alpha = 0.16f), CircleShape)
+                                                        .scale(copilotGlowScale)
+                                                        .background(item.activeColor.copy(alpha = navPulseAlpha), CircleShape)
                                                 )
                                             }
                                             Icon(
@@ -661,6 +655,7 @@ fun DrugsNepalMainApp(viewModel: ClinicalViewModel) {
                                                 Box(
                                                     modifier = Modifier
                                                         .size(4.dp)
+                                                        .scale(copilotGlowScale)
                                                         .background(item.activeColor, CircleShape)
                                                 )
                                             }
