@@ -38,6 +38,7 @@ fun AntidoteToxicologyScreen(
 ) {
     var selectedTab by remember { mutableStateOf(ToxicologyTab.ANTIDOTES) }
     var searchQuery by remember { mutableStateOf("") }
+    var showHelplinesSheet by remember { mutableStateOf(false) }
 
     val antidotes = remember(searchQuery) {
         val q = searchQuery.trim().lowercase()
@@ -87,20 +88,40 @@ fun AntidoteToxicologyScreen(
                     )
                 }
 
-                if (onOpenCriticalCare != null) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     FilledTonalButton(
-                        onClick = onOpenCriticalCare,
+                        onClick = { showHelplinesSheet = true },
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = Red600,
+                            containerColor = Color(0xFFDC2626).copy(alpha = 0.85f),
                             contentColor = Color.White
                         ),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                         modifier = Modifier.height(30.dp)
                     ) {
-                        Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(13.dp))
+                        Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(12.dp))
                         Spacer(modifier = Modifier.width(3.dp))
-                        Text("ER/ICU", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                        Text("Helplines", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    if (onOpenCriticalCare != null) {
+                        FilledTonalButton(
+                            onClick = onOpenCriticalCare,
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = Red600,
+                                contentColor = Color.White
+                            ),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier.height(30.dp)
+                        ) {
+                            Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(13.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text("ER/ICU", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                        }
                     }
                 }
             }
@@ -196,6 +217,12 @@ fun AntidoteToxicologyScreen(
                 }
             }
         }
+    }
+
+    if (showHelplinesSheet) {
+        com.example.ui.components.NepalEmergencyHelplinesSheet(
+            onDismissRequest = { showHelplinesSheet = false }
+        )
     }
 }
 

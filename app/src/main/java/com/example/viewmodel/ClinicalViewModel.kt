@@ -1154,7 +1154,7 @@ class ClinicalViewModel(application: Application) : AndroidViewModel(application
             _uiState.update {
                 it.copy(
                     isCheckingAppUpdates = false,
-                    updateCheckMessage = "✓ Up to Date: DRUGs Nepal v4.2.1 (Formulary 2026.1 verified with Cardiac Society ACLS, Vonopran P-CAB & Eternity Medical Engines)"
+                    updateCheckMessage = "✓ Up to Date: DRUGs Nepal v4.3.0 (Formulary 2026.4 verified with Nepal Emergency Helplines, Cardiac Society ACLS, Vonopran P-CAB & Eternity Medical Engines)"
                 )
             }
         }

@@ -671,7 +671,7 @@ fun AppSidebarDrawer(
                                                 color = Color.White
                                             )
                                             Text(
-                                                text = "v4.2.1 • Update Option available in Settings",
+                                                text = "v4.3.0 • Update Option available in Settings",
                                                 fontSize = 9.5.sp,
                                                 color = Slate400
                                             )

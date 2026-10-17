@@ -88,6 +88,7 @@ fun CriticalCareEmergencyScreen(
     var weightInputText by remember { mutableStateOf("70") }
     var antidoteSearchQuery by remember { mutableStateOf("") }
     var selectedResusProtocolIndex by remember { mutableIntStateOf(0) }
+    var showHelplinesSheet by remember { mutableStateOf(false) }
 
     // Pre-calculated emergency antidote database
     val emergencyAntidotes = remember {
@@ -443,30 +444,61 @@ fun CriticalCareEmergencyScreen(
                         }
                     }
 
-                    // Direct jump to Code Blue Resuscitation Clock
-                    Surface(
-                        onClick = onNavigateToCodeBlue,
-                        shape = RoundedCornerShape(8.dp),
-                        color = Color(0xFFDC2626),
-                        modifier = Modifier.testTag("top_quick_code_blue_button")
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                        Surface(
+                            onClick = { showHelplinesSheet = true },
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFB91C1C),
+                            modifier = Modifier.testTag("top_quick_helpline_button")
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Bolt,
-                                contentDescription = "Code Blue Clock",
-                                tint = Color.White,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Text(
-                                text = "CPR Clock",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Black,
-                                color = Color.White
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Phone,
+                                    contentDescription = "Nepal Helplines",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Text(
+                                    text = "102/NPIC",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+
+                        // Direct jump to Code Blue Resuscitation Clock
+                        Surface(
+                            onClick = onNavigateToCodeBlue,
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFDC2626),
+                            modifier = Modifier.testTag("top_quick_code_blue_button")
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Bolt,
+                                    contentDescription = "Code Blue Clock",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = "CPR Clock",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color.White
+                                )
+                            }
                         }
                     }
                 }
@@ -621,6 +653,12 @@ fun CriticalCareEmergencyScreen(
                 }
             }
         }
+    }
+
+    if (showHelplinesSheet) {
+        com.example.ui.components.NepalEmergencyHelplinesSheet(
+            onDismissRequest = { showHelplinesSheet = false }
+        )
     }
 }
 

@@ -34,6 +34,7 @@ fun SettingsScreen(
     viewModel: ClinicalViewModel
 ) {
     var showEditProfileDialog by remember { mutableStateOf(false) }
+    var showHelplinesSheet by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -470,7 +471,195 @@ fun SettingsScreen(
             }
         }
 
-        // 9. Software & Formulary Update Option (User Request)
+        // 9. Nepal National Emergency & Poison Helplines
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("settings_emergency_helplines_card"),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFDC2626).copy(alpha = 0.5f))
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = Color(0xFFDC2626).copy(alpha = 0.15f),
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.PhoneInTalk,
+                                    contentDescription = "Emergency Helplines",
+                                    tint = Color(0xFFDC2626),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                        Column {
+                            Text(
+                                text = "Nepal Emergency & Poison Helplines",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "नेपाल आपतकालीन, विष सूचना तथा रक्तसञ्चार सम्पर्क",
+                                fontSize = 11.5.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFDC2626).copy(alpha = 0.15f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFDC2626))
+                    ) {
+                        Text(
+                            text = "24/7 DESK",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFFDC2626),
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+
+                Text(
+                    text = "Instant 1-tap emergency contacts for TUTH Poison Information Center (01-4412303), Teku Snakebite & Rabies Referral (01-4253396), Central Blood Bank (01-4288485), and National Ambulance Dispatch (102).",
+                    fontSize = 11.5.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 16.sp
+                )
+
+                Button(
+                    onClick = { showHelplinesSheet = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("open_emergency_helplines_button")
+                ) {
+                    Icon(imageVector = Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Open Emergency Directory (102 / NPIC / Teku) 📞", fontSize = 12.5.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        // 10. Offline Clinical Engine Status Card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("settings_offline_engine_card"),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = androidx.compose.foundation.BorderStroke(1.2.dp, Emerald500.copy(alpha = 0.45f))
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = Emerald500.copy(alpha = 0.15f),
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.CloudOff,
+                                    contentDescription = "Offline Mode",
+                                    tint = Emerald400,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                        Column {
+                            Text(
+                                text = "100% Offline Clinical Resilience",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Zero-latency on-device medical database",
+                                fontSize = 11.5.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Emerald500.copy(alpha = 0.15f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Emerald400)
+                    ) {
+                        Text(
+                            text = "OFFLINE READY",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Emerald400,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+
+                Text(
+                    text = "The entire drug index (611+ molecules), Nepal/India trade brands, clinical protocols (WHO/Nepal EDCD), resuscitation calculators, and toxicology management run 100% locally on your phone without requiring mobile data or Wi-Fi. Designed specifically for remote health posts, district hospitals, and high-altitude emergency practice across Nepal.",
+                    fontSize = 11.5.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 16.sp
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    listOf(
+                        "611+ Drugs" to Emerald400,
+                        "28+ Protocols" to Color(0xFF38BDF8),
+                        "18+ Calculators" to Amber400,
+                        "25+ Antidotes" to Color(0xFFF43F5E)
+                    ).forEach { (stat, color) ->
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = color.copy(alpha = 0.12f),
+                            border = androidx.compose.foundation.BorderStroke(0.8.dp, color.copy(alpha = 0.4f)),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(vertical = 6.dp)) {
+                                Text(text = stat, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = color)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 11. Software & Formulary Update Option (User Request)
         var autoUpdateEnabled by remember { mutableStateOf(true) }
         Card(
             modifier = Modifier
@@ -516,7 +705,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Current Version: v4.2.1 • Build 2026.3 • Eternity Release",
+                                text = "Current Version: v4.3.0 • Build 2026.4 • Eternity Release",
                                 fontSize = 11.5.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -628,13 +817,13 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "What's New in v4.2.1 (Eternity Medical Build):",
+                            text = "What's New in v4.3.0 (Eternity Final Release Edition):",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "• Added Developer: Eternity & Dedicated Update Option in Settings\n• Full Drug Dose Alarm & Medication Reminder System with audio/vibration alerts\n• AI-style bottom taskbar animations: smooth breathing pulse & oscillation instead of icon enlargement on click\n• Fixed AI search input: unified direct typing directly inside search box at bottom\n• Comprehensive AHA ACLS Cardiac Resuscitation algorithm & CPR Guide\n• 35+ Commonly Prescribed Nepal Essential Medications & Vaccines (EDCD/MoHP)",
+                            text = "• Nepal National Emergency & Poison Helplines Directory (TUTH NPIC, Teku ASV/Rabies, Central Blood Bank, Ambulance 102)\n• 100% Offline Clinical Resilience Engine for remote health posts and district hospitals across all 77 districts\n• AI-style taskbar animations: smooth breathing pulse & rotational oscillation replacing icon expansion\n• Full Drug Dose Alarm & Medication Reminder System with audio/vibration alerts\n• Fixed AI Copilot search input with unified bottom typing bar\n• Comprehensive AHA ACLS Cardiac Resuscitation algorithm & CPR Guide\n• 35+ Commonly Prescribed Nepal Essential Medications & EDCD Vaccines",
                             fontSize = 10.5.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 15.sp
@@ -765,7 +954,7 @@ fun SettingsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "DRUGs Nepal v4.2.1 • Dev: Eternity",
+                text = "DRUGs Nepal v4.3.0 • Dev: Eternity",
                 style = MaterialTheme.typography.bodySmall,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
@@ -813,6 +1002,13 @@ fun SettingsScreen(
                 viewModel.logout()
                 showEditProfileDialog = false
             }
+        )
+    }
+
+    // Nepal Emergency Helplines Sheet
+    if (showHelplinesSheet) {
+        com.example.ui.components.NepalEmergencyHelplinesSheet(
+            onDismissRequest = { showHelplinesSheet = false }
         )
     }
 }
